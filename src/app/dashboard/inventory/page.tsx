@@ -236,6 +236,7 @@ export default function InventoryPage() {
                 <th className="px-5 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Ingredient</th>
                 <th className="px-5 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Stock</th>
                 <th className="px-5 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Cost/Unit</th>
+                <th className="px-5 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-10"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-muted/50">
@@ -285,6 +286,14 @@ export default function InventoryPage() {
                       </td>
                       <td className="px-5 py-4 text-right font-bold text-primary/80">
                         RM {ing.avg_cost_per_unit.toFixed(4)}
+                      </td>
+                      <td className="px-5 py-4 text-center">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleDeleteIngredient(ing.id); }}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-red-300 hover:text-red-600 hover:bg-red-50 transition-all"
+                        >
+                          🗑️
+                        </button>
                       </td>
                     </tr>
                   );
@@ -564,10 +573,15 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
               )}
             </div>
             
-            <div className="flex gap-2 pt-2">
-              <button onClick={() => onDelete(ingredient.id)} className="w-12 h-12 flex items-center justify-center rounded-2xl border border-red-100 text-red-400 hover:bg-red-50 transition-colors">🗑️</button>
-              <button onClick={handleEditSubmit} disabled={loading} className="flex-1 h-12 bg-foreground text-white rounded-2xl font-black shadow-lg">
+            <div className="space-y-2 pt-4">
+              <button onClick={handleEditSubmit} disabled={loading} className="w-full h-12 bg-foreground text-white rounded-2xl font-black shadow-lg">
                 {loading ? 'Saving...' : 'Update Details'}
+              </button>
+              <button 
+                onClick={() => { if(confirm('Hapus bahan ini?')) { onDelete(ingredient.id); onClose(); } }} 
+                className="w-full h-10 flex items-center justify-center rounded-2xl text-red-500 font-bold hover:bg-red-50 transition-colors text-xs"
+              >
+                🗑️ Hapus Bahan Dari Inventory
               </button>
             </div>
           </div>
