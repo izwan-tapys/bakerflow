@@ -610,57 +610,60 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
 
           {/* Add New Item */}
           <div className="bg-muted/30 p-3 rounded-xl border border-muted/50 space-y-3">
-          <div className="flex gap-2 bg-white p-1 rounded-lg border border-muted">
-            <button onClick={() => setIsNewIngredient(false)} className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${!isNewIngredient ? 'bg-primary text-white shadow-sm' : 'text-foreground/50'}`}>Select Existing</button>
-            <button onClick={() => setIsNewIngredient(true)} className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${isNewIngredient ? 'bg-primary text-white shadow-sm' : 'text-foreground/50'}`}>Create New</button>
-          </div>
+            <div className="flex gap-2 bg-white p-1 rounded-lg border border-muted">
+              <button onClick={() => setIsNewIngredient(false)} className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${!isNewIngredient ? 'bg-primary text-white shadow-sm' : 'text-foreground/50'}`}>Select Existing</button>
+              <button onClick={() => setIsNewIngredient(true)} className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${isNewIngredient ? 'bg-primary text-white shadow-sm' : 'text-foreground/50'}`}>Create New</button>
+            </div>
 
-          {isNewIngredient ? (
-            <div>
-              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Ingredient Name</label>
-              <input placeholder="e.g. Premium Butter" value={form.new_name} onChange={e => setForm({ ...form, new_name: e.target.value })}
-                className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary outline-none bg-white" />
-            </div>
-          ) : (
-            <div>
-              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Select Ingredient</label>
-              <select value={form.ingredient_id} onChange={e => setForm({ ...form, ingredient_id: e.target.value, unit: ingredients.find(i=>i.id===e.target.value)?.unit || 'g' })}
-                className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary outline-none bg-white">
-                <option value="">Choose from inventory...</option>
-                {ingredients.map(i => <option key={i.id} value={i.id}>{i.name} ({i.unit})</option>)}
-              </select>
-            </div>
-          )}
- 
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Qty</label>
-              <input type="number" placeholder="0" value={form.quantity_needed || ''} onChange={e => setForm({ ...form, quantity_needed: +e.target.value })}
-                className="w-full h-10 px-2 rounded-xl border border-muted text-sm focus:border-primary outline-none bg-white" />
-            </div>
-            <div className="w-20">
-              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Unit</label>
-              {isNewIngredient ? (
-                <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
-                  className="w-full h-10 px-1 rounded-xl border border-muted text-[10px] font-bold focus:border-primary outline-none bg-white">
-                  {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
+            {isNewIngredient ? (
+              <div>
+                <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Ingredient Name</label>
+                <input placeholder="e.g. Premium Butter" value={form.new_name} onChange={e => setForm({ ...form, new_name: e.target.value })}
+                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary outline-none bg-white" />
+              </div>
+            ) : (
+              <div>
+                <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Select Ingredient</label>
+                <select value={form.ingredient_id} onChange={e => setForm({ ...form, ingredient_id: e.target.value, unit: ingredients.find(i=>i.id===e.target.value)?.unit || 'g' })}
+                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary outline-none bg-white">
+                  <option value="">Choose from inventory...</option>
+                  {ingredients.map(i => <option key={i.id} value={i.id}>{i.name} ({i.unit})</option>)}
                 </select>
-              ) : (
-                <div className="h-10 px-2 bg-white border border-muted rounded-xl flex items-center justify-center text-xs font-bold text-foreground/50">
-                  {ingredients.find(i => i.id === form.ingredient_id)?.unit || '-'}
-                </div>
-              )}
+              </div>
+            )}
+
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Qty</label>
+                <input type="number" placeholder="0" value={form.quantity_needed || ''} onChange={e => setForm({ ...form, quantity_needed: +e.target.value })}
+                  className="w-full h-10 px-2 rounded-xl border border-muted text-sm focus:border-primary outline-none bg-white" />
+              </div>
+              <div className="w-20">
+                <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Unit</label>
+                {isNewIngredient ? (
+                  <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
+                    className="w-full h-10 px-1 rounded-xl border border-muted text-[10px] font-bold focus:border-primary outline-none bg-white">
+                    {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                ) : (
+                  <div className="h-10 px-2 bg-white border border-muted rounded-xl flex items-center justify-center text-xs font-bold text-foreground/50">
+                    {ingredients.find(i => i.id === form.ingredient_id)?.unit || '-'}
+                  </div>
+                )}
+              </div>
+              <button onClick={handleAdd} disabled={(isNewIngredient ? !form.new_name : !form.ingredient_id) || form.quantity_needed <= 0}
+                className="h-10 px-4 bg-foreground text-white font-bold text-xs rounded-xl disabled:opacity-50 hover:bg-black transition-colors">
+                + Add
+              </button>
             </div>
-            <button onClick={handleAdd} disabled={(isNewIngredient ? !form.new_name : !form.ingredient_id) || form.quantity_needed <= 0} 
-              className="h-10 px-4 bg-foreground text-white font-bold text-xs rounded-xl disabled:opacity-50 hover:bg-black transition-colors">
-              + Add
-            </button>
           </div>
         </div>
 
-        <button onClick={handleSaveAll} className="w-full h-12 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-          Save Recipe & Times
-        </button>
+        <div className="flex-none pt-2">
+          <button onClick={handleSaveAll} className="w-full h-12 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+            Save Recipe &amp; Times
+          </button>
+        </div>
       </div>
     </div>
   );
