@@ -92,6 +92,7 @@ export default function OrderPage() {
 
     const orderPayload = {
       baker_id: bakerInfo.baker_id,
+      product_id: selectedProduct.id,
       customer_name: form.customer_name,
       customer_phone: form.customer_phone,
       customer_address: form.customer_address,
