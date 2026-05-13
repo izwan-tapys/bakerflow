@@ -463,9 +463,9 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-[40px] p-6 shadow-2xl space-y-6">
-        <div className="flex justify-between items-start">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+      <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-6 shadow-2xl flex flex-col max-h-[95vh] md:max-h-[85vh] overflow-hidden">
+        <div className="flex justify-between items-start flex-none mb-4">
           <div>
             <h2 className="text-xl font-black text-foreground">{ingredient.name}</h2>
             <div className="flex items-center gap-2">
@@ -483,12 +483,12 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-muted/50 p-1.5 rounded-2xl">
+        <div className="flex bg-muted/50 p-1.5 rounded-2xl flex-none mb-6">
           <button onClick={() => setTab('restock')} className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${tab === 'restock' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>🚚 Restock</button>
           <button onClick={() => setTab('edit')} className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${tab === 'edit' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>⚙️ Edit Info</button>
         </div>
 
-        {tab === 'restock' ? (
+        <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
           <div className="space-y-5">
             <div className="flex justify-between items-center px-1">
               <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest">Restock Mode</p>
@@ -654,6 +654,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
