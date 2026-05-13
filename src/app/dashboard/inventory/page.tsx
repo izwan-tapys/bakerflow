@@ -299,10 +299,10 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
   const [inputMode, setInputMode] = useState<'total' | 'unit'>('total');
 
   // Restock State - Bulk/Pack Mode
-  const [isBulk, setIsBulk] = useState(false);
+  const [isBulk, setIsBulk] = useState(!!ingredient.pack_size);
   const [numPacks, setNumPacks] = useState<number | ''>('');
-  const [packSize, setPackSize] = useState<number | ''>('');
-  const [packSizeUnit, setPackSizeUnit] = useState(ingredient.unit);
+  const [packSize, setPackSize] = useState<number | ''>(ingredient.pack_size ?? '');
+  const [packSizeUnit, setPackSizeUnit] = useState(ingredient.pack_size_unit ?? ingredient.unit);
   const [pricePerPack, setPricePerPack] = useState<number | ''>('');
 
   // Edit State
