@@ -28,9 +28,10 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 interface OrderCardProps {
   order: Order;
   onStatusChange?: (orderId: string, status: OrderStatus) => void;
+  onRefresh?: () => void;
 }
 
-export function OrderCard({ order, onStatusChange }: OrderCardProps) {
+export function OrderCard({ order, onStatusChange, onRefresh }: OrderCardProps) {
   const formatCurrency = (amount: number) => `RM ${amount.toFixed(2)}`;
 
   const getNextStatus = (current: OrderStatus): OrderStatus | null => {
@@ -58,6 +59,18 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
     cancelled:  '',
   };
 
+  const handlePaymentToggle = async () => {
+    const newStatus = order.payment_status === 'paid' ? 'pending' : 'paid';
+    const { updatePaymentStatus } = await import('@/lib/services/baker.service');
+    const success = await updatePaymentStatus(order.id!, newStatus);
+    if (success && onRefresh) {
+      onRefresh();
+    } else if (success && onStatusChange) {
+      // Fallback if onRefresh not provided
+      onStatusChange(order.id!, order.status);
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl p-4 shadow-sm border border-muted/50 space-y-3">
       <div className="flex items-start justify-between">
@@ -82,24 +95,16 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
       </div>
 
       <div className="flex gap-2">
-        {onStatusChange && (
-          <button
-            onClick={async () => {
-              const newStatus = order.payment_status === 'paid' ? 'pending' : 'paid';
-              const { updatePaymentStatus } = await import('@/lib/services/baker.service');
-              await updatePaymentStatus(order.id!, newStatus);
-              // We'll pass the same status to trigger a refresh on the parent
-              onStatusChange(order.id!, order.status); 
-            }}
-            className={`flex-1 h-10 rounded-xl font-bold text-sm transition-all border-2 ${
-              order.payment_status === 'paid' 
-                ? 'border-muted text-foreground/50 hover:bg-muted' 
-                : 'border-green-200 text-green-600 bg-green-50 hover:bg-green-100'
-            }`}
-          >
-            {order.payment_status === 'paid' ? 'Mark Unpaid' : 'Mark as Paid'}
-          </button>
-        )}
+        <button
+          onClick={handlePaymentToggle}
+          className={`flex-1 h-10 rounded-xl font-bold text-sm transition-all border-2 ${
+            order.payment_status === 'paid' 
+              ? 'border-muted text-foreground/50 hover:bg-muted' 
+              : 'border-green-200 text-green-600 bg-green-50 hover:bg-green-100'
+          }`}
+        >
+          {order.payment_status === 'paid' ? 'Mark Unpaid' : 'Mark as Paid'}
+        </button>
 
         {nextStatus && onStatusChange && (
           <button

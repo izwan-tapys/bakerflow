@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Order, OrderStatus } from '@/lib/types';
 import { updateOrderStatus } from '@/lib/services/baker.service';
 
-function ProductionCard({ order, onStatusChange }: { order: Order; onStatusChange: (id: string, s: OrderStatus) => void }) {
+function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; onStatusChange: (id: string, s: OrderStatus) => void; onRefresh?: () => void }) {
   const nextStatus: Record<string, { label: string; status: OrderStatus; color: string }> = {
     approved: { label: 'Start Baking 🔥', status: 'production', color: 'bg-orange-500' },
     production: { label: 'Mark as Ready ✅', status: 'ready', color: 'bg-green-600' },
@@ -42,8 +42,9 @@ function ProductionCard({ order, onStatusChange }: { order: Order; onStatusChang
           onClick={async () => {
             const newStatus = order.payment_status === 'paid' ? 'pending' : 'paid';
             const { updatePaymentStatus } = await import('@/lib/services/baker.service');
-            await updatePaymentStatus(order.id!, newStatus);
-            onStatusChange(order.id!, order.status);
+            const success = await updatePaymentStatus(order.id!, newStatus);
+            if (success && onRefresh) onRefresh();
+            else if (success) onStatusChange(order.id!, order.status);
           }}
           className={`rounded-xl p-3 text-left transition-colors border-2 ${
             order.payment_status === 'paid' ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200 hover:bg-orange-100'
@@ -145,7 +146,7 @@ export default function ProductionPage() {
                 🔥 Currently Baking
                 <span className="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full font-bold">{baking.length}</span>
               </h2>
-              {baking.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} />)}
+              {baking.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadData} />)}
             </section>
           )}
 
@@ -155,7 +156,7 @@ export default function ProductionPage() {
                 📋 Queued
                 <span className="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full font-bold">{queued.length}</span>
               </h2>
-              {queued.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} />)}
+              {queued.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadData} />)}
             </section>
           )}
 

@@ -128,7 +128,7 @@ export default function AdminDashboardPage() {
             <span className="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-0.5 rounded-full">{pendingOrders.length}</span>
           </h2>
           {pendingOrders.map(order => (
-            <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} />
+            <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} onRefresh={loadDashboardData} />
           ))}
         </div>
       )}
@@ -140,7 +140,7 @@ export default function AdminDashboardPage() {
             🍳 Kitchen Tasks
           </h2>
           {productionOrders.map(order => (
-            <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} />
+            <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} onRefresh={loadDashboardData} />
           ))}
         </div>
       )}

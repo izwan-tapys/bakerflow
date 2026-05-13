@@ -103,7 +103,7 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map(order => (
-            <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} />
+            <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} onRefresh={loadOrders} />
           ))}
         </div>
       )}
