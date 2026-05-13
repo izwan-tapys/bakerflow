@@ -97,6 +97,23 @@ export default function AdminDashboardPage() {
 
   const allOrdersForTimeline = [...todayOrders, ...productionOrders];
 
+  const schedule = todayOrders.map(order => {
+    const product = products.find(p => p.id === order.product_id);
+    if (!product) return null;
+    const deadline = settings?.delivery_start_time || '15:00';
+    const [deadH, deadM] = deadline.split(':').map(Number);
+    const readyTime = new Date();
+    readyTime.setHours(deadH, deadM, 0, 0);
+
+    const startCool = new Date(readyTime.getTime() - (product.cool_time || 60) * 60000);
+    const startBake = new Date(startCool.getTime() - (product.bake_time || 45) * 60000);
+    const startPrep = new Date(startBake.getTime() - (product.prep_time || 30) * 60000);
+
+    return { ...order, product, startPrep, startBake, readyTime };
+  }).filter(Boolean).sort((a: any, b: any) => a.startPrep.getTime() - b.startPrep.getTime());
+
+  const nextTask = (schedule as any[]).find(s => s.startPrep > new Date());
+
   if (loading) {
     return (
       <div className="space-y-4 animate-pulse">
