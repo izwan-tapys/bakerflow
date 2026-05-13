@@ -14,6 +14,7 @@ interface Ingredient {
   pack_size?: number | null;
   pack_unit?: string | null;
   pack_size_unit?: string | null;
+  category?: string | null;
 }
 
 interface ShoppingItem {
@@ -27,7 +28,9 @@ export default function InventoryPage() {
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ name: '', unit: 'g', current_stock: 0, avg_cost_per_unit: 0, low_stock_threshold: 100 });
+  const [form, setForm] = useState({ name: '', unit: 'g', current_stock: 0, category: 'Lain-lain' });
+  const [selectedCategory, setSelectedCategory] = useState('Semua');
+  const CATEGORIES = ['Semua', 'Tepung', 'Tenusu', 'Gula', 'Lemak', 'Hiasan', 'Packaging', 'Lain-lain'];
   
   // Modal State
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
@@ -78,8 +81,16 @@ export default function InventoryPage() {
   const handleAddIngredient = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    await supabase.from('ingredients').insert({ ...form, baker_id: user.id });
-    setForm({ name: '', unit: 'g', current_stock: 0, avg_cost_per_unit: 0, low_stock_threshold: 100 });
+    await supabase.from('ingredients').insert({ 
+      baker_id: user.id,
+      name: form.name,
+      unit: form.unit,
+      current_stock: form.current_stock,
+      category: form.category,
+      avg_cost_per_unit: 0,
+      low_stock_threshold: 0
+    });
+    setForm({ name: '', unit: 'g', current_stock: 0, category: 'Lain-lain' });
     setShowAdd(false);
     loadIngredients();
   };
@@ -119,6 +130,11 @@ export default function InventoryPage() {
     await supabase.from('ingredients').delete().eq('id', id);
     loadIngredients();
   };
+
+  const filteredIngredients = ingredients.filter(i => {
+    if (selectedCategory === 'Semua') return true;
+    return i.category === selectedCategory;
+  });
 
   const lowStock = ingredients.filter(i => i.current_stock <= i.low_stock_threshold && !shoppingList.find(s => s.ingredient.id === i.id));
 
@@ -219,6 +235,13 @@ export default function InventoryPage() {
               <input type="number" value={form.current_stock || ''} onChange={e => setForm({ ...form, current_stock: +e.target.value })}
                 className="w-full h-11 px-4 rounded-xl border border-muted focus:border-primary outline-none font-bold" />
             </div>
+            <div className="col-span-2">
+              <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Category</label>
+              <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
+                className="w-full h-11 px-4 rounded-xl border border-muted focus:border-primary outline-none bg-white font-bold">
+                {CATEGORIES.filter(c => c !== 'Semua').map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
           </div>
           <div className="flex gap-2">
             <button onClick={() => setShowAdd(false)} className="flex-1 h-12 rounded-xl border border-muted font-bold text-foreground/50">Cancel</button>
@@ -226,6 +249,23 @@ export default function InventoryPage() {
           </div>
         </div>
       )}
+
+      {/* Category Filter */}
+      <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+        {CATEGORIES.map(c => (
+          <button
+            key={c}
+            onClick={() => setSelectedCategory(c)}
+            className={`px-4 py-2 rounded-full text-xs font-black transition-all whitespace-nowrap border-2 ${
+              selectedCategory === c 
+                ? 'bg-primary border-primary text-white shadow-lg' 
+                : 'bg-white border-muted text-foreground/40 hover:border-primary/30'
+            }`}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
 
       {/* Ingredients List Table */}
       <div className="bg-white rounded-[32px] border border-muted overflow-hidden shadow-sm">
@@ -248,12 +288,12 @@ export default function InventoryPage() {
                     <td className="px-5 py-4 text-right"><div className="h-4 bg-muted rounded w-20 ml-auto" /></td>
                   </tr>
                 ))
-              ) : ingredients.length === 0 ? (
+              ) : filteredIngredients.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-5 py-20 text-center text-foreground/30 font-bold italic">No ingredients yet. Click +Add to start.</td>
+                  <td colSpan={4} className="px-5 py-20 text-center text-foreground/30 font-bold italic">No ingredients found in this category.</td>
                 </tr>
               ) : (
-                ingredients.map(ing => {
+                filteredIngredients.map(ing => {
                   const committed = shoppingList.find(s => s.ingredient.id === ing.id)?.needed || 0;
                   const available = ing.current_stock - committed;
                   const isLow = available <= ing.low_stock_threshold;
@@ -344,6 +384,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
   const [editForm, setEditForm] = useState({
     name: ingredient.name,
     unit: ingredient.unit,
+    category: ingredient.category || 'Lain-lain',
     current_stock: ingredient.current_stock,
     low_stock_threshold: ingredient.low_stock_threshold,
     pack_size: ingredient.pack_size ?? '' as number | '',
@@ -393,6 +434,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
         unit: editForm.unit,
         current_stock: Number(editForm.current_stock) || 0,
         low_stock_threshold: Number(editForm.low_stock_threshold) || 0,
+        category: editForm.category,
         pack_size: editForm.pack_size === '' ? null : Number(editForm.pack_size),
         pack_unit: editForm.pack_unit || null,
         pack_size_unit: editForm.pack_size_unit || null
@@ -444,6 +486,14 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
               >
                 {isBulk ? '📦 Bulk / Packs' : '⚖️ Single Unit'}
               </button>
+            </div>
+            
+            <div className="bg-muted/30 p-3 rounded-2xl border border-muted/50">
+              <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Category</label>
+              <select value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })}
+                className="w-full h-10 px-3 rounded-xl border border-muted focus:border-primary outline-none bg-white font-bold text-xs">
+                {['Tepung', 'Tenusu', 'Gula', 'Lemak', 'Hiasan', 'Packaging', 'Lain-lain'].map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
             </div>
 
             {isBulk ? (
