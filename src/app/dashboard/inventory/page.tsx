@@ -273,7 +273,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
   const [qty, setQty] = useState<number | ''>('');
   const [purchaseUnit, setPurchaseUnit] = useState(ingredient.unit);
   const [totalPrice, setTotalPrice] = useState<number | ''>('');
-  const [costPerUnit, setCostPerUnit] = useState<number | ''>('');
+  const [costPerUnit, setCostPerUnit] = useState<number | ''>(ingredient.avg_cost_per_unit);
   const [inputMode, setInputMode] = useState<'total' | 'unit'>('total');
 
   // Restock State - Bulk/Pack Mode
@@ -389,14 +389,14 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
               <div className="grid grid-cols-3 gap-2 bg-muted/20 p-4 rounded-3xl border border-muted/50">
                 <div>
                   <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">How many?</label>
-                  <input type="number" placeholder="22" value={numPacks} onChange={e => setNumPacks(e.target.value === '' ? '' : +e.target.value)}
+                  <input type="number" placeholder="e.g. 22" value={numPacks} onChange={e => setNumPacks(e.target.value === '' ? '' : +e.target.value)}
                     className="w-full h-11 px-3 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
                   <p className="text-[9px] font-bold text-foreground/30 mt-1 text-center">Packs/Bottles</p>
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Size each</label>
                   <div className="relative">
-                    <input type="number" placeholder="25" value={packSize} onChange={e => setPackSize(e.target.value === '' ? '' : +e.target.value)}
+                    <input type="number" placeholder="e.g. 25" value={packSize} onChange={e => setPackSize(e.target.value === '' ? '' : +e.target.value)}
                       className="w-full h-11 px-3 pr-8 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold opacity-30">{ingredient.unit}</span>
                   </div>
@@ -405,7 +405,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
                   <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Price each</label>
                   <div className="relative">
                     <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] font-bold opacity-30">RM</span>
-                    <input type="number" placeholder="2.50" value={pricePerPack} onChange={e => setPricePerPack(e.target.value === '' ? '' : +e.target.value)}
+                    <input type="number" placeholder="e.g. 2.50" value={pricePerPack} onChange={e => setPricePerPack(e.target.value === '' ? '' : +e.target.value)}
                       className="w-full h-11 pl-7 pr-2 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
                   </div>
                 </div>
