@@ -166,11 +166,20 @@ export default function ProductsPage() {
 
       // Link to product
       if (finalIngredientId) {
+        let finalQty = recipe.quantity_needed;
+        const ing = ingredients.find(i => i.id === finalIngredientId);
+        const baseUnit = ing?.unit || recipe.unit;
+        
+        // Convert to base unit if necessary
+        if ((recipe.unit === 'kg' && baseUnit === 'g') || (recipe.unit === 'L' && baseUnit === 'ml')) {
+          finalQty = recipe.quantity_needed * 1000;
+        }
+
         await supabase.from('recipes').insert({
           baker_id: user.id,
           product_id: prodData.id,
           ingredient_id: finalIngredientId,
-          quantity_needed: recipe.quantity_needed
+          quantity_needed: finalQty
         });
       }
     }
@@ -353,16 +362,17 @@ export default function ProductsPage() {
                 </select>
               )}
 
-              <div className="flex gap-2">
-                <input type="number" placeholder="Qty needed" value={ingForm.quantity_needed || ''} onChange={e => setIngForm({ ...ingForm, quantity_needed: +e.target.value })}
-                  className="flex-1 h-9 px-2 rounded-lg border border-muted text-sm focus:border-primary focus:outline-none" />
-                <div className="h-9 px-3 bg-white border border-muted rounded-lg flex items-center justify-center text-sm font-medium text-foreground/50">
-                  {isNewIngredient ? ingForm.unit : ingredients.find(i => i.id === ingForm.ingredient_id)?.unit || '-'}
+                <div className="flex gap-2">
+                  <input type="number" placeholder="Qty needed" value={ingForm.quantity_needed || ''} onChange={e => setIngForm({ ...ingForm, quantity_needed: +e.target.value })}
+                    className="flex-1 h-9 px-2 rounded-lg border border-muted text-sm focus:border-primary focus:outline-none" />
+                  <select value={ingForm.unit} onChange={e => setIngForm({ ...ingForm, unit: e.target.value })}
+                    className="w-20 h-9 px-1 rounded-lg border border-muted text-[10px] font-bold focus:border-primary focus:outline-none bg-white">
+                    {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                  <button onClick={handleAddPendingRecipe} disabled={(isNewIngredient ? !ingForm.new_name : !ingForm.ingredient_id) || ingForm.quantity_needed <= 0} className="h-9 px-4 bg-foreground text-white font-bold text-xs rounded-lg disabled:opacity-50">
+                    + Add
+                  </button>
                 </div>
-                <button onClick={handleAddPendingRecipe} disabled={(isNewIngredient ? !ingForm.new_name : !ingForm.ingredient_id) || ingForm.quantity_needed <= 0} className="h-9 px-4 bg-foreground text-white font-bold text-xs rounded-lg disabled:opacity-50">
-                  + Add
-                </button>
-              </div>
             </div>
           </div>
 
@@ -638,11 +648,19 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
     }
 
     if (finalIngredientId) {
+      let finalQty = form.quantity_needed;
+      const baseUnit = isNewIngredient ? form.unit : ingredients.find(i => i.id === finalIngredientId)?.unit;
+      
+      // Convert to base unit if necessary
+      if ((form.unit === 'kg' && baseUnit === 'g') || (form.unit === 'L' && baseUnit === 'ml')) {
+        finalQty = form.quantity_needed * 1000;
+      }
+
       await supabase.from('recipes').insert({
         baker_id: user.id,
         product_id: product.id,
         ingredient_id: finalIngredientId,
-        quantity_needed: form.quantity_needed
+        quantity_needed: finalQty
       });
     }
     
@@ -724,16 +742,10 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
               </div>
               <div className="w-20">
                 <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Unit</label>
-                {isNewIngredient ? (
-                  <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
-                    className="w-full h-10 px-1 rounded-xl border border-muted text-[10px] font-bold focus:border-primary outline-none bg-white">
-                    {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
-                  </select>
-                ) : (
-                  <div className="h-10 px-2 bg-white border border-muted rounded-xl flex items-center justify-center text-xs font-bold text-foreground/50">
-                    {ingredients.find(i => i.id === form.ingredient_id)?.unit || '-'}
-                  </div>
-                )}
+                <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
+                  className="w-full h-10 px-1 rounded-xl border border-muted text-[10px] font-bold focus:border-primary outline-none bg-white">
+                  {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
+                </select>
               </div>
               <button onClick={handleAdd} disabled={(isNewIngredient ? !form.new_name : !form.ingredient_id) || form.quantity_needed <= 0}
                 className="h-10 px-4 bg-foreground text-white font-bold text-xs rounded-xl disabled:opacity-50 hover:bg-black transition-colors">
