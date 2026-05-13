@@ -43,6 +43,8 @@ export default function InventoryPage() {
     const newTotalStock = ingredient.current_stock + qty;
     const newAvgCost = newTotalStock > 0 ? (totalExistingValue + newPurchaseValue) / newTotalStock : cost;
 
+    const { data: { user } } = await supabase.auth.getUser();
+
     await supabase.from('ingredients').update({
       current_stock: newTotalStock,
       avg_cost_per_unit: Math.round(newAvgCost * 10000) / 10000,
@@ -50,7 +52,7 @@ export default function InventoryPage() {
 
     await supabase.from('ingredient_purchases').insert({
       ingredient_id: ingredient.id,
-      baker_id: (await supabase.auth.getUser()).data.user?.id,
+      baker_id: user?.id,
       quantity: qty,
       unit_cost: cost,
       total_cost: qty * cost,
