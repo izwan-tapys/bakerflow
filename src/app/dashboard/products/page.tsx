@@ -11,21 +11,44 @@ interface Product {
   is_active: boolean;
 }
 
+interface Ingredient {
+  id: string;
+  name: string;
+  unit: string;
+}
+
+interface Recipe {
+  id: string;
+  ingredient_id: string;
+  quantity_needed: number;
+  ingredient?: Ingredient;
+}
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ name: '', description: '', price: 0 });
 
-  const loadProducts = useCallback(async () => {
+  // Recipe Modal State
+  const [editingRecipe, setEditingRecipe] = useState<Product | null>(null);
+
+  const loadData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase.from('products').select('*').eq('baker_id', user.id).order('created_at', { ascending: false });
-    setProducts(data || []);
+    
+    const [prodRes, ingRes] = await Promise.all([
+      supabase.from('products').select('*').eq('baker_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('ingredients').select('id, name, unit').eq('baker_id', user.id).order('name')
+    ]);
+
+    setProducts(prodRes.data || []);
+    setIngredients(ingRes.data || []);
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadProducts(); }, [loadProducts]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleAddProduct = async () => {
     if (!form.name || form.price <= 0) return;
@@ -42,18 +65,18 @@ export default function ProductsPage() {
 
     setForm({ name: '', description: '', price: 0 });
     setShowAdd(false);
-    loadProducts();
+    loadData();
   };
 
   const toggleActive = async (product: Product) => {
     await supabase.from('products').update({ is_active: !product.is_active }).eq('id', product.id);
-    loadProducts();
+    loadData();
   };
 
   const deleteProduct = async (id: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
     await supabase.from('products').delete().eq('id', id);
-    loadProducts();
+    loadData();
   };
 
   return (
@@ -132,6 +155,12 @@ export default function ProductsPage() {
                     {product.is_active ? '✅ Active' : '❌ Hidden'}
                   </button>
                   <button 
+                    onClick={() => setEditingRecipe(product)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 w-24"
+                  >
+                    📝 Recipe
+                  </button>
+                  <button 
                     onClick={() => deleteProduct(product.id)}
                     className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 w-24"
                   >
@@ -143,6 +172,106 @@ export default function ProductsPage() {
           ))}
         </div>
       )}
+
+      {/* Recipe Modal */}
+      {editingRecipe && (
+        <RecipeModal 
+          product={editingRecipe} 
+          ingredients={ingredients} 
+          onClose={() => setEditingRecipe(null)} 
+        />
+      )}
+    </div>
+  );
+}
+
+function RecipeModal({ product, ingredients, onClose }: { product: Product, ingredients: Ingredient[], onClose: () => void }) {
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({ ingredient_id: '', quantity_needed: 0 });
+
+  const loadRecipes = useCallback(async () => {
+    const { data } = await supabase
+      .from('recipes')
+      .select('*, ingredient:ingredients(name, unit)')
+      .eq('product_id', product.id);
+    
+    setRecipes(data || []);
+    setLoading(false);
+  }, [product.id]);
+
+  useEffect(() => { loadRecipes(); }, [loadRecipes]);
+
+  const handleAdd = async () => {
+    if (!form.ingredient_id || form.quantity_needed <= 0) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    await supabase.from('recipes').insert({
+      baker_id: user?.id,
+      product_id: product.id,
+      ingredient_id: form.ingredient_id,
+      quantity_needed: form.quantity_needed
+    });
+    
+    setForm({ ingredient_id: '', quantity_needed: 0 });
+    loadRecipes();
+  };
+
+  const handleRemove = async (id: string) => {
+    await supabase.from('recipes').delete().eq('id', id);
+    loadRecipes();
+  };
+
+  const selectedIng = ingredients.find(i => i.id === form.ingredient_id);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-5">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Recipe Setup</h2>
+          <p className="text-sm text-foreground/50">Ingredients for 1x {product.name}</p>
+        </div>
+
+        {/* Existing Recipe Items */}
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {loading ? <p className="text-sm text-foreground/40">Loading...</p> : 
+           recipes.length === 0 ? <p className="text-sm text-foreground/40 italic">No ingredients added yet.</p> :
+           recipes.map(r => (
+             <div key={r.id} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
+               <div>
+                 <p className="font-bold text-sm text-foreground">{r.ingredient?.name}</p>
+                 <p className="text-xs text-foreground/50">{r.quantity_needed}{r.ingredient?.unit}</p>
+               </div>
+               <button onClick={() => handleRemove(r.id)} className="text-red-400 hover:text-red-600 text-lg">×</button>
+             </div>
+           ))
+          }
+        </div>
+
+        {/* Add New Item */}
+        <div className="bg-muted/30 p-4 rounded-xl border border-muted/50 space-y-3">
+          <p className="text-xs font-bold uppercase text-foreground/50">Add Ingredient</p>
+          <select value={form.ingredient_id} onChange={e => setForm({ ...form, ingredient_id: e.target.value })}
+            className="w-full h-10 px-3 rounded-lg border border-muted text-sm focus:border-primary focus:outline-none bg-white">
+            <option value="">Select ingredient...</option>
+            {ingredients.map(i => <option key={i.id} value={i.id}>{i.name} ({i.unit})</option>)}
+          </select>
+          <div className="flex gap-2">
+            <input type="number" placeholder="Qty needed" value={form.quantity_needed || ''} onChange={e => setForm({ ...form, quantity_needed: +e.target.value })}
+              className="flex-1 h-10 px-3 rounded-lg border border-muted text-sm focus:border-primary focus:outline-none" />
+            <div className="h-10 px-3 bg-muted rounded-lg flex items-center justify-center text-sm font-medium text-foreground/50">
+              {selectedIng ? selectedIng.unit : '-'}
+            </div>
+            <button onClick={handleAdd} disabled={!form.ingredient_id || form.quantity_needed <= 0} className="h-10 px-4 bg-primary text-white font-bold text-sm rounded-lg disabled:opacity-50">
+              Add
+            </button>
+          </div>
+        </div>
+
+        <button onClick={onClose} className="w-full h-12 bg-muted text-foreground font-bold rounded-xl hover:bg-muted/80">
+          Done
+        </button>
+      </div>
     </div>
   );
 }
