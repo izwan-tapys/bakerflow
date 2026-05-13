@@ -102,7 +102,7 @@ export default function SetupPage() {
 
       if (zonesError) throw zonesError;
 
-      router.push('/admin');
+      router.push('/dashboard');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
