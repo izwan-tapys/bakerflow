@@ -269,8 +269,14 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
   const [tab, setTab] = useState<'restock' | 'edit'>('restock');
   const [loading, setLoading] = useState(false);
 
-  // Restock State
+  // Restock State - Single Unit Mode
+  const [qty, setQty] = useState<number | ''>('');
+  const [purchaseUnit, setPurchaseUnit] = useState(ingredient.unit);
+  const [totalPrice, setTotalPrice] = useState<number | ''>('');
+  const [costPerUnit, setCostPerUnit] = useState<number | ''>(ingredient.avg_cost_per_unit);
   const [inputMode, setInputMode] = useState<'total' | 'unit'>('total');
+
+  // Restock State - Bulk/Pack Mode
   const [isBulk, setIsBulk] = useState(false);
   const [numPacks, setNumPacks] = useState<number | ''>('');
   const [packSize, setPackSize] = useState<number | ''>('');
