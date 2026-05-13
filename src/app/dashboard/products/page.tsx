@@ -479,6 +479,11 @@ export default function ProductsPage() {
 function RecipeModal({ product, ingredients, onClose }: { product: Product, ingredients: Ingredient[], onClose: () => void }) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [times, setTimes] = useState({ 
+    prep: product.prep_time || 30, 
+    bake: product.bake_time || 45, 
+    cool: product.cool_time || 60 
+  });
   
   // Modal Inline Add State
   const [isNewIngredient, setIsNewIngredient] = useState(false);
@@ -537,30 +542,65 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
     loadRecipes();
   };
 
+  const handleSaveAll = async () => {
+    // Update times first
+    await supabase.from('products').update({
+      prep_time: times.prep,
+      bake_time: times.bake,
+      cool_time: times.cool
+    }).eq('id', product.id);
+    
+    onClose();
+  };
+
   const selectedIng = ingredients.find(i => i.id === form.ingredient_id);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-5">
+      <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-5 overflow-y-auto max-h-[90vh]">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Recipe Setup</h2>
-          <p className="text-sm text-foreground/50">Ingredients for 1x {product.name}</p>
+          <h2 className="text-xl font-black text-foreground">Recipe Setup</h2>
+          <p className="text-sm text-foreground/50">Details for {product.name}</p>
         </div>
 
-        {/* Existing Recipe Items */}
-        <div className="space-y-2 max-h-48 overflow-y-auto">
-          {loading ? <p className="text-sm text-foreground/40">Loading...</p> : 
-           recipes.length === 0 ? <p className="text-sm text-foreground/40 italic">No ingredients added yet.</p> :
-           recipes.map(r => (
-             <div key={r.id} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
-               <div>
-                 <p className="font-bold text-sm text-foreground">{r.ingredient?.name}</p>
-                 <p className="text-xs text-foreground/50">{r.quantity_needed}{r.ingredient?.unit}</p>
+        {/* Cooking Times Setup */}
+        <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-3">
+          <p className="text-[10px] font-black text-primary uppercase tracking-widest">🕒 Production Timing (Mins)</p>
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Prep</label>
+              <input type="number" value={times.prep} onChange={e => setTimes({...times, prep: +e.target.value})}
+                className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Bake</label>
+              <input type="number" value={times.bake} onChange={e => setTimes({...times, bake: +e.target.value})}
+                className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Cool</label>
+              <input type="number" value={times.cool} onChange={e => setTimes({...times, cool: +e.target.value})}
+                className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-muted pt-4 space-y-3">
+          <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">🥣 Ingredients List</p>
+          {/* Existing Recipe Items */}
+          <div className="space-y-2">
+            {loading ? <p className="text-sm text-foreground/40">Loading...</p> : 
+             recipes.length === 0 ? <p className="text-sm text-foreground/40 italic">No ingredients added yet.</p> :
+             recipes.map(r => (
+               <div key={r.id} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
+                 <div>
+                   <p className="font-bold text-sm text-foreground">{r.ingredient?.name}</p>
+                   <p className="text-xs text-foreground/50">{r.quantity_needed}{r.ingredient?.unit}</p>
+                 </div>
+                 <button onClick={() => handleRemove(r.id)} className="text-red-400 hover:text-red-600 text-lg">×</button>
                </div>
-               <button onClick={() => handleRemove(r.id)} className="text-red-400 hover:text-red-600 text-lg">×</button>
-             </div>
-           ))
-          }
+             ))
+            }
         </div>
 
         {/* Add New Item */}
@@ -599,8 +639,8 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
           </div>
         </div>
 
-        <button onClick={onClose} className="w-full h-12 bg-muted text-foreground font-bold rounded-xl hover:bg-muted/80">
-          Done
+        <button onClick={handleSaveAll} className="w-full h-12 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+          Save Recipe & Times
         </button>
       </div>
     </div>
