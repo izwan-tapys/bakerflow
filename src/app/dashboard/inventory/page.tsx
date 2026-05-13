@@ -78,15 +78,27 @@ export default function InventoryPage() {
 
   useEffect(() => { loadIngredients(); }, [loadIngredients]);
 
+  const getAutoCategory = (name: string): string => {
+    const n = name.toLowerCase();
+    if (n.includes('tepung') || n.includes('flour')) return 'Tepung';
+    if (n.includes('susu') || n.includes('milk') || n.includes('cheese') || n.includes('keju') || n.includes('cream') || n.includes('yogurt')) return 'Tenusu';
+    if (n.includes('gula') || n.includes('sugar') || n.includes('pemanis') || n.includes('honey')) return 'Gula';
+    if (n.includes('mentega') || n.includes('butter') || n.includes('minyak') || n.includes('oil') || n.includes('margarine')) return 'Lemak';
+    if (n.includes('box') || n.includes('kotak') || n.includes('plastic') || n.includes('bekas') || n.includes('packaging')) return 'Packaging';
+    if (n.includes('coklat') || n.includes('chocolate') || n.includes('hiasan') || n.includes('sprinkle') || n.includes('topping')) return 'Hiasan';
+    return 'Lain-lain';
+  };
+
   const handleAddIngredient = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+    const autoCat = getAutoCategory(form.name);
     await supabase.from('ingredients').insert({ 
       baker_id: user.id,
       name: form.name,
       unit: form.unit,
       current_stock: form.current_stock,
-      category: form.category,
+      category: form.category === 'Lain-lain' ? autoCat : form.category,
       avg_cost_per_unit: 0,
       low_stock_threshold: 0
     });
@@ -487,14 +499,6 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
                 {isBulk ? '📦 Bulk / Packs' : '⚖️ Single Unit'}
               </button>
             </div>
-            
-            <div className="bg-muted/30 p-3 rounded-2xl border border-muted/50">
-              <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Category</label>
-              <select value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })}
-                className="w-full h-10 px-3 rounded-xl border border-muted focus:border-primary outline-none bg-white font-bold text-xs">
-                {['Tepung', 'Tenusu', 'Gula', 'Lemak', 'Hiasan', 'Packaging', 'Lain-lain'].map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
 
             {isBulk ? (
               <>
@@ -573,10 +577,19 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
           </div>
         ) : (
           <div className="space-y-4">
-            <div>
-              <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Ingredient Name</label>
-              <input value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})}
-                className="w-full h-12 px-4 rounded-2xl border border-muted font-bold focus:border-primary outline-none" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Category</label>
+                <select value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })}
+                  className="w-full h-11 px-4 rounded-xl border border-muted focus:border-primary outline-none bg-white font-bold text-sm">
+                  {['Tepung', 'Tenusu', 'Gula', 'Lemak', 'Hiasan', 'Packaging', 'Lain-lain'].map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="col-span-2">
+                <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Ingredient Name</label>
+                <input value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})}
+                  className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
