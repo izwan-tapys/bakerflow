@@ -28,7 +28,7 @@ export default function InventoryPage() {
   
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', unit: '', low_stock_threshold: 0 });
+  const [editForm, setEditForm] = useState({ name: '', unit: '', current_stock: 0, low_stock_threshold: 0 });
 
   const loadIngredients = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -80,6 +80,7 @@ export default function InventoryPage() {
     await supabase.from('ingredients').update({
       name: editForm.name,
       unit: editForm.unit,
+      current_stock: editForm.current_stock,
       low_stock_threshold: editForm.low_stock_threshold
     }).eq('id', editingId);
     
@@ -89,7 +90,12 @@ export default function InventoryPage() {
 
   const startEdit = (ing: Ingredient) => {
     setEditingId(ing.id);
-    setEditForm({ name: ing.name, unit: ing.unit, low_stock_threshold: ing.low_stock_threshold });
+    setEditForm({ 
+      name: ing.name, 
+      unit: ing.unit, 
+      current_stock: ing.current_stock,
+      low_stock_threshold: ing.low_stock_threshold 
+    });
   };
 
   const handleAddIngredient = async () => {
@@ -243,39 +249,53 @@ export default function InventoryPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 text-sm">
-                  <div>
-                    <p className="text-foreground/40 text-[10px] uppercase font-bold tracking-wide">Unit</p>
-                    {editingId === ingredient.id ? (
+                {editingId === ingredient.id ? (
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <p className="text-[10px] text-foreground/40 font-bold uppercase mb-0.5">Unit</p>
                       <select 
                         value={editForm.unit} 
                         onChange={e => setEditForm({...editForm, unit: e.target.value})}
-                        className="h-7 w-full rounded border border-muted text-xs bg-white"
+                        className="h-8 w-full rounded border border-muted text-xs bg-white"
                       >
                         {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u}>{u}</option>)}
                       </select>
-                    ) : (
-                      <p className="font-bold">{ingredient.unit}</p>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-foreground/40 text-[10px] uppercase font-bold tracking-wide">Stock</p>
-                    <p className={`font-bold ${inCart ? 'text-orange-600' : isLow ? 'text-red-600' : 'text-foreground'}`}>{ingredient.current_stock}{ingredient.unit}</p>
-                  </div>
-                  <div>
-                    <p className="text-foreground/40 text-[10px] uppercase font-bold tracking-wide">Alert At</p>
-                    {editingId === ingredient.id ? (
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[10px] text-foreground/40 font-bold uppercase mb-0.5">Stock</p>
+                      <input 
+                        type="number" 
+                        value={editForm.current_stock} 
+                        onChange={e => setEditForm({...editForm, current_stock: +e.target.value})}
+                        className="h-8 w-full rounded border border-muted text-xs px-1"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[10px] text-foreground/40 font-bold uppercase mb-0.5">Alert At</p>
                       <input 
                         type="number" 
                         value={editForm.low_stock_threshold} 
                         onChange={e => setEditForm({...editForm, low_stock_threshold: +e.target.value})}
-                        className="h-7 w-full rounded border border-muted text-xs px-1"
+                        className="h-8 w-full rounded border border-muted text-xs px-1"
                       />
-                    ) : (
-                      <p className="font-bold">{ingredient.low_stock_threshold}{ingredient.unit}</p>
-                    )}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div>
+                      <p className="text-foreground/40 text-[10px] uppercase font-bold tracking-wide">Unit</p>
+                      <p className="font-bold">{ingredient.unit}</p>
+                    </div>
+                    <div>
+                      <p className="text-foreground/40 text-[10px] uppercase font-bold tracking-wide">Stock</p>
+                      <p className={`font-bold ${inCart ? 'text-orange-600' : isLow ? 'text-red-600' : 'text-foreground'}`}>{ingredient.current_stock}{ingredient.unit}</p>
+                    </div>
+                    <div>
+                      <p className="text-foreground/40 text-[10px] uppercase font-bold tracking-wide">Alert At</p>
+                      <p className="font-bold">{ingredient.low_stock_threshold}{ingredient.unit}</p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex gap-2 mt-3">
                   <div className="flex-1">
