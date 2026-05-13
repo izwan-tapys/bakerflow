@@ -60,6 +60,33 @@ export default function AdminDashboardPage() {
   }, [loadDashboardData]);
 
   const handleStatusChange = async (orderId: string, status: OrderStatus) => {
+    // If starting production, check stock first
+    if (status === 'production') {
+      const { data: order } = await supabase.from('orders').select('*').eq('id', orderId).single();
+      if (order && order.product_id) {
+        const { data: recipe } = await supabase
+          .from('recipes')
+          .select('*, ingredient:ingredients(name, current_stock, unit)')
+          .eq('product_id', order.product_id);
+
+        if (recipe && recipe.length > 0) {
+          const missing = recipe.filter(r => {
+            const needed = r.quantity_needed * order.quantity;
+            return (r.ingredient?.current_stock || 0) < needed;
+          });
+
+          if (missing.length > 0) {
+            const missingText = missing.map(m => 
+              `${m.ingredient?.name} (Need: ${m.quantity_needed * order.quantity}${m.ingredient?.unit}, Have: ${m.ingredient?.current_stock}${m.ingredient?.unit})`
+            ).join('\n');
+            
+            alert(`⚠️ Stock Tak Cukup!\n\nAnda tak boleh mula baking sebab bahan tak cukup:\n\n${missingText}`);
+            return;
+          }
+        }
+      }
+    }
+
     await updateOrderStatus(orderId, status);
     loadDashboardData(); // Refresh
   };
