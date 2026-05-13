@@ -557,8 +557,8 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center">
-      <div className="bg-white w-full max-w-md md:rounded-3xl rounded-t-[40px] p-6 shadow-2xl space-y-5 flex flex-col h-[calc(100vh-80px)] md:h-auto md:max-h-[85vh] mb-[72px] md:mb-0 overflow-hidden">
-        <div className="flex-none">
+      <div className="bg-white w-full max-w-md md:rounded-3xl rounded-t-[40px] p-6 shadow-2xl flex flex-col h-[calc(100vh-120px)] md:h-auto md:max-h-[85vh] mb-[72px] md:mb-0 overflow-hidden">
+        <div className="flex-none mb-4">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-xl font-black text-foreground">Recipe Setup</h2>
             <button onClick={onClose} className="w-8 h-8 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
@@ -566,7 +566,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
           <p className="text-sm text-foreground/50">Details for {product.name}</p>
         </div>
 
-        <div className="space-y-5">
+        <div className="flex-1 overflow-y-auto space-y-5 pr-1 custom-scrollbar">
           {/* Cooking Times Setup */}
           <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-3">
             <p className="text-[10px] font-black text-primary uppercase tracking-widest">🕒 Production Timing (Mins)</p>
