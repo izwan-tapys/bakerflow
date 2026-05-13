@@ -25,6 +25,10 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ name: '', unit: 'g', current_stock: 0, avg_cost_per_unit: 0, low_stock_threshold: 100 });
+  
+  // Edit State
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', unit: '', low_stock_threshold: 0 });
 
   const loadIngredients = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -70,6 +74,23 @@ export default function InventoryPage() {
   }, []);
 
   useEffect(() => { loadIngredients(); }, [loadIngredients]);
+
+  const handleUpdateIngredient = async () => {
+    if (!editingId) return;
+    await supabase.from('ingredients').update({
+      name: editForm.name,
+      unit: editForm.unit,
+      low_stock_threshold: editForm.low_stock_threshold
+    }).eq('id', editingId);
+    
+    setEditingId(null);
+    loadIngredients();
+  };
+
+  const startEdit = (ing: Ingredient) => {
+    setEditingId(ing.id);
+    setEditForm({ name: ing.name, unit: ing.unit, low_stock_threshold: ing.low_stock_threshold });
+  };
 
   const handleAddIngredient = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -200,37 +221,74 @@ export default function InventoryPage() {
             return (
               <div key={ingredient.id} className={`bg-white rounded-2xl p-4 border-2 transition-all ${inCart ? 'border-orange-300 shadow-sm' : isLow ? 'border-red-200' : 'border-muted/50'}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="font-bold text-foreground">{ingredient.name}</p>
-                  {inCart ? (
-                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold">Buy {inCart.shortfall}{ingredient.unit}</span>
-                  ) : isLow && (
-                    <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">Low!</span>
+                  {editingId === ingredient.id ? (
+                    <input 
+                      value={editForm.name} 
+                      onChange={e => setEditForm({...editForm, name: e.target.value})}
+                      className="h-8 px-2 rounded-lg border border-muted text-sm font-bold focus:border-primary focus:outline-none flex-1 mr-4"
+                    />
+                  ) : (
+                    <p className="font-bold text-foreground">{ingredient.name}</p>
                   )}
+                  
+                  <div className="flex gap-2">
+                    {editingId === ingredient.id ? (
+                      <>
+                        <button onClick={handleUpdateIngredient} className="text-green-500 font-bold text-xs bg-green-50 px-2 py-1 rounded-lg">Save</button>
+                        <button onClick={() => setEditingId(null)} className="text-foreground/40 font-bold text-xs bg-muted px-2 py-1 rounded-lg">Cancel</button>
+                      </>
+                    ) : (
+                      <button onClick={() => startEdit(ingredient)} className="text-primary/60 hover:text-primary text-xs font-bold">Edit</button>
+                    )}
+                  </div>
                 </div>
+
                 <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div>
+                    <p className="text-foreground/40 text-[10px] uppercase font-bold tracking-wide">Unit</p>
+                    {editingId === ingredient.id ? (
+                      <select 
+                        value={editForm.unit} 
+                        onChange={e => setEditForm({...editForm, unit: e.target.value})}
+                        className="h-7 w-full rounded border border-muted text-xs bg-white"
+                      >
+                        {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u}>{u}</option>)}
+                      </select>
+                    ) : (
+                      <p className="font-bold">{ingredient.unit}</p>
+                    )}
+                  </div>
                   <div>
                     <p className="text-foreground/40 text-[10px] uppercase font-bold tracking-wide">Stock</p>
                     <p className={`font-bold ${inCart ? 'text-orange-600' : isLow ? 'text-red-600' : 'text-foreground'}`}>{ingredient.current_stock}{ingredient.unit}</p>
                   </div>
                   <div>
-                    <p className="text-foreground/40 text-[10px] uppercase font-bold tracking-wide">Avg Cost</p>
-                    <p className="font-bold">RM{ingredient.avg_cost_per_unit.toFixed(4)}/{ingredient.unit}</p>
-                  </div>
-                  <div>
                     <p className="text-foreground/40 text-[10px] uppercase font-bold tracking-wide">Alert At</p>
-                    <p className="font-bold">{ingredient.low_stock_threshold}{ingredient.unit}</p>
+                    {editingId === ingredient.id ? (
+                      <input 
+                        type="number" 
+                        value={editForm.low_stock_threshold} 
+                        onChange={e => setEditForm({...editForm, low_stock_threshold: +e.target.value})}
+                        className="h-7 w-full rounded border border-muted text-xs px-1"
+                      />
+                    ) : (
+                      <p className="font-bold">{ingredient.low_stock_threshold}{ingredient.unit}</p>
+                    )}
                   </div>
                 </div>
+
                 <div className="flex gap-2 mt-3">
                   <div className="flex-1">
                     <RestockModal ingredient={ingredient} onRestock={handleRestock} />
                   </div>
-                  <button 
-                    onClick={() => handleDeleteIngredient(ingredient.id)}
-                    className="mt-3 px-3 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors text-xs font-bold"
-                  >
-                    Delete
-                  </button>
+                  {!editingId && (
+                    <button 
+                      onClick={() => handleDeleteIngredient(ingredient.id)}
+                      className="mt-3 px-3 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors text-xs font-bold"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
             );
