@@ -566,7 +566,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
           <p className="text-sm text-foreground/50">Details for {product.name}</p>
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-1 space-y-5">
+        <div className="space-y-5">
           {/* Cooking Times Setup */}
           <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-3">
             <p className="text-[10px] font-black text-primary uppercase tracking-widest">🕒 Production Timing (Mins)</p>
