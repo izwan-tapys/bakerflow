@@ -374,8 +374,19 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
 
   const handleEditSubmit = async () => {
     setLoading(true);
-    await onUpdate(ingredient, editForm);
-    onClose();
+    try {
+      const cleanData = {
+        ...editForm,
+        pack_size: editForm.pack_size === '' ? null : Number(editForm.pack_size)
+      };
+      await onUpdate(ingredient, cleanData);
+      onClose();
+    } catch (err) {
+      console.error("Failed to update ingredient:", err);
+      alert("Gagal update. Pastikan anda telah run SQL migration di Supabase.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
