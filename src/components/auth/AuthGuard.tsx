@@ -18,12 +18,27 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
         router.push('/login');
-      } else {
-        setChecking(false);
+        return;
       }
+
+      // Check setup status for all private routes EXCEPT setup itself
+      if (!pathname.startsWith('/dashboard/setup')) {
+        const { data: settings } = await supabase
+          .from('baker_settings')
+          .select('is_setup_complete')
+          .eq('baker_id', session.user.id)
+          .single();
+
+        if (!settings || !settings.is_setup_complete) {
+          router.push('/dashboard/setup');
+          return;
+        }
+      }
+      
+      setChecking(false);
     });
   }, [pathname, router]);
 

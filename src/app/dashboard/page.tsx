@@ -44,69 +44,14 @@ export default function AdminDashboardPage() {
 
     if (settingsRes.data) setShopName(settingsRes.data.shop_name);
     
-    // Inject Mock Data if no real orders found
-    if (!todayRes.data?.length && !pendingRes.data?.length && !productionRes.data?.length) {
-      const mockOrders: Order[] = [
-        {
-          id: '1',
-          customer_name: 'Siti Aminah',
-          customer_phone: '0123456789',
-          customer_address: 'Subang Jaya',
-          product_name: 'Chocolate Moist Cake',
-          quantity: 1,
-          unit_price: 85,
-          delivery_fee: 5,
-          total_amount: 90,
-          delivery_date: today,
-          status: 'production',
-          payment_status: 'paid',
-          distance_km: 4.2
-        },
-        {
-          id: '2',
-          customer_name: 'Ahmad Zaki',
-          customer_phone: '0198765432',
-          customer_address: 'Shah Alam',
-          product_name: 'Pandan Gula Melaka',
-          quantity: 2,
-          unit_price: 60,
-          delivery_fee: 10,
-          total_amount: 130,
-          delivery_date: today,
-          status: 'ready',
-          payment_status: 'paid',
-          distance_km: 12.5
-        },
-        {
-          id: '3',
-          customer_name: 'Sarah Tan',
-          customer_phone: '0172223333',
-          customer_address: 'Kuala Lumpur',
-          product_name: 'Red Velvet cupcakes',
-          quantity: 12,
-          unit_price: 5,
-          delivery_fee: 15,
-          total_amount: 75,
-          delivery_date: today,
-          status: 'pending',
-          payment_status: 'unpaid',
-          distance_km: 8.0
-        }
-      ];
-      
-      setTodayOrders(mockOrders.filter(o => o.status !== 'pending'));
-      setPendingOrders(mockOrders.filter(o => o.status === 'pending'));
-      setProductionOrders(mockOrders.filter(o => ['approved', 'production', 'ready'].includes(o.status)));
-      setMonthlyRevenue(1450.50);
-    } else {
-      if (todayRes.data) setTodayOrders(todayRes.data);
-      if (pendingRes.data) setPendingOrders(pendingRes.data);
-      if (productionRes.data) setProductionOrders(productionRes.data);
-      if (revenueRes.data) {
-        const total = revenueRes.data.reduce((sum: number, o: { total_amount: number }) => sum + (o.total_amount || 0), 0);
-        setMonthlyRevenue(total);
-      }
+    if (todayRes.data) setTodayOrders(todayRes.data);
+    if (pendingRes.data) setPendingOrders(pendingRes.data);
+    if (productionRes.data) setProductionOrders(productionRes.data);
+    if (revenueRes.data) {
+      const total = revenueRes.data.reduce((sum: number, o: { total_amount: number }) => sum + (o.total_amount || 0), 0);
+      setMonthlyRevenue(total);
     }
+    
     setLoading(false);
   }, []);
 
