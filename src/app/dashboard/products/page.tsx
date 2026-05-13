@@ -170,10 +170,11 @@ export default function ProductsPage() {
         const ing = ingredients.find(i => i.id === finalIngredientId);
         const baseUnit = ing?.unit || recipe.unit;
         
-        // Convert to base unit if necessary
-        if ((recipe.unit === 'kg' && baseUnit === 'g') || (recipe.unit === 'L' && baseUnit === 'ml')) {
-          finalQty = recipe.quantity_needed * 1000;
-        }
+        // Bidirectional Conversion
+        if (recipe.unit === 'kg' && baseUnit === 'g') finalQty = recipe.quantity_needed * 1000;
+        else if (recipe.unit === 'g' && baseUnit === 'kg') finalQty = recipe.quantity_needed / 1000;
+        else if (recipe.unit === 'L' && baseUnit === 'ml') finalQty = recipe.quantity_needed * 1000;
+        else if (recipe.unit === 'ml' && baseUnit === 'L') finalQty = recipe.quantity_needed / 1000;
 
         await supabase.from('recipes').insert({
           baker_id: user.id,
@@ -651,10 +652,11 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
       let finalQty = form.quantity_needed;
       const baseUnit = isNewIngredient ? form.unit : ingredients.find(i => i.id === finalIngredientId)?.unit;
       
-      // Convert to base unit if necessary
-      if ((form.unit === 'kg' && baseUnit === 'g') || (form.unit === 'L' && baseUnit === 'ml')) {
-        finalQty = form.quantity_needed * 1000;
-      }
+      // Bidirectional Conversion
+      if (form.unit === 'kg' && baseUnit === 'g') finalQty = form.quantity_needed * 1000;
+      else if (form.unit === 'g' && baseUnit === 'kg') finalQty = form.quantity_needed / 1000;
+      else if (form.unit === 'L' && baseUnit === 'ml') finalQty = form.quantity_needed * 1000;
+      else if (form.unit === 'ml' && baseUnit === 'L') finalQty = form.quantity_needed / 1000;
 
       await supabase.from('recipes').insert({
         baker_id: user.id,
