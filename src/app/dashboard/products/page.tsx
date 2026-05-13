@@ -183,9 +183,6 @@ export default function ProductsPage() {
     loadData();
   };
 
-    loadData();
-  };
-
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
     setForm({
