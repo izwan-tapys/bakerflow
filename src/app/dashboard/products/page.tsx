@@ -9,12 +9,14 @@ interface Product {
   description: string;
   price: number;
   is_active: boolean;
+  cogs?: number;
 }
 
 interface Ingredient {
   id: string;
   name: string;
   unit: string;
+  avg_cost_per_unit: number;
 }
 
 interface Recipe {
@@ -54,13 +56,25 @@ export default function ProductsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     
-    const [prodRes, ingRes] = await Promise.all([
+    const [prodRes, ingRes, recipeRes] = await Promise.all([
       supabase.from('products').select('*').eq('baker_id', user.id).order('created_at', { ascending: false }),
-      supabase.from('ingredients').select('id, name, unit').eq('baker_id', user.id).order('name')
+      supabase.from('ingredients').select('id, name, unit, avg_cost_per_unit').eq('baker_id', user.id).order('name'),
+      supabase.from('recipes').select('product_id, ingredient_id, quantity_needed').eq('baker_id', user.id)
     ]);
 
-    setProducts(prodRes.data || []);
-    setIngredients(ingRes.data || []);
+    const ings = ingRes.data || [];
+    const recipes = recipeRes.data || [];
+    const prods = (prodRes.data || []).map(p => {
+      const productRecipes = recipes.filter(r => r.product_id === p.id);
+      const totalCogs = productRecipes.reduce((sum, r) => {
+        const ing = ings.find(i => i.id === r.ingredient_id);
+        return sum + (r.quantity_needed * (ing?.avg_cost_per_unit || 0));
+      }, 0);
+      return { ...p, cogs: totalCogs };
+    });
+
+    setProducts(prods);
+    setIngredients(ings);
     setLoading(false);
   }, []);
 
@@ -299,8 +313,28 @@ export default function ProductsPage() {
                       <span className="text-[10px] uppercase font-black bg-muted text-foreground/50 px-2 py-0.5 rounded-md">Draft</span>
                     )}
                   </div>
-                  <p className="text-sm text-foreground/60 mb-2">{product.description || <span className="italic text-foreground/30">No description</span>}</p>
-                  <p className="font-extrabold text-primary text-lg">RM {product.price.toFixed(2)}</p>
+                  <p className="text-sm text-foreground/60 mb-3">{product.description || <span className="italic text-foreground/30">No description</span>}</p>
+                  
+                  <div className="flex items-center gap-6">
+                    <div>
+                      <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-wider">Selling Price</p>
+                      <p className="font-extrabold text-primary text-xl">RM {product.price.toFixed(2)}</p>
+                    </div>
+                    {product.cogs !== undefined && product.cogs > 0 && (
+                      <>
+                        <div>
+                          <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-wider">COGS</p>
+                          <p className="font-bold text-foreground/70">RM {product.cogs.toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-wider">Margin</p>
+                          <p className={`font-bold ${((product.price - product.cogs) / product.price) > 0.3 ? 'text-green-600' : 'text-orange-500'}`}>
+                            {(((product.price - product.cogs) / product.price) * 100).toFixed(0)}%
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="flex flex-col items-end gap-2">
