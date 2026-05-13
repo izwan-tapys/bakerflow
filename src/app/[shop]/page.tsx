@@ -102,7 +102,7 @@ export default function OrderPage() {
       delivery_date: selectedDate,
       status: 'pending',
       payment_method: form.payment_method,
-      payment_status: 'unpaid',
+      payment_status: 'pending',
       special_notes: form.special_notes,
     };
 
