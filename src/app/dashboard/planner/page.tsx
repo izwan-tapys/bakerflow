@@ -121,6 +121,19 @@ export default function PlannerPage() {
         />
       </div>
 
+      {schedule.length > 0 && (
+        <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl p-6 text-white shadow-lg shadow-orange-200">
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl">👨‍🍳</div>
+            <div>
+              <p className="text-xs font-black uppercase opacity-70 tracking-widest">Today's Goal</p>
+              <h2 className="text-xl font-black">Start Production at <span className="underline decoration-yellow-300">{schedule[0].prepStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></h2>
+              <p className="text-sm opacity-80 font-bold">Total {schedule.length} orders to prepare.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Delivery Window Setting */}
       {settings && (
         <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10 flex items-center justify-between">
