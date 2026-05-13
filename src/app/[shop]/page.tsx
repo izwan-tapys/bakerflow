@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useParams } from 'next/navigation';
 
 interface Product {
   id?: string;
@@ -22,6 +23,9 @@ interface BakerInfo {
 }
 
 export default function OrderPage() {
+  const params = useParams();
+  const shopSlug = typeof params.shop === 'string' ? params.shop.replace(/-/g, ' ') : '';
+
   const [step, setStep] = useState<'calendar' | 'form' | 'payment' | 'success'>('calendar');
   const [bakerInfo, setBakerInfo] = useState<BakerInfo | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -39,25 +43,30 @@ export default function OrderPage() {
     payment_method: 'manual_transfer' as 'manual_transfer' | 'cod',
   });
 
-  // NOTE: In production, baker_id would come from URL slug or subdomain
-  // For now, we load the first baker's public info
   const loadBakerData = useCallback(async () => {
+    // Search for the baker using the shop name slug from the URL
     const { data: settingsData } = await supabase
       .from('baker_settings')
-      .select('shop_name, daily_capacity, home_address, whatsapp_number, bank_name, bank_account, bank_holder')
+      .select('baker_id, shop_name, daily_capacity, home_address, whatsapp_number, bank_name, bank_account, bank_holder')
       .eq('is_setup_complete', true)
+      .ilike('shop_name', shopSlug)
       .limit(1)
       .single();
 
-    const { data: productsData } = await supabase
-      .from('products')
-      .select('*')
-      .eq('is_active', true);
-
-    if (settingsData) setBakerInfo(settingsData);
-    if (productsData) setProducts(productsData);
+    if (settingsData) {
+      setBakerInfo(settingsData);
+      
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('*')
+        .eq('baker_id', settingsData.baker_id)
+        .eq('is_active', true);
+        
+      if (productsData) setProducts(productsData);
+    }
+    
     setLoading(false);
-  }, []);
+  }, [shopSlug]);
 
   useEffect(() => { loadBakerData(); }, [loadBakerData]);
 

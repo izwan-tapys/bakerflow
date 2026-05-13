@@ -34,8 +34,8 @@ export default function SettingsPage() {
     setSettings(prev => ({ ...prev, [field]: value }));
   };
 
-  const shopUrl = typeof window !== 'undefined' ? `${window.location.origin}/order` : '';
-
+  const shopSlug = settings.shop_name ? settings.shop_name.toLowerCase().replace(/\s+/g, '-') : '';
+  const shopUrl = typeof window !== 'undefined' ? `${window.location.origin}/${shopSlug}` : '';
   return (
     <div className="space-y-6 pb-4">
       <div>
