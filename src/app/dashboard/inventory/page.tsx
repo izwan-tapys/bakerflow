@@ -358,21 +358,24 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
     if (!finalQty || !finalTotalVal) return;
     
     setLoading(true);
-    let finalCostPerBaseUnit = finalTotalVal / finalQty;
-    
+    const isKgToG = (isBulk ? packSizeUnit : purchaseUnit) === 'kg' && ingredient.unit === 'g';
+    const isGToKg = (isBulk ? packSizeUnit : purchaseUnit) === 'g' && ingredient.unit === 'kg';
+    const isLToMl = (isBulk ? packSizeUnit : purchaseUnit) === 'L' && ingredient.unit === 'ml';
+    const isMlToL = (isBulk ? packSizeUnit : purchaseUnit) === 'ml' && ingredient.unit === 'L';
+
     if (isBulk) {
       let sizeInBase = Number(packSize);
-      if ((packSizeUnit === 'kg' && ingredient.unit === 'g') || (packSizeUnit === 'L' && ingredient.unit === 'ml')) {
-        sizeInBase = Number(packSize) * 1000;
-      }
+      if (isKgToG || isLToMl) sizeInBase = Number(packSize) * 1000;
+      if (isGToKg || isMlToL) sizeInBase = Number(packSize) / 1000;
+      
       finalQty = Number(numPacks) * sizeInBase;
-      finalCostPerBaseUnit = Number(finalTotalVal) / finalQty;
     } else {
-      if ((purchaseUnit === 'kg' && ingredient.unit === 'g') || (purchaseUnit === 'L' && ingredient.unit === 'ml')) {
-        finalQty = finalQty * 1000;
-        finalCostPerBaseUnit = (finalTotalVal / finalQty) / 1000;
-      }
+      if (isKgToG || isLToMl) finalQty = Number(qty) * 1000;
+      else if (isGToKg || isMlToL) finalQty = Number(qty) / 1000;
+      else finalQty = Number(qty);
     }
+
+    finalCostPerBaseUnit = finalTotalVal / finalQty;
     
     await onRestock(ingredient, finalQty, finalCostPerBaseUnit);
     onClose();
