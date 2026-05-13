@@ -18,34 +18,79 @@ const STATUS_FILTERS: { label: string; value: OrderStatus | 'all' }[] = [
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  
+  // Manual Order State
+  const [showManual, setShowManual] = useState(false);
+  const [manualForm, setManualForm] = useState({
+    customer_name: '',
+    product_id: '',
+    quantity: 1,
+    delivery_date: new Date().toISOString().split('T')[0],
+    delivery_time: '15:00',
+    notes: '',
+    payment_status: 'unpaid' as const
+  });
 
-  const loadOrders = useCallback(async () => {
+  const loadData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    let query = supabase
-      .from('orders')
-      .select('*')
-      .eq('baker_id', user.id)
-      .order('created_at', { ascending: false });
+    const [ordersRes, productsRes] = await Promise.all([
+      supabase.from('orders').select('*').eq('baker_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('products').select('*').eq('baker_id', user.id).eq('is_active', true)
+    ]);
 
-    if (filter !== 'all') {
-      query = query.eq('status', filter);
-    }
-
-    const { data } = await query;
-    setOrders(data || []);
+    setOrders(ordersRes.data || []);
+    setProducts(productsRes.data || []);
     setLoading(false);
-  }, [filter]);
+  }, []);
 
-  useEffect(() => { loadOrders(); }, [loadOrders]);
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleAddManualOrder = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const product = products.find(p => p.id === manualForm.product_id);
+    if (!product) return;
+
+    const total_amount = product.price * manualForm.quantity;
+
+    await supabase.from('orders').insert({
+      baker_id: user.id,
+      customer_name: manualForm.customer_name,
+      product_id: product.id,
+      product_name: product.name,
+      quantity: manualForm.quantity,
+      total_amount,
+      payment_status: manualForm.payment_status,
+      delivery_date: manualForm.delivery_date,
+      delivery_time: manualForm.delivery_time,
+      status: 'approved', // Manual orders are usually already approved
+      notes: manualForm.notes,
+      order_number: `M-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
+    });
+
+    setShowManual(false);
+    setManualForm({
+      customer_name: '',
+      product_id: '',
+      quantity: 1,
+      delivery_date: new Date().toISOString().split('T')[0],
+      delivery_time: '15:00',
+      notes: '',
+      payment_status: 'unpaid'
+    });
+    loadData();
+  };
 
   const handleStatusChange = async (orderId: string, status: OrderStatus) => {
     await updateOrderStatus(orderId, status);
-    loadOrders();
+    loadData();
   };
 
   const filtered = orders.filter(o =>
@@ -56,10 +101,79 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-5 pb-4">
-      <div>
-        <h1 className="text-2xl font-extrabold text-foreground">Orders</h1>
-        <p className="text-foreground/50 text-sm">Manage all your customer orders</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-foreground">Orders 📝</h1>
+          <p className="text-foreground/50 text-sm">Manage all your customer orders</p>
+        </div>
+        <button 
+          onClick={() => setShowManual(true)}
+          className="h-10 px-4 bg-primary text-white rounded-xl font-bold text-sm shadow-md shadow-primary/20 hover:scale-105 transition-all"
+        >
+          + Manual Order
+        </button>
       </div>
+
+      {/* Manual Order Modal */}
+      {showManual && (
+        <div className="bg-white rounded-2xl border-2 border-primary/20 p-5 space-y-4 shadow-xl">
+          <p className="font-black text-foreground">Add Manual Order</p>
+          
+          <div className="space-y-3">
+            <div>
+              <label className="text-[10px] font-black uppercase text-foreground/40">Customer Name</label>
+              <input value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})}
+                className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-black uppercase text-foreground/40">Product</label>
+                <select value={manualForm.product_id} onChange={e => setManualForm({...manualForm, product_id: e.target.value})}
+                  className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold bg-white">
+                  <option value="">Select Product</option>
+                  {products.map(p => <option key={p.id} value={p.id}>{p.name} (RM{p.price})</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase text-foreground/40">Quantity</label>
+                <input type="number" value={manualForm.quantity} onChange={e => setManualForm({...manualForm, quantity: +e.target.value})}
+                  className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-black uppercase text-foreground/40">Date</label>
+                <input type="date" value={manualForm.delivery_date} onChange={e => setManualForm({...manualForm, delivery_date: e.target.value})}
+                  className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase text-foreground/40">Payment</label>
+                <select value={manualForm.payment_status} onChange={e => setManualForm({...manualForm, payment_status: e.target.value as any})}
+                  className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold bg-white">
+                  <option value="unpaid">Unpaid</option>
+                  <option value="paid">Paid</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-black uppercase text-foreground/40">Special Note (Optional)</label>
+              <textarea value={manualForm.notes} onChange={e => setManualForm({...manualForm, notes: e.target.value})} rows={2}
+                className="w-full px-3 py-2 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold resize-none" />
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button onClick={() => setShowManual(false)} className="flex-1 h-11 rounded-xl border-2 border-muted font-bold text-sm">Cancel</button>
+            <button onClick={handleAddManualOrder} disabled={!manualForm.customer_name || !manualForm.product_id}
+              className="flex-2 bg-primary text-white rounded-xl font-bold text-sm px-6 disabled:opacity-50 shadow-md shadow-primary/20">
+              Save Order
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative">
@@ -103,7 +217,7 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map(order => (
-            <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} onRefresh={loadOrders} />
+            <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} onRefresh={loadData} />
           ))}
         </div>
       )}
