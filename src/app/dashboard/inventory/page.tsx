@@ -203,7 +203,11 @@ export default function InventoryPage() {
                 </tr>
               ) : (
                 ingredients.map(ing => {
-                  const isLow = ing.current_stock <= ing.low_stock_threshold;
+                  const committed = shoppingList.find(s => s.ingredient.id === ing.id)?.needed || 0;
+                  const available = ing.current_stock - committed;
+                  const isLow = available <= ing.low_stock_threshold;
+                  const isNegative = available < 0;
+                  
                   return (
                     <tr 
                       key={ing.id} 
@@ -213,13 +217,21 @@ export default function InventoryPage() {
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
                           <p className="font-bold text-foreground">{ing.name}</p>
-                          {isLow && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Low Stock" />}
+                          {isLow && !isNegative && <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" title="Low Stock" />}
+                          {isNegative && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Insufficient Stock" />}
                         </div>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <p className={`font-black ${ing.current_stock < 0 ? 'text-red-600' : isLow ? 'text-orange-500' : 'text-foreground/70'}`}>
-                          {ing.current_stock.toLocaleString()}<span className="text-[10px] font-bold ml-0.5 opacity-40">{ing.unit}</span>
-                        </p>
+                        <div className="flex flex-col items-end">
+                          <p className={`font-black ${isNegative ? 'text-red-600' : isLow ? 'text-orange-500' : 'text-foreground/70'}`}>
+                            {available.toLocaleString()}<span className="text-[10px] font-bold ml-0.5 opacity-40">{ing.unit}</span>
+                          </p>
+                          {committed > 0 && (
+                            <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-tighter">
+                              On Hand: {ing.current_stock}{ing.unit}
+                            </p>
+                          )}
+                        </div>
                       </td>
                       <td className="px-5 py-4 text-right font-bold text-primary/80">
                         RM {ing.avg_cost_per_unit.toFixed(4)}
