@@ -28,6 +28,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 interface OrderCardProps {
   order: Order;
   onStatusChange?: (orderId: string, status: OrderStatus) => void;
+  onEdit?: (order: Order) => void;
   onRefresh?: () => void;
 }
 
@@ -95,7 +96,18 @@ export function OrderCard({ order, onStatusChange, onRefresh }: OrderCardProps) 
           <p className="text-sm font-bold text-foreground/60">{order.product_name} × {order.quantity}</p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <StatusBadge status={order.status} />
+          <div className="flex items-center gap-1">
+            {onEdit && (
+              <button 
+                onClick={() => onEdit(order)}
+                className="p-1.5 hover:bg-muted rounded-lg text-foreground/40 transition-colors"
+                title="Edit Order"
+              >
+                ✏️
+              </button>
+            )}
+            <StatusBadge status={order.status} />
+          </div>
         </div>
       </div>
 

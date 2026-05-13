@@ -23,8 +23,9 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   
-  // Manual Order State
+  // Modal State
   const [showManual, setShowManual] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [manualForm, setManualForm] = useState({
     customer_name: '',
     customer_phone: '',
@@ -103,6 +104,56 @@ export default function OrdersPage() {
     loadData();
   };
 
+  const handleEditOrder = (order: Order) => {
+    setEditingOrder(order);
+    setManualForm({
+      customer_name: order.customer_name,
+      customer_phone: order.customer_phone,
+      customer_address: order.customer_address,
+      product_id: order.product_id || '',
+      quantity: order.quantity,
+      delivery_date: order.delivery_date,
+      delivery_time: order.delivery_time || '15:00',
+      special_notes: order.special_notes || '',
+      payment_status: order.payment_status
+    });
+    setShowManual(true);
+  };
+
+  const handleUpdateOrder = async () => {
+    if (!editingOrder) return;
+    const product = products.find(p => p.id === manualForm.product_id);
+    if (!product) return;
+
+    const total_amount = product.price * manualForm.quantity;
+
+    const { error } = await supabase.from('orders')
+      .update({
+        customer_name: manualForm.customer_name,
+        customer_phone: manualForm.customer_phone,
+        customer_address: manualForm.customer_address,
+        product_id: product.id,
+        product_name: product.name,
+        quantity: manualForm.quantity,
+        unit_price: product.price,
+        total_amount,
+        payment_status: manualForm.payment_status,
+        delivery_date: manualForm.delivery_date,
+        delivery_time: manualForm.delivery_time,
+        special_notes: manualForm.special_notes,
+      })
+      .eq('id', editingOrder.id);
+
+    if (error) {
+      alert('Gagal update: ' + error.message);
+      return;
+    }
+
+    setShowManual(false);
+    setEditingOrder(null);
+    loadData();
+  };
+
   const handleStatusChange = async (orderId: string, status: OrderStatus) => {
     await updateOrderStatus(orderId, status);
     loadData();
@@ -132,7 +183,7 @@ export default function OrdersPage() {
       {/* Manual Order Modal */}
       {showManual && (
         <div className="bg-white rounded-2xl border-2 border-primary/20 p-5 space-y-4 shadow-xl">
-          <p className="font-black text-foreground">Add Manual Order</p>
+          <p className="font-black text-foreground">{editingOrder ? 'Edit Order' : 'Add Manual Order'}</p>
           
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
@@ -194,10 +245,10 @@ export default function OrdersPage() {
           </div>
 
           <div className="flex gap-2 pt-2">
-            <button onClick={() => setShowManual(false)} className="flex-1 h-11 rounded-xl border-2 border-muted font-bold text-sm">Cancel</button>
-            <button onClick={handleAddManualOrder} disabled={!manualForm.customer_name || !manualForm.product_id}
+            <button onClick={() => { setShowManual(false); setEditingOrder(null); }} className="flex-1 h-11 rounded-xl border-2 border-muted font-bold text-sm">Cancel</button>
+            <button onClick={editingOrder ? handleUpdateOrder : handleAddManualOrder} disabled={!manualForm.customer_name || !manualForm.product_id}
               className="flex-2 bg-primary text-white rounded-xl font-bold text-sm px-6 disabled:opacity-50 shadow-md shadow-primary/20">
-              Save Order
+              {editingOrder ? 'Update Order' : 'Save Order'}
             </button>
           </div>
         </div>
@@ -245,7 +296,7 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map(order => (
-            <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} onRefresh={loadData} />
+            <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} onEdit={handleEditOrder} onRefresh={loadData} />
           ))}
         </div>
       )}
