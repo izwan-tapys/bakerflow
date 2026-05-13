@@ -573,17 +573,17 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
             <div className="grid grid-cols-3 gap-2">
               <div>
                 <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Prep</label>
-                <input type="number" value={times.prep} onChange={e => setTimes({...times, prep: +e.target.value})}
+                <input type="number" value={times.prep || ''} placeholder="0" onChange={e => setTimes({...times, prep: e.target.value === '' ? 0 : +e.target.value})}
                   className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
               </div>
               <div>
                 <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Bake</label>
-                <input type="number" value={times.bake} onChange={e => setTimes({...times, bake: +e.target.value})}
+                <input type="number" value={times.bake || ''} placeholder="0" onChange={e => setTimes({...times, bake: e.target.value === '' ? 0 : +e.target.value})}
                   className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
               </div>
               <div>
                 <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Cool</label>
-                <input type="number" value={times.cool} onChange={e => setTimes({...times, cool: +e.target.value})}
+                <input type="number" value={times.cool || ''} placeholder="0" onChange={e => setTimes({...times, cool: e.target.value === '' ? 0 : +e.target.value})}
                   className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
               </div>
             </div>
@@ -635,7 +635,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
             <div className="flex gap-2 items-end">
               <div className="flex-1">
                 <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Qty</label>
-                <input type="number" placeholder="0" value={form.quantity_needed || ''} onChange={e => setForm({ ...form, quantity_needed: +e.target.value })}
+                <input type="number" placeholder="0" value={form.quantity_needed || ''} onChange={e => setForm({ ...form, quantity_needed: e.target.value === '' ? 0 : +e.target.value })}
                   className="w-full h-10 px-2 rounded-xl border border-muted text-sm focus:border-primary outline-none bg-white" />
               </div>
               <div className="w-20">
