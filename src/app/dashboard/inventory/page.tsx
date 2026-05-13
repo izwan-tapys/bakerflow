@@ -369,29 +369,26 @@ function RestockModal({ ingredient, onRestock }: { ingredient: Ingredient; onRes
   return (
     <div className="mt-3 bg-muted/30 rounded-xl p-3 border border-muted/50 space-y-3">
       <div className="flex justify-between items-center">
-        <p className="text-xs font-bold text-foreground">Restock {ingredient.name}</p>
+        <p className="text-[10px] font-black uppercase text-foreground/40 tracking-widest">Restock {ingredient.name}</p>
         <div className="flex bg-white rounded-lg p-0.5 border border-muted">
-          <button onClick={() => setInputMode('total')} className={`px-2 py-0.5 text-[9px] font-bold rounded ${inputMode === 'total' ? 'bg-primary text-white' : 'text-foreground/40'}`}>Total RM</button>
-          <button onClick={() => setInputMode('unit')} className={`px-2 py-0.5 text-[9px] font-bold rounded ${inputMode === 'unit' ? 'bg-primary text-white' : 'text-foreground/40'}`}>Unit RM</button>
+          <button onClick={() => setInputMode('total')} className={`px-2 py-0.5 text-[8px] font-black rounded uppercase ${inputMode === 'total' ? 'bg-primary text-white' : 'text-foreground/40'}`}>Total</button>
+          <button onClick={() => setInputMode('unit')} className={`px-2 py-0.5 text-[8px] font-black rounded uppercase ${inputMode === 'unit' ? 'bg-primary text-white' : 'text-foreground/40'}`}>Unit</button>
         </div>
       </div>
       
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold text-foreground/40 uppercase">Qty Bought</label>
-          <div className="flex gap-1">
-            <input type="number" placeholder="0" value={qty} onChange={e => setQty(e.target.value === '' ? '' : +e.target.value)}
-              className="flex-1 h-8 px-2 rounded-lg border border-muted text-xs focus:outline-none bg-white font-bold" />
-            <select value={purchaseUnit} onChange={e => setPurchaseUnit(e.target.value)}
-              className="w-12 h-8 px-1 rounded-lg border border-muted text-[10px] font-bold bg-white">
-              {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
-            </select>
-          </div>
-        </div>
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold text-foreground/40 uppercase">
-            {inputMode === 'total' ? 'Total Paid (RM)' : `Price per ${purchaseUnit}`}
-          </label>
+      <div className="flex items-center gap-1">
+        <input type="number" placeholder="Qty" value={qty} onChange={e => setQty(e.target.value === '' ? '' : +e.target.value)}
+          className="w-16 h-9 px-2 rounded-lg border border-muted text-xs font-black focus:outline-none bg-white text-center" />
+        
+        <select value={purchaseUnit} onChange={e => setPurchaseUnit(e.target.value)}
+          className="w-14 h-9 px-1 rounded-lg border border-muted text-[10px] font-black bg-white">
+          {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
+        </select>
+
+        <span className="text-foreground/20 font-light mx-1">~</span>
+
+        <div className="flex-1 relative">
+          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground/30">RM</span>
           <input 
             type="number" 
             placeholder="0.00"
@@ -401,28 +398,23 @@ function RestockModal({ ingredient, onRestock }: { ingredient: Ingredient; onRes
               if (inputMode === 'total') setTotalPrice(val);
               else setCostPerUnit(val);
             }}
-            className="w-full h-8 px-2 rounded-lg border border-muted text-xs focus:outline-none bg-white font-bold" 
+            className="w-full h-9 pl-7 pr-2 rounded-lg border border-muted text-xs font-black focus:outline-none bg-white" 
           />
         </div>
       </div>
 
-      {/* Summary / Calculation Info */}
-      <div className="bg-white/50 p-2 rounded-lg border border-muted/50 space-y-1">
-        <div className="flex justify-between items-center text-[10px]">
-          <span className="text-foreground/40 font-medium italic">Calculated Cost:</span>
-          <span className="font-black text-primary">RM {Number(costPerUnit || 0).toFixed(4)} / {purchaseUnit}</span>
-        </div>
-        {purchaseUnit !== ingredient.unit && (
-          <div className="flex justify-between items-center text-[10px]">
-            <span className="text-foreground/40 font-medium italic">Base Unit Cost:</span>
-            <span className="font-black text-orange-600">RM {Number((purchaseUnit === 'kg' || purchaseUnit === 'L') ? (Number(costPerUnit || 0) / 1000) : (costPerUnit || 0)).toFixed(4)} / {ingredient.unit}</span>
-          </div>
-        )}
+      <div className="flex justify-between items-center bg-white/40 px-2 py-1 rounded-lg border border-muted/30">
+        <p className="text-[9px] font-bold text-foreground/40 italic">
+          {purchaseUnit !== ingredient.unit ? `Auto-convert to ${ingredient.unit}` : 'Price update'}
+        </p>
+        <p className="text-[10px] font-black text-primary">
+          RM {Number((purchaseUnit === 'kg' || purchaseUnit === 'L') ? (Number(costPerUnit || 0) / 1000) : (costPerUnit || 0)).toFixed(4)}/{ingredient.unit}
+        </p>
       </div>
 
       <div className="flex gap-2">
-        <button onClick={() => setOpen(false)} className="flex-1 h-8 rounded-lg border border-muted text-[10px] font-bold">Cancel</button>
-        <button onClick={handleSubmit} disabled={!qty || !costPerUnit || Number(qty) <= 0} className="flex-1 h-8 rounded-lg bg-primary text-white text-[10px] font-bold disabled:opacity-50 shadow-md shadow-primary/20">Confirm Restock</button>
+        <button onClick={() => setOpen(false)} className="flex-1 h-8 rounded-lg border border-muted text-[10px] font-black uppercase text-foreground/40 hover:bg-white transition-all">Cancel</button>
+        <button onClick={handleSubmit} disabled={!qty || !costPerUnit || Number(qty) <= 0} className="flex-1 h-8 rounded-lg bg-foreground text-white text-[10px] font-black uppercase disabled:opacity-50 shadow-sm">Confirm</button>
       </div>
     </div>
   );
