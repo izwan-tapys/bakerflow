@@ -56,6 +56,32 @@ export async function getProductionOrders(bakerId: string): Promise<Order[]> {
 }
 
 export async function updateOrderStatus(orderId: string, status: Order['status']): Promise<boolean> {
+  // 1. Get current order to check status and product info
+  const { data: order } = await supabase.from('orders').select('*').eq('id', orderId).single();
+  if (!order) return false;
+
+  // 2. Logic: If finishing production (Mark Ready), deduct actual stock
+  // Only deduct if transitioning to 'ready' from an active state and hasn't been deducted before
+  const isTransitioningToReady = status === 'ready' && !['ready', 'otw', 'completed'].includes(order.status);
+  
+  if (isTransitioningToReady && order.product_id) {
+    const { data: recipes } = await supabase.from('recipes').select('*').eq('product_id', order.product_id);
+    
+    if (recipes && recipes.length > 0) {
+      for (const recipe of recipes) {
+        const amountToDeduct = recipe.quantity_needed * order.quantity;
+        
+        // Update ingredient stock using atomic decrement (or fetch and update)
+        const { data: currentIng } = await supabase.from('ingredients').select('current_stock').eq('id', recipe.ingredient_id).single();
+        if (currentIng) {
+          await supabase.from('ingredients')
+            .update({ current_stock: Math.max(0, currentIng.current_stock - amountToDeduct) })
+            .eq('id', recipe.ingredient_id);
+        }
+      }
+    }
+  }
+
   const { error } = await supabase
     .from('orders')
     .update({ status, updated_at: new Date().toISOString() })
