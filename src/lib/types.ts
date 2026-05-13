@@ -32,6 +32,9 @@ export interface Product {
   price: number;
   image_url?: string;
   is_active: boolean;
+  prep_time: number;
+  bake_time: number;
+  cool_time: number;
 }
 
 export type OrderStatus = 'pending' | 'approved' | 'production' | 'ready' | 'otw' | 'completed' | 'cancelled';

@@ -53,6 +53,12 @@ CREATE TABLE products (
   price DECIMAL(8, 2) NOT NULL,
   image_url TEXT,
   is_active BOOLEAN DEFAULT TRUE,
+  
+  -- Time Management (minutes)
+  prep_time INT DEFAULT 30,
+  bake_time INT DEFAULT 45,
+  cool_time INT DEFAULT 60,
+
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

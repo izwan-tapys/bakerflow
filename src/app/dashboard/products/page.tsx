@@ -10,6 +10,9 @@ interface Product {
   price: number;
   is_active: boolean;
   cogs?: number;
+  prep_time: number;
+  bake_time: number;
+  cool_time: number;
 }
 
 interface Ingredient {
@@ -42,7 +45,7 @@ export default function ProductsPage() {
   // Add Product State
   const [showAdd, setShowAdd] = useState(false);
   const [savingProduct, setSavingProduct] = useState(false);
-  const [form, setForm] = useState({ name: '', description: '', price: 0 });
+  const [form, setForm] = useState({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 });
   const [pendingRecipes, setPendingRecipes] = useState<PendingRecipe[]>([]);
   
   // Inline Add Ingredient State
@@ -127,7 +130,10 @@ export default function ProductsPage() {
       name: form.name,
       description: form.description,
       price: form.price,
-      is_active: true
+      is_active: true,
+      prep_time: form.prep_time,
+      bake_time: form.bake_time,
+      cool_time: form.cool_time
     }).select().single();
 
     if (prodError || !prodData) {
@@ -164,7 +170,7 @@ export default function ProductsPage() {
       }
     }
 
-    setForm({ name: '', description: '', price: 0 });
+    setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 });
     setPendingRecipes([]);
     setShowAdd(false);
     setSavingProduct(false);
@@ -218,6 +224,23 @@ export default function ProductsPage() {
                 <label className="text-xs font-semibold text-foreground/70 block mb-1">Price (RM)</label>
                 <input type="number" placeholder="0.00" value={form.price || ''} onChange={e => setForm({ ...form, price: +e.target.value })}
                   className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none" />
+              </div>
+              <div className="col-span-2 grid grid-cols-3 gap-2 mt-1">
+                <div>
+                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Prep (Min)</label>
+                  <input type="number" value={form.prep_time} onChange={e => setForm({...form, prep_time: +e.target.value})}
+                    className="w-full h-9 px-2 rounded-lg border border-muted focus:border-primary focus:outline-none font-bold text-xs" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Bake (Min)</label>
+                  <input type="number" value={form.bake_time} onChange={e => setForm({...form, bake_time: +e.target.value})}
+                    className="w-full h-9 px-2 rounded-lg border border-muted focus:border-primary focus:outline-none font-bold text-xs" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Cool (Min)</label>
+                  <input type="number" value={form.cool_time} onChange={e => setForm({...form, cool_time: +e.target.value})}
+                    className="w-full h-9 px-2 rounded-lg border border-muted focus:border-primary focus:outline-none font-bold text-xs" />
+                </div>
               </div>
             </div>
           </div>
