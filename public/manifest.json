@@ -1,0 +1,27 @@
+{
+  "name": "BakerFlow",
+  "short_name": "BakerFlow",
+  "description": "The all-in-one bakery management app for home bakers.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#FDF8F3",
+  "theme_color": "#8B5E3C",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["business", "productivity"],
+  "lang": "en-MY"
+}
