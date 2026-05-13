@@ -601,7 +601,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
                </div>
              ))
             }
-        </div>
+          </div>
 
         {/* Add New Item */}
         <div className="bg-muted/30 p-3 rounded-xl border border-muted/50 space-y-3">
