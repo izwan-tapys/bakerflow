@@ -35,7 +35,7 @@ export default function AdminDashboardPage() {
     startOfMonth.setHours(0, 0, 0, 0);
 
     const [settingsRes, todayRes, pendingRes, productionRes, revenueRes] = await Promise.all([
-      supabase.from('baker_settings').select('shop_name').eq('baker_id', user.id).single(),
+      supabase.from('baker_settings').select('shop_name').eq('baker_id', user.id).limit(1).single(),
       supabase.from('orders').select('*').eq('baker_id', user.id).eq('delivery_date', today).order('created_at'),
       supabase.from('orders').select('*').eq('baker_id', user.id).eq('status', 'pending').order('created_at', { ascending: false }),
       supabase.from('orders').select('*').eq('baker_id', user.id).in('status', ['approved', 'production', 'ready']),

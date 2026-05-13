@@ -15,7 +15,7 @@ export default function SettingsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setUserId(user.id);
-    const { data } = await supabase.from('baker_settings').select('*').eq('baker_id', user.id).single();
+    const { data } = await supabase.from('baker_settings').select('*').eq('baker_id', user.id).limit(1).single();
     if (data) setSettings(data);
     setLoading(false);
   }, []);

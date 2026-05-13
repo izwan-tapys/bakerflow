@@ -26,11 +26,16 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
       // Check setup status for all private routes EXCEPT setup itself
       if (!pathname.startsWith('/dashboard/setup')) {
-        const { data: settings } = await supabase
+        const { data: settings, error: settingsError } = await supabase
           .from('baker_settings')
           .select('is_setup_complete')
           .eq('baker_id', session.user.id)
+          .limit(1)
           .single();
+
+        if (settingsError && settingsError.code !== 'PGRST116') {
+          console.error("AuthGuard settings error:", settingsError);
+        }
 
         if (!settings || !settings.is_setup_complete) {
           router.push('/dashboard/setup');
