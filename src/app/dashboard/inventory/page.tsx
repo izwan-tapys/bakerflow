@@ -227,7 +227,7 @@ export default function InventoryPage() {
 
       {/* Add Ingredient Modal */}
       {showAdd && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
           <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-6 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
             <div className="flex justify-between items-center mb-6 flex-none">
               <p className="font-black text-xl text-primary">New Ingredient</p>
@@ -274,7 +274,7 @@ export default function InventoryPage() {
               </div>
             </div>
 
-            <div className="pt-6 flex-none">
+            <div className="pt-6 pb-8 md:pb-0 flex-none">
               <button onClick={handleAddIngredient} className="w-full h-14 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20">
                 Create Ingredient
               </button>
@@ -484,7 +484,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
       <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-6 shadow-2xl flex flex-col max-h-[95vh] md:max-h-[85vh] overflow-hidden">
         <div className="flex justify-between items-start flex-none mb-4">
           <div>
@@ -593,9 +593,11 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
               </div>
             </div>
 
-            <button onClick={handleRestockSubmit} disabled={loading || !displayQty || !displayTotal} className="w-full h-14 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20 disabled:opacity-50">
-              {loading ? 'Processing...' : 'Confirm Restock'}
-            </button>
+            <div className="pt-6 pb-8 md:pb-0 flex-none">
+              <button onClick={handleRestockSubmit} disabled={loading || !displayQty || !displayTotal} className="w-full h-14 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20 disabled:opacity-50">
+                {loading ? 'Processing...' : 'Confirm Restock'}
+              </button>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -663,7 +665,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
               )}
             </div>
             
-            <div className="space-y-2 pt-4">
+            <div className="pt-6 pb-8 md:pb-0 flex-none">
               <button onClick={handleEditSubmit} disabled={loading} className="w-full h-12 bg-foreground text-white rounded-2xl font-black shadow-lg">
                 {loading ? 'Saving...' : 'Update Details'}
               </button>
