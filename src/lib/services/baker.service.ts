@@ -60,26 +60,27 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
   const { data: order } = await supabase.from('orders').select('*').eq('id', orderId).single();
   if (!order) return { success: false, message: 'Order tidak dijumpai.' };
 
-  // 2. Pre-check: If starting production, check physical stock sufficiency first
-  if (status === 'production') {
+  // 2. Pre-check: If starting production or marking ready, check physical stock sufficiency first
+  if (status === 'production' || status === 'ready') {
+    // Only check if product_id exists. If manual order with no product link, we can't check recipes.
     if (order.product_id) {
       const { data: recipes } = await supabase
         .from('recipes')
-        .select('*, ingredient:ingredients(name, current_stock, unit)')
+        .select('*, ingredient:ingredients(id, name, current_stock, unit)')
         .eq('product_id', order.product_id);
 
       if (recipes && recipes.length > 0) {
         const missing = recipes.filter(r => {
           const needed = r.quantity_needed * order.quantity;
           const current = (r.ingredient as any)?.current_stock || 0;
-          return current < needed;
+          return current < (needed - 0.001); // Small buffer for float precision
         });
 
         if (missing.length > 0) {
           const missingItems = missing.map(m => 
-            `${(m.ingredient as any)?.name} (Perlu: ${m.quantity_needed * order.quantity}${(m.ingredient as any)?.unit}, Ada kat dapur: ${(m.ingredient as any)?.current_stock}${(m.ingredient as any)?.unit})`
+            `${(m.ingredient as any)?.name} (Perlu: ${m.quantity_needed * order.quantity}${(m.ingredient as any)?.unit}, Ada: ${(m.ingredient as any)?.current_stock}${(m.ingredient as any)?.unit})`
           ).join('\n');
-          return { success: false, message: `Bahan tidak mencukupi untuk mula baking:\n${missingItems}` };
+          return { success: false, message: `Bahan tak cukup untuk ${status === 'production' ? 'mula baking' : 'siapkan order'}:\n${missingItems}` };
         }
       }
     }
