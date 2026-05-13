@@ -55,13 +55,37 @@ export async function getProductionOrders(bakerId: string): Promise<Order[]> {
   return data || [];
 }
 
-export async function updateOrderStatus(orderId: string, status: Order['status']): Promise<boolean> {
+export async function updateOrderStatus(orderId: string, status: Order['status']): Promise<{ success: boolean; message?: string }> {
   // 1. Get current order to check status and product info
   const { data: order } = await supabase.from('orders').select('*').eq('id', orderId).single();
-  if (!order) return false;
+  if (!order) return { success: false, message: 'Order tidak dijumpai.' };
 
-  // 2. Logic: If finishing production (Mark Ready), deduct actual stock
-  // Only deduct if transitioning to 'ready' from an active state and hasn't been deducted before
+  // 2. Pre-check: If starting production, check stock sufficiency first
+  if (status === 'production') {
+    if (order.product_id) {
+      const { data: recipes } = await supabase
+        .from('recipes')
+        .select('*, ingredient:ingredients(name, current_stock, unit)')
+        .eq('product_id', order.product_id);
+
+      if (recipes && recipes.length > 0) {
+        const missing = recipes.filter(r => {
+          const needed = r.quantity_needed * order.quantity;
+          const current = (r.ingredient as any)?.current_stock || 0;
+          return current < needed;
+        });
+
+        if (missing.length > 0) {
+          const missingItems = missing.map(m => 
+            `${(m.ingredient as any)?.name} (Perlu: ${m.quantity_needed * order.quantity}${(m.ingredient as any)?.unit}, Ada: ${(m.ingredient as any)?.current_stock}${(m.ingredient as any)?.unit})`
+          ).join('\n');
+          return { success: false, message: `Bahan tidak mencukupi:\n${missingItems}` };
+        }
+      }
+    }
+  }
+
+  // 3. Logic: If finishing production (Mark Ready), deduct actual stock
   const isTransitioningToReady = status === 'ready' && !['ready', 'otw', 'completed'].includes(order.status);
   
   if (isTransitioningToReady && order.product_id) {
@@ -70,8 +94,6 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
     if (recipes && recipes.length > 0) {
       for (const recipe of recipes) {
         const amountToDeduct = recipe.quantity_needed * order.quantity;
-        
-        // Update ingredient stock using atomic decrement (or fetch and update)
         const { data: currentIng } = await supabase.from('ingredients').select('current_stock').eq('id', recipe.ingredient_id).single();
         if (currentIng) {
           await supabase.from('ingredients')
@@ -87,7 +109,8 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
     .update({ status, updated_at: new Date().toISOString() })
     .eq('id', orderId);
 
-  return !error;
+  if (error) return { success: false, message: error.message };
+  return { success: true };
 }
 
 export async function updatePaymentStatus(orderId: string, payment_status: 'unpaid' | 'paid'): Promise<boolean> {

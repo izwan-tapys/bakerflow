@@ -154,7 +154,11 @@ export default function OrdersPage() {
   };
 
   const handleStatusChange = async (orderId: string, status: OrderStatus) => {
-    await updateOrderStatus(orderId, status);
+    const result = await updateOrderStatus(orderId, status);
+    if (!result.success) {
+      alert(result.message);
+      return;
+    }
     loadData();
   };
 
