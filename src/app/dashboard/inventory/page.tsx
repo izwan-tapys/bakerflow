@@ -302,7 +302,28 @@ export default function InventoryPage() {
 function RestockModal({ ingredient, onRestock }: { ingredient: Ingredient; onRestock: (i: Ingredient, qty: number, cost: number) => void }) {
   const [open, setOpen] = useState(false);
   const [qty, setQty] = useState<number | ''>('');
+  const [purchaseUnit, setPurchaseUnit] = useState(ingredient.unit);
   const [cost, setCost] = useState<number | ''>(ingredient.avg_cost_per_unit);
+
+  const handleSubmit = () => {
+    if (qty === '' || cost === '') return;
+    
+    let finalQty = qty;
+    let finalCostPerBaseUnit = cost;
+
+    // Conversion Logic
+    if (purchaseUnit === 'kg' && ingredient.unit === 'g') {
+      finalQty = qty * 1000;
+      finalCostPerBaseUnit = cost / 1000;
+    } else if (purchaseUnit === 'L' && ingredient.unit === 'ml') {
+      finalQty = qty * 1000;
+      finalCostPerBaseUnit = cost / 1000;
+    }
+
+    onRestock(ingredient, finalQty, finalCostPerBaseUnit);
+    setOpen(false);
+    setQty('');
+  };
 
   if (!open) return (
     <button onClick={() => setOpen(true)} className="mt-3 w-full h-9 rounded-xl border border-dashed border-primary/30 text-primary/60 text-xs font-bold hover:border-primary hover:bg-primary/5 hover:text-primary transition-all">
@@ -313,22 +334,35 @@ function RestockModal({ ingredient, onRestock }: { ingredient: Ingredient; onRes
   return (
     <div className="mt-3 bg-muted/30 rounded-xl p-3 border border-muted/50 space-y-3">
       <p className="text-xs font-bold text-foreground">Restock {ingredient.name}</p>
+      
       <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="text-[10px] uppercase font-bold tracking-wide text-foreground/50">Quantity ({ingredient.unit})</label>
-          <input type="number" placeholder="0" value={qty} onChange={e => setQty(+e.target.value)} className="w-full h-9 px-2 rounded-lg border border-muted text-sm focus:border-primary focus:outline-none mt-1" />
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-foreground/40 uppercase">Qty Bought</label>
+          <div className="flex gap-1">
+            <input type="number" value={qty} onChange={e => setQty(e.target.value === '' ? '' : +e.target.value)}
+              className="flex-1 h-8 px-2 rounded-lg border border-muted text-xs focus:outline-none" />
+            <select value={purchaseUnit} onChange={e => setPurchaseUnit(e.target.value)}
+              className="w-12 h-8 px-1 rounded-lg border border-muted text-[10px] font-bold bg-white">
+              {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
+            </select>
+          </div>
         </div>
-        <div>
-          <label className="text-[10px] uppercase font-bold tracking-wide text-foreground/50">Cost per {ingredient.unit} (RM)</label>
-          <input type="number" placeholder="0.00" step="0.001" value={cost} onChange={e => setCost(+e.target.value)} className="w-full h-9 px-2 rounded-lg border border-muted text-sm focus:border-primary focus:outline-none mt-1" />
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-foreground/40 uppercase">Cost per {purchaseUnit}</label>
+          <input type="number" value={cost} onChange={e => setCost(e.target.value === '' ? '' : +e.target.value)}
+            className="w-full h-8 px-2 rounded-lg border border-muted text-xs focus:outline-none" />
         </div>
       </div>
-      <p className="text-xs text-foreground/60">
-        New Avg Cost: <strong className="text-primary">RM{Number(qty) > 0 ? (((ingredient.current_stock * ingredient.avg_cost_per_unit) + (Number(qty) * Number(cost))) / (ingredient.current_stock + Number(qty))).toFixed(4) : ingredient.avg_cost_per_unit.toFixed(4)}</strong>/{ingredient.unit}
-      </p>
+
+      {purchaseUnit !== ingredient.unit && (
+        <p className="text-[10px] text-orange-600 font-medium">
+          Note: Will convert to {ingredient.unit} automatically.
+        </p>
+      )}
+
       <div className="flex gap-2">
-        <button onClick={() => setOpen(false)} className="flex-1 h-8 rounded-lg border border-muted text-xs font-medium hover:bg-muted/50">Cancel</button>
-        <button onClick={() => { onRestock(ingredient, Number(qty), Number(cost)); setOpen(false); setQty(''); }} disabled={!qty || Number(qty) <= 0} className="flex-1 h-8 rounded-lg bg-primary text-white text-xs font-bold disabled:opacity-50">Confirm</button>
+        <button onClick={() => setOpen(false)} className="flex-1 h-8 rounded-lg border border-muted text-[10px] font-bold">Cancel</button>
+        <button onClick={handleSubmit} disabled={!qty || Number(qty) <= 0} className="flex-1 h-8 rounded-lg bg-primary text-white text-[10px] font-bold disabled:opacity-50">Confirm</button>
       </div>
     </div>
   );
