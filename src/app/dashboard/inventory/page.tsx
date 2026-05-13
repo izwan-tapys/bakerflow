@@ -323,26 +323,41 @@ function RestockModal({ ingredient, onRestock }: { ingredient: Ingredient; onRes
   const [open, setOpen] = useState(false);
   const [qty, setQty] = useState<number | ''>('');
   const [purchaseUnit, setPurchaseUnit] = useState(ingredient.unit);
-  const [cost, setCost] = useState<number | ''>(ingredient.avg_cost_per_unit);
+  const [totalPrice, setTotalPrice] = useState<number | ''>('');
+  const [costPerUnit, setCostPerUnit] = useState<number | ''>(ingredient.avg_cost_per_unit);
+  const [inputMode, setInputMode] = useState<'total' | 'unit'>('total');
+
+  // Auto-calculate unit cost when total price or qty changes
+  useEffect(() => {
+    if (inputMode === 'total' && qty && qty > 0 && totalPrice && totalPrice > 0) {
+      setCostPerUnit(totalPrice / qty);
+    }
+  }, [totalPrice, qty, inputMode]);
+
+  // Auto-calculate total price when unit cost or qty changes
+  useEffect(() => {
+    if (inputMode === 'unit' && qty && qty > 0 && costPerUnit && costPerUnit > 0) {
+      setTotalPrice(qty * costPerUnit);
+    }
+  }, [costPerUnit, qty, inputMode]);
 
   const handleSubmit = () => {
-    if (qty === '' || cost === '') return;
+    if (qty === '' || costPerUnit === '') return;
     
     let finalQty = qty;
-    let finalCostPerBaseUnit = cost;
+    let finalCostPerBaseUnit = costPerUnit;
 
-    // Conversion Logic
-    if (purchaseUnit === 'kg' && ingredient.unit === 'g') {
+    // Conversion Logic (Base Unit is g/ml etc)
+    if ((purchaseUnit === 'kg' && ingredient.unit === 'g') || (purchaseUnit === 'L' && ingredient.unit === 'ml')) {
       finalQty = qty * 1000;
-      finalCostPerBaseUnit = cost / 1000;
-    } else if (purchaseUnit === 'L' && ingredient.unit === 'ml') {
-      finalQty = qty * 1000;
-      finalCostPerBaseUnit = cost / 1000;
+      finalCostPerBaseUnit = costPerUnit / 1000;
     }
 
     onRestock(ingredient, finalQty, finalCostPerBaseUnit);
     setOpen(false);
     setQty('');
+    setTotalPrice('');
+    setCostPerUnit(ingredient.avg_cost_per_unit);
   };
 
   if (!open) return (
@@ -353,14 +368,20 @@ function RestockModal({ ingredient, onRestock }: { ingredient: Ingredient; onRes
 
   return (
     <div className="mt-3 bg-muted/30 rounded-xl p-3 border border-muted/50 space-y-3">
-      <p className="text-xs font-bold text-foreground">Restock {ingredient.name}</p>
+      <div className="flex justify-between items-center">
+        <p className="text-xs font-bold text-foreground">Restock {ingredient.name}</p>
+        <div className="flex bg-white rounded-lg p-0.5 border border-muted">
+          <button onClick={() => setInputMode('total')} className={`px-2 py-0.5 text-[9px] font-bold rounded ${inputMode === 'total' ? 'bg-primary text-white' : 'text-foreground/40'}`}>Total RM</button>
+          <button onClick={() => setInputMode('unit')} className={`px-2 py-0.5 text-[9px] font-bold rounded ${inputMode === 'unit' ? 'bg-primary text-white' : 'text-foreground/40'}`}>Unit RM</button>
+        </div>
+      </div>
       
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
           <label className="text-[10px] font-bold text-foreground/40 uppercase">Qty Bought</label>
           <div className="flex gap-1">
-            <input type="number" value={qty} onChange={e => setQty(e.target.value === '' ? '' : +e.target.value)}
-              className="flex-1 h-8 px-2 rounded-lg border border-muted text-xs focus:outline-none" />
+            <input type="number" placeholder="0" value={qty} onChange={e => setQty(e.target.value === '' ? '' : +e.target.value)}
+              className="flex-1 h-8 px-2 rounded-lg border border-muted text-xs focus:outline-none bg-white font-bold" />
             <select value={purchaseUnit} onChange={e => setPurchaseUnit(e.target.value)}
               className="w-12 h-8 px-1 rounded-lg border border-muted text-[10px] font-bold bg-white">
               {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
@@ -368,21 +389,40 @@ function RestockModal({ ingredient, onRestock }: { ingredient: Ingredient; onRes
           </div>
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-bold text-foreground/40 uppercase">Cost per {purchaseUnit}</label>
-          <input type="number" value={cost} onChange={e => setCost(e.target.value === '' ? '' : +e.target.value)}
-            className="w-full h-8 px-2 rounded-lg border border-muted text-xs focus:outline-none" />
+          <label className="text-[10px] font-bold text-foreground/40 uppercase">
+            {inputMode === 'total' ? 'Total Paid (RM)' : `Price per ${purchaseUnit}`}
+          </label>
+          <input 
+            type="number" 
+            placeholder="0.00"
+            value={inputMode === 'total' ? totalPrice : costPerUnit} 
+            onChange={e => {
+              const val = e.target.value === '' ? '' : +e.target.value;
+              if (inputMode === 'total') setTotalPrice(val);
+              else setCostPerUnit(val);
+            }}
+            className="w-full h-8 px-2 rounded-lg border border-muted text-xs focus:outline-none bg-white font-bold" 
+          />
         </div>
       </div>
 
-      {purchaseUnit !== ingredient.unit && (
-        <p className="text-[10px] text-orange-600 font-medium">
-          Note: Will convert to {ingredient.unit} automatically.
-        </p>
-      )}
+      {/* Summary / Calculation Info */}
+      <div className="bg-white/50 p-2 rounded-lg border border-muted/50 space-y-1">
+        <div className="flex justify-between items-center text-[10px]">
+          <span className="text-foreground/40 font-medium italic">Calculated Cost:</span>
+          <span className="font-black text-primary">RM {Number(costPerUnit || 0).toFixed(4)} / {purchaseUnit}</span>
+        </div>
+        {purchaseUnit !== ingredient.unit && (
+          <div className="flex justify-between items-center text-[10px]">
+            <span className="text-foreground/40 font-medium italic">Base Unit Cost:</span>
+            <span className="font-black text-orange-600">RM {Number((purchaseUnit === 'kg' || purchaseUnit === 'L') ? (Number(costPerUnit || 0) / 1000) : (costPerUnit || 0)).toFixed(4)} / {ingredient.unit}</span>
+          </div>
+        )}
+      </div>
 
       <div className="flex gap-2">
         <button onClick={() => setOpen(false)} className="flex-1 h-8 rounded-lg border border-muted text-[10px] font-bold">Cancel</button>
-        <button onClick={handleSubmit} disabled={!qty || Number(qty) <= 0} className="flex-1 h-8 rounded-lg bg-primary text-white text-[10px] font-bold disabled:opacity-50">Confirm</button>
+        <button onClick={handleSubmit} disabled={!qty || !costPerUnit || Number(qty) <= 0} className="flex-1 h-8 rounded-lg bg-primary text-white text-[10px] font-bold disabled:opacity-50 shadow-md shadow-primary/20">Confirm Restock</button>
       </div>
     </div>
   );
