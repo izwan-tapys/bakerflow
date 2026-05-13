@@ -364,15 +364,11 @@ export default function ProductsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {products.map(product => (
             <div key={product.id} className={`bg-white rounded-3xl p-5 border-2 transition-all group relative ${product.is_active ? 'border-muted/50 hover:border-primary/30' : 'border-muted/20 opacity-60'}`}>
-              {/* Edit Icon Button - Top Right */}
-              <button 
-                onClick={() => setEditingProduct(product)}
-                className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-md border border-muted rounded-full text-foreground/40 hover:text-primary hover:border-primary transition-all shadow-sm"
-              >
-                ⚙️
-              </button>
               <div className="flex flex-col h-full justify-between gap-4">
-                <div>
+                <div 
+                  onClick={() => handleEditProduct(product)}
+                  className="cursor-pointer active:scale-[0.98] transition-all"
+                >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <h3 className="font-black text-lg text-foreground leading-tight">{product.name}</h3>
@@ -380,9 +376,9 @@ export default function ProductsPage() {
                         <span className="text-[10px] uppercase font-black bg-muted text-foreground/50 px-2 py-0.5 rounded-md">Draft</span>
                       )}
                     </div>
-                    <button onClick={() => handleEditProduct(product)} className="p-2 hover:bg-muted rounded-xl transition-colors text-sm opacity-0 group-hover:opacity-100 absolute top-3 right-3 bg-white shadow-sm border border-muted">✏️</button>
                   </div>
                   <p className="text-xs text-foreground/50 mb-4 line-clamp-2">{product.description || 'No description provided.'}</p>
+                </div>
                   
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className="bg-primary/5 rounded-2xl p-3 border border-primary/10">
