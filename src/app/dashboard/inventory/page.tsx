@@ -270,11 +270,11 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
   const [loading, setLoading] = useState(false);
 
   // Restock State
-  const [qty, setQty] = useState<number | ''>('');
-  const [purchaseUnit, setPurchaseUnit] = useState(ingredient.unit);
-  const [totalPrice, setTotalPrice] = useState<number | ''>('');
-  const [costPerUnit, setCostPerUnit] = useState<number | ''>(ingredient.avg_cost_per_unit);
   const [inputMode, setInputMode] = useState<'total' | 'unit'>('total');
+  const [isBulk, setIsBulk] = useState(false);
+  const [numPacks, setNumPacks] = useState<number | ''>('');
+  const [packSize, setPackSize] = useState<number | ''>('');
+  const [pricePerPack, setPricePerPack] = useState<number | ''>('');
 
   // Edit State
   const [editForm, setEditForm] = useState({
@@ -285,26 +285,44 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
   });
 
   useEffect(() => {
-    if (inputMode === 'total' && qty && qty > 0 && totalPrice && totalPrice > 0) {
-      setCostPerUnit(totalPrice / qty);
+    if (isBulk && numPacks && packSize) {
+      setQty(Number(numPacks) * Number(packSize));
     }
-  }, [totalPrice, qty, inputMode]);
+  }, [isBulk, numPacks, packSize]);
 
   useEffect(() => {
-    if (inputMode === 'unit' && qty && qty > 0 && costPerUnit && costPerUnit > 0) {
-      setTotalPrice(qty * costPerUnit);
+    if (isBulk && numPacks && pricePerPack) {
+      setTotalPrice(Number(numPacks) * Number(pricePerPack));
     }
-  }, [costPerUnit, qty, inputMode]);
+  }, [isBulk, numPacks, pricePerPack]);
+
+  useEffect(() => {
+    if (!isBulk && inputMode === 'total' && qty && qty > 0 && totalPrice && totalPrice > 0) {
+      setCostPerUnit(Number(totalPrice) / Number(qty));
+    }
+  }, [totalPrice, qty, inputMode, isBulk]);
+
+  useEffect(() => {
+    if (!isBulk && inputMode === 'unit' && qty && qty > 0 && costPerUnit && costPerUnit > 0) {
+      setTotalPrice(Number(qty) * Number(costPerUnit));
+    }
+  }, [costPerUnit, qty, inputMode, isBulk]);
 
   const handleRestockSubmit = async () => {
-    if (qty === '' || costPerUnit === '') return;
+    const finalQtyVal = isBulk ? (Number(numPacks) * Number(packSize)) : Number(qty);
+    const finalTotalVal = isBulk ? (Number(numPacks) * Number(pricePerPack)) : Number(totalPrice);
+    
+    if (!finalQtyVal || !finalTotalVal) return;
+    
     setLoading(true);
-    let finalQty = qty;
-    let finalCostPerBaseUnit = costPerUnit;
+    let finalQty = finalQtyVal;
+    let finalCostPerBaseUnit = finalTotalVal / finalQtyVal;
+    
     if ((purchaseUnit === 'kg' && ingredient.unit === 'g') || (purchaseUnit === 'L' && ingredient.unit === 'ml')) {
-      finalQty = qty * 1000;
-      finalCostPerBaseUnit = costPerUnit / 1000;
+      finalQty = finalQtyVal * 1000;
+      finalCostPerBaseUnit = (finalTotalVal / finalQtyVal) / 1000;
     }
+    
     await onRestock(ingredient, finalQty, finalCostPerBaseUnit);
     onClose();
   };
@@ -351,33 +369,70 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
-              <div className="w-24">
-                <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Qty</label>
-                <input type="number" placeholder="0" value={qty} onChange={e => setQty(e.target.value === '' ? '' : +e.target.value)}
-                  className="w-full h-12 px-3 rounded-2xl border border-muted text-sm font-black focus:outline-none focus:border-primary text-center" />
-              </div>
-              <div className="w-20">
-                <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Unit</label>
-                <select value={purchaseUnit} onChange={e => setPurchaseUnit(e.target.value)}
-                  className="w-full h-12 px-2 rounded-2xl border border-muted text-[10px] font-black bg-white focus:border-primary">
-                  {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
-                </select>
-              </div>
-              <div className="flex-1">
-                <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">{inputMode === 'total' ? 'Total Paid' : `Price per ${purchaseUnit}`}</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground/30">RM</span>
-                  <input type="number" placeholder="0.00" value={inputMode === 'total' ? totalPrice : costPerUnit} 
-                    onChange={e => {
-                      const val = e.target.value === '' ? '' : +e.target.value;
-                      if (inputMode === 'total') setTotalPrice(val);
-                      else setCostPerUnit(val);
-                    }}
-                    className="w-full h-12 pl-10 pr-3 rounded-2xl border border-muted text-sm font-black focus:outline-none focus:border-primary" />
+            <div className="flex justify-between items-center px-1">
+              <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest">Restock Mode</p>
+              <button 
+                onClick={() => setIsBulk(!isBulk)}
+                className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${isBulk ? 'bg-primary text-white shadow-md' : 'bg-muted text-foreground/40'}`}
+              >
+                {isBulk ? '📦 Bulk / Packs' : '⚖️ Single Unit'}
+              </button>
+            </div>
+
+            {isBulk ? (
+              <div className="grid grid-cols-3 gap-2 bg-muted/20 p-4 rounded-3xl border border-muted/50">
+                <div>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">How many?</label>
+                  <input type="number" placeholder="22" value={numPacks} onChange={e => setNumPacks(e.target.value === '' ? '' : +e.target.value)}
+                    className="w-full h-11 px-3 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
+                  <p className="text-[9px] font-bold text-foreground/30 mt-1 text-center">Packs/Bottles</p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Size each</label>
+                  <div className="relative">
+                    <input type="number" placeholder="25" value={packSize} onChange={e => setPackSize(e.target.value === '' ? '' : +e.target.value)}
+                      className="w-full h-11 px-3 pr-8 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold opacity-30">{ingredient.unit}</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Price each</label>
+                  <div className="relative">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] font-bold opacity-30">RM</span>
+                    <input type="number" placeholder="2.50" value={pricePerPack} onChange={e => setPricePerPack(e.target.value === '' ? '' : +e.target.value)}
+                      className="w-full h-11 pl-7 pr-2 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="w-24">
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Qty</label>
+                  <input type="number" placeholder="0" value={qty} onChange={e => setQty(e.target.value === '' ? '' : +e.target.value)}
+                    className="w-full h-12 px-3 rounded-2xl border border-muted text-sm font-black focus:outline-none focus:border-primary text-center" />
+                </div>
+                <div className="w-20">
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Unit</label>
+                  <select value={purchaseUnit} onChange={e => setPurchaseUnit(e.target.value)}
+                    className="w-full h-12 px-2 rounded-2xl border border-muted text-[10px] font-black bg-white focus:border-primary">
+                    {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">{inputMode === 'total' ? 'Total Paid' : `Price per ${purchaseUnit}`}</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground/30">RM</span>
+                    <input type="number" placeholder="0.00" value={inputMode === 'total' ? totalPrice : costPerUnit} 
+                      onChange={e => {
+                        const val = e.target.value === '' ? '' : +e.target.value;
+                        if (inputMode === 'total') setTotalPrice(val);
+                        else setCostPerUnit(val);
+                      }}
+                      className="w-full h-12 pl-10 pr-3 rounded-2xl border border-muted text-sm font-black focus:outline-none focus:border-primary" />
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="bg-primary/5 p-4 rounded-3xl border border-primary/10 space-y-2">
               <div className="flex justify-between items-center text-xs">
