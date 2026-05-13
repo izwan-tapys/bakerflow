@@ -11,6 +11,8 @@ interface Ingredient {
   current_stock: number;
   avg_cost_per_unit: number;
   low_stock_threshold: number;
+  pack_size?: number | null;
+  pack_unit?: string | null;
 }
 
 interface ShoppingItem {
@@ -137,12 +139,23 @@ export default function InventoryPage() {
         <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 space-y-3 shadow-sm">
           <p className="font-bold text-orange-800 text-sm flex items-center gap-2">🛒 Shopping List <span className="bg-orange-200 text-orange-800 px-2 py-0.5 rounded text-[10px]">{shoppingList.length}</span></p>
           <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-            {shoppingList.map(item => (
-              <div key={item.ingredient.id} onClick={() => setSelectedIngredient(item.ingredient)} className="flex-none bg-white p-2 px-3 rounded-xl border border-orange-200 cursor-pointer hover:border-orange-400 transition-all">
-                <p className="font-black text-xs text-orange-900">{item.ingredient.name}</p>
-                <p className="text-[10px] font-bold text-orange-600">Buy {item.shortfall.toFixed(0)}{item.ingredient.unit}</p>
-              </div>
-            ))}
+            {shoppingList.map(item => {
+              const packs = item.ingredient.pack_size
+                ? Math.ceil(item.shortfall / item.ingredient.pack_size)
+                : null;
+              return (
+                <div key={item.ingredient.id} onClick={() => setSelectedIngredient(item.ingredient)} className="flex-none bg-white p-2 px-3 rounded-xl border border-orange-200 cursor-pointer hover:border-orange-400 transition-all">
+                  <p className="font-black text-xs text-orange-900">{item.ingredient.name}</p>
+                  {packs ? (
+                    <p className="text-[10px] font-bold text-orange-600">
+                      {packs} {item.ingredient.pack_unit || 'pek'} ({item.shortfall.toFixed(0)}{item.ingredient.unit})
+                    </p>
+                  ) : (
+                    <p className="text-[10px] font-bold text-orange-600">Buy {item.shortfall.toFixed(0)}{item.ingredient.unit}</p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -288,7 +301,9 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
     name: ingredient.name,
     unit: ingredient.unit,
     current_stock: ingredient.current_stock,
-    low_stock_threshold: ingredient.low_stock_threshold
+    low_stock_threshold: ingredient.low_stock_threshold,
+    pack_size: ingredient.pack_size ?? '' as number | '',
+    pack_unit: ingredient.pack_unit ?? '',
   });
 
   useEffect(() => {
@@ -509,6 +524,30 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
               <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Low Stock Alert Threshold</label>
               <input type="number" value={editForm.low_stock_threshold} onChange={e => setEditForm({...editForm, low_stock_threshold: +e.target.value})}
                 className="w-full h-12 px-4 rounded-2xl border border-muted font-bold focus:border-primary outline-none" />
+            </div>
+
+            {/* Pack Setting */}
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 space-y-3">
+              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">📦 Pack Setting (Optional)</p>
+              <p className="text-[9px] text-blue-400">Tetapkan saiz pek supaya Shopping List tunjuk bilangan pek yang perlu dibeli.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Saiz 1 Pek</label>
+                  <div className="relative">
+                    <input type="number" placeholder={`e.g. 25`} value={editForm.pack_size} onChange={e => setEditForm({...editForm, pack_size: e.target.value === '' ? '' : +e.target.value})}
+                      className="w-full h-11 px-3 pr-8 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold opacity-30">{ingredient.unit}</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Nama Unit</label>
+                  <input placeholder="e.g. botol, pek, tin" value={editForm.pack_unit} onChange={e => setEditForm({...editForm, pack_unit: e.target.value})}
+                    className="w-full h-11 px-3 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
+                </div>
+              </div>
+              {editForm.pack_size && editForm.pack_unit && (
+                <p className="text-[10px] font-bold text-blue-600">✓ 1 {editForm.pack_unit} = {editForm.pack_size}{ingredient.unit}</p>
+              )}
             </div>
             
             <div className="flex gap-2 pt-2">
