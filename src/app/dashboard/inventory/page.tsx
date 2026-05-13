@@ -489,7 +489,8 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
         </div>
 
         <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
-          <div className="space-y-5">
+          {tab === 'restock' ? (
+            <div className="space-y-5">
             <div className="flex justify-between items-center px-1">
               <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest">Restock Mode</p>
               <button 
