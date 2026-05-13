@@ -1,30 +1,43 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-      },
-    });
-
-    if (error) {
-      setError(error.message);
+    if (isLogin) {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        setError(error.message);
+      } else {
+        router.push('/dashboard');
+      }
     } else {
-      setSent(true);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (error) {
+        setError(error.message);
+      } else {
+        // Redirect to setup page for new accounts
+        router.push('/dashboard/setup');
+      }
     }
     setLoading(false);
   };
@@ -48,62 +61,66 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-white rounded-3xl shadow-xl shadow-foreground/5 border border-muted p-8">
-          {!sent ? (
-            <>
-              <div className="mb-6">
-                <h2 className="text-xl font-bold text-foreground">Welcome back! 👋</h2>
-                <p className="text-foreground/60 text-sm mt-1">Enter your email to receive a magic login link.</p>
-              </div>
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-foreground">
+              {isLogin ? 'Welcome back! 👋' : 'Create an account 🚀'}
+            </h2>
+            <p className="text-foreground/60 text-sm mt-1">
+              {isLogin ? 'Enter your details to log in.' : 'Sign up to manage your bakery.'}
+            </p>
+          </div>
 
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  <label className="text-sm font-semibold text-foreground/70 block mb-2">Email Address</label>
-                  <input
-                    type="email"
-                    placeholder="baker@example.com"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                    className="w-full h-14 px-4 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors text-base"
-                  />
-                </div>
-
-                {error && (
-                  <p className="text-red-500 text-sm font-medium bg-red-50 p-3 rounded-xl">⚠️ {error}</p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading || !email}
-                  className="w-full h-14 bg-primary text-white font-bold text-base rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
-                >
-                  {loading ? 'Sending...' : '✉️ Send Magic Link'}
-                </button>
-              </form>
-
-              <p className="text-center text-foreground/40 text-xs mt-6">
-                No password needed. Just tap the link in your email.
-              </p>
-            </>
-          ) : (
-            <div className="text-center space-y-4 py-4">
-              <div className="text-5xl">📬</div>
-              <h2 className="text-xl font-bold text-foreground">Check your inbox!</h2>
-              <p className="text-foreground/60 text-sm">
-                We sent a magic link to<br />
-                <span className="font-bold text-primary">{email}</span>
-              </p>
-              <p className="text-foreground/40 text-xs">
-                Tap the link in the email to log in. You can close this tab.
-              </p>
-              <button
-                onClick={() => { setSent(false); setEmail(''); }}
-                className="text-primary text-sm font-medium hover:underline"
-              >
-                Use a different email →
-              </button>
+          <form onSubmit={handleAuth} className="space-y-4">
+            <div>
+              <label className="text-sm font-semibold text-foreground/70 block mb-2">Email Address</label>
+              <input
+                type="email"
+                placeholder="baker@example.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                className="w-full h-14 px-4 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors text-base"
+              />
             </div>
-          )}
+
+            <div>
+              <label className="text-sm font-semibold text-foreground/70 block mb-2">Password</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full h-14 px-4 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors text-base"
+              />
+            </div>
+
+            {error && (
+              <p className="text-red-500 text-sm font-medium bg-red-50 p-3 rounded-xl">⚠️ {error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || !email || !password}
+              className="w-full h-14 bg-primary text-white font-bold text-base rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 mt-2"
+            >
+              {loading ? 'Processing...' : isLogin ? 'Log In' : 'Sign Up'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setError('');
+              }}
+              className="text-primary text-sm font-bold hover:underline"
+            >
+              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Log in'}
+            </button>
+          </div>
         </div>
 
         <p className="text-center text-foreground/30 text-xs">
