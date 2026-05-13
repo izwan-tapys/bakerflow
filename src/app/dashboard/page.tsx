@@ -32,7 +32,7 @@ export default function AdminDashboardPage() {
       return;
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA'); // en-CA gives YYYY-MM-DD
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);

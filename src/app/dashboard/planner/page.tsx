@@ -23,7 +23,13 @@ export default function PlannerPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<BakerSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date(Date.now() + 86400000).toISOString().split('T')[0]); // Default Tomorrow
+  const getLocalDate = (offsetDays = 0) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return d.toLocaleDateString('en-CA');
+  };
+
+  const [selectedDate, setSelectedDate] = useState(getLocalDate(1)); // Default Tomorrow
 
   const loadPlannerData = useCallback(async () => {
     setLoading(true);
