@@ -489,6 +489,24 @@ export default function ProductsPage() {
                 )}
               </div>
 
+              {/* Profitability DNA */}
+              <div className="bg-muted/20 rounded-2xl p-3 flex justify-between items-center border border-muted/50">
+                <div>
+                  <p className="text-[9px] font-black text-foreground/30 uppercase tracking-widest">COGS (Cost)</p>
+                  <p className="text-xs font-bold text-foreground/70">RM {product.cogs?.toFixed(2) || '0.00'}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] font-black text-foreground/30 uppercase tracking-widest">Margin</p>
+                  {product.price > 0 ? (
+                    <p className={`text-xs font-black ${((product.price - (product.cogs || 0)) / product.price) > 0.4 ? 'text-green-500' : 'text-orange-500'}`}>
+                      {(((product.price - (product.cogs || 0)) / product.price) * 100).toFixed(0)}%
+                    </p>
+                  ) : (
+                    <p className="text-xs font-black text-foreground/30">-</p>
+                  )}
+                </div>
+              </div>
+
               {/* Action Buttons */}
               <div className="flex gap-2">
                 <button
