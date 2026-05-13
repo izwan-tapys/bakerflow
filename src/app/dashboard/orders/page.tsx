@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Order, OrderStatus, Product } from '@/lib/types';
+import { Order, OrderStatus, Product, PaymentStatus } from '@/lib/types';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { updateOrderStatus } from '@/lib/services/baker.service';
 
