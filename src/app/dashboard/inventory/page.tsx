@@ -375,7 +375,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
       else finalQty = Number(qty);
     }
 
-    finalCostPerBaseUnit = finalTotalVal / finalQty;
+    let finalCostPerBaseUnit = finalTotalVal / finalQty;
     
     await onRestock(ingredient, finalQty, finalCostPerBaseUnit);
     onClose();
