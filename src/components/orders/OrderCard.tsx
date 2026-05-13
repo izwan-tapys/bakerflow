@@ -75,7 +75,7 @@ export function OrderCard({ order, onStatusChange, onRefresh }: OrderCardProps) 
   const isTomorrow = order.delivery_date === new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
   const handleCopyLabel = () => {
-    const label = `🏷️ *ORDER LABEL*\n------------------\n👤 *Customer:* ${order.customer_name}\n🧁 *Product:* ${order.product_name} x${order.quantity}\n📅 *Date:* ${order.delivery_date}\n📝 *Note:* ${order.notes || '-'}\n------------------\n#BakerFlow`;
+    const label = `🏷️ *ORDER LABEL*\n------------------\n👤 *Customer:* ${order.customer_name}\n🧁 *Product:* ${order.product_name} x${order.quantity}\n📅 *Date:* ${order.delivery_date}\n📝 *Note:* ${order.special_notes || '-'}\n------------------\n#BakerFlow`;
     navigator.clipboard.writeText(label);
     alert('Label copied to clipboard! Paste it into your printer or notes.');
   };
@@ -99,10 +99,10 @@ export function OrderCard({ order, onStatusChange, onRefresh }: OrderCardProps) 
         </div>
       </div>
 
-      {order.notes && (
+      {order.special_notes && (
         <div className="bg-yellow-50 p-2.5 rounded-xl border border-yellow-100">
           <p className="text-[10px] font-black text-yellow-600 uppercase tracking-widest mb-0.5">Special Note 📝</p>
-          <p className="text-xs font-bold text-yellow-800">{order.notes}</p>
+          <p className="text-xs font-bold text-yellow-800">{order.special_notes}</p>
         </div>
       )}
 

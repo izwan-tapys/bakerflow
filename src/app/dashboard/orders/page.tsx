@@ -31,7 +31,7 @@ export default function OrdersPage() {
     quantity: 1,
     delivery_date: new Date().toISOString().split('T')[0],
     delivery_time: '15:00',
-    notes: '',
+    special_notes: '',
     payment_status: 'unpaid' as const
   });
 
@@ -71,7 +71,7 @@ export default function OrdersPage() {
       delivery_date: manualForm.delivery_date,
       delivery_time: manualForm.delivery_time,
       status: 'approved', // Manual orders are usually already approved
-      notes: manualForm.notes,
+      special_notes: manualForm.special_notes,
       order_number: `M-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
     });
 
@@ -82,7 +82,7 @@ export default function OrdersPage() {
       quantity: 1,
       delivery_date: new Date().toISOString().split('T')[0],
       delivery_time: '15:00',
-      notes: '',
+      special_notes: '',
       payment_status: 'unpaid'
     });
     loadData();
@@ -160,7 +160,7 @@ export default function OrdersPage() {
 
             <div>
               <label className="text-[10px] font-black uppercase text-foreground/40">Special Note (Optional)</label>
-              <textarea value={manualForm.notes} onChange={e => setManualForm({...manualForm, notes: e.target.value})} rows={2}
+              <textarea value={manualForm.special_notes} onChange={e => setManualForm({...manualForm, special_notes: e.target.value})} rows={2}
                 className="w-full px-3 py-2 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold resize-none" />
             </div>
           </div>
