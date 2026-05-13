@@ -1,8 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Order, OrderStatus } from '@/lib/types';
+import { Order, OrderStatus, Product, BakerSettings } from '@/lib/types';
 import { SmartTimeline } from '@/components/dashboard/SmartTimeline';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { updateOrderStatus } from '@/lib/services/baker.service';
@@ -20,6 +21,8 @@ export default function AdminDashboardPage() {
   const [todayOrders, setTodayOrders] = useState<Order[]>([]);
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [productionOrders, setProductionOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [settings, setSettings] = useState<BakerSettings | null>(null);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
 
   const loadDashboardData = useCallback(async () => {
@@ -34,16 +37,21 @@ export default function AdminDashboardPage() {
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const [settingsRes, todayRes, pendingRes, productionRes, revenueRes] = await Promise.all([
-      supabase.from('baker_settings').select('shop_name').eq('baker_id', user.id).limit(1).single(),
+    const [settingsRes, todayRes, pendingRes, productionRes, revenueRes, productsRes] = await Promise.all([
+      supabase.from('baker_settings').select('*').eq('baker_id', user.id).limit(1).single(),
       supabase.from('orders').select('*').eq('baker_id', user.id).eq('delivery_date', today).order('created_at'),
       supabase.from('orders').select('*').eq('baker_id', user.id).eq('status', 'pending').order('created_at', { ascending: false }),
       supabase.from('orders').select('*').eq('baker_id', user.id).in('status', ['approved', 'production', 'ready']),
       supabase.from('orders').select('total_amount').eq('baker_id', user.id).eq('payment_status', 'paid').gte('created_at', startOfMonth.toISOString()),
+      supabase.from('products').select('*').eq('baker_id', user.id)
     ]);
 
-    if (settingsRes.data) setShopName(settingsRes.data.shop_name);
+    if (settingsRes.data) {
+      setSettings(settingsRes.data);
+      setShopName(settingsRes.data.shop_name);
+    }
     
+    if (productsRes.data) setProducts(productsRes.data);
     if (todayRes.data) setTodayOrders(todayRes.data);
     if (pendingRes.data) setPendingOrders(pendingRes.data);
     if (productionRes.data) setProductionOrders(productionRes.data);
