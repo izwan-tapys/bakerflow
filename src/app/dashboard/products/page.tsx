@@ -628,13 +628,20 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
             </select>
           )}
 
-          <div className="flex gap-2">
-            <input type="number" placeholder="Qty needed" value={form.quantity_needed || ''} onChange={e => setForm({ ...form, quantity_needed: +e.target.value })}
-              className="flex-1 h-9 px-2 rounded-lg border border-muted text-sm focus:border-primary focus:outline-none" />
-            <div className="h-9 px-3 bg-white border border-muted rounded-lg flex items-center justify-center text-sm font-medium text-foreground/50">
-              {isNewIngredient ? form.unit : ingredients.find(i => i.id === form.ingredient_id)?.unit || '-'}
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Qty</label>
+              <input type="number" placeholder="0" value={form.quantity_needed || ''} onChange={e => setForm({ ...form, quantity_needed: +e.target.value })}
+                className="w-full h-10 px-2 rounded-xl border border-muted text-sm focus:border-primary outline-none" />
             </div>
-            <button onClick={handleAdd} disabled={(isNewIngredient ? !form.new_name : !form.ingredient_id) || form.quantity_needed <= 0} className="h-9 px-4 bg-foreground text-white font-bold text-xs rounded-lg disabled:opacity-50">
+            <div className="w-16">
+              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Unit</label>
+              <div className="h-10 px-2 bg-white border border-muted rounded-xl flex items-center justify-center text-xs font-bold text-foreground/50">
+                {isNewIngredient ? form.unit : ingredients.find(i => i.id === form.ingredient_id)?.unit || '-'}
+              </div>
+            </div>
+            <button onClick={handleAdd} disabled={(isNewIngredient ? !form.new_name : !form.ingredient_id) || form.quantity_needed <= 0} 
+              className="h-10 px-4 bg-foreground text-white font-bold text-xs rounded-xl disabled:opacity-50 hover:bg-black transition-colors">
               + Add
             </button>
           </div>
