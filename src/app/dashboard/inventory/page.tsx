@@ -109,8 +109,9 @@ export default function InventoryPage() {
   };
 
   const handleUpdateInfo = async (ingredient: Ingredient, updatedData: any) => {
-    await supabase.from('ingredients').update(updatedData).eq('id', ingredient.id);
-    loadIngredients();
+    const { error } = await supabase.from('ingredients').update(updatedData).eq('id', ingredient.id);
+    if (error) throw error;
+    await loadIngredients();
   };
 
   const handleDeleteIngredient = async (id: string) => {
@@ -373,17 +374,25 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
   };
 
   const handleEditSubmit = async () => {
+    if (!editForm.name) return alert("Nama bahan wajib isi!");
+    
     setLoading(true);
     try {
       const cleanData = {
-        ...editForm,
-        pack_size: editForm.pack_size === '' ? null : Number(editForm.pack_size)
+        name: editForm.name,
+        unit: editForm.unit,
+        current_stock: Number(editForm.current_stock) || 0,
+        low_stock_threshold: Number(editForm.low_stock_threshold) || 0,
+        pack_size: editForm.pack_size === '' ? null : Number(editForm.pack_size),
+        pack_unit: editForm.pack_unit || null,
+        pack_size_unit: editForm.pack_size_unit || null
       };
+      
       await onUpdate(ingredient, cleanData);
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to update ingredient:", err);
-      alert("Gagal update. Pastikan anda telah run SQL migration di Supabase.");
+      alert("Gagal update: " + (err.message || "Sila semak console"));
     } finally {
       setLoading(false);
     }
