@@ -122,6 +122,26 @@ export default function InventoryPage() {
 
   const lowStock = ingredients.filter(i => i.current_stock <= i.low_stock_threshold && !shoppingList.find(s => s.ingredient.id === i.id));
 
+  const handleShareWhatsApp = () => {
+    if (shoppingList.length === 0) return;
+    let message = `🛒 *SHOPPING LIST BAKERFLOW*\n\n`;
+    shoppingList.forEach((item, idx) => {
+      let packInfo = '';
+      if (item.ingredient.pack_size) {
+        let sizeInBase = item.ingredient.pack_size;
+        if ((item.ingredient.pack_size_unit === 'kg' && item.ingredient.unit === 'g') || 
+            (item.ingredient.pack_size_unit === 'L' && item.ingredient.unit === 'ml')) {
+          sizeInBase = item.ingredient.pack_size * 1000;
+        }
+        const packs = Math.ceil(item.shortfall / sizeInBase);
+        packInfo = `${packs} ${item.ingredient.pack_unit || 'pek'} `;
+      }
+      message += `${idx + 1}. *${item.ingredient.name}*: ${packInfo}(${item.shortfall.toFixed(0)}${item.ingredient.unit})\n`;
+    });
+    message += `\nJom restock! 🧁`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   return (
     <div className="space-y-5 pb-4">
       <KitchenTabs />
@@ -139,7 +159,15 @@ export default function InventoryPage() {
       {/* Shopping List & Alerts (Keep these as they are helpful) */}
       {shoppingList.length > 0 && (
         <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 space-y-3 shadow-sm">
-          <p className="font-bold text-orange-800 text-sm flex items-center gap-2">🛒 Shopping List <span className="bg-orange-200 text-orange-800 px-2 py-0.5 rounded text-[10px]">{shoppingList.length}</span></p>
+          <div className="flex items-center justify-between">
+            <p className="font-bold text-orange-800 text-sm flex items-center gap-2">🛒 Shopping List <span className="bg-orange-200 text-orange-800 px-2 py-0.5 rounded text-[10px]">{shoppingList.length}</span></p>
+            <button 
+              onClick={handleShareWhatsApp}
+              className="flex items-center gap-1.5 px-3 py-1 bg-green-500 text-white rounded-lg text-[10px] font-bold hover:bg-green-600 transition-all"
+            >
+              Share WhatsApp
+            </button>
+          </div>
           <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
             {shoppingList.map(item => {
               let packs = null;
