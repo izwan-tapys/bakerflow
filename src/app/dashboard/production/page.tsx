@@ -124,60 +124,95 @@ export default function ProductionPage() {
     loadOrders();
   };
 
+  const [activeTab, setActiveTab] = useState<'queued' | 'baking' | 'ready'>('baking');
+  const scrollRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      node.addEventListener('scroll', () => {
+        const index = Math.round(node.scrollLeft / node.clientWidth);
+        const tabs: ('queued' | 'baking' | 'ready')[] = ['baking', 'queued', 'ready'];
+        if (tabs[index]) setActiveTab(tabs[index]);
+      }, { passive: true });
+    }
+  }, []);
+
+  const scrollToTab = (tab: 'queued' | 'baking' | 'ready') => {
+    const node = document.getElementById('production-scroll-container');
+    if (!node) return;
+    const tabs = ['baking', 'queued', 'ready'];
+    const index = tabs.indexOf(tab);
+    node.scrollTo({ left: index * node.clientWidth, behavior: 'smooth' });
+    setActiveTab(tab);
+  };
+
   const queued = orders.filter(o => o.status === 'approved');
   const baking = orders.filter(o => o.status === 'production');
   const ready = orders.filter(o => o.status === 'ready');
 
-  return (
-    <div className="space-y-6 pb-4">
-      <KitchenTabs />
+  // Sort baking to show first since it's most active
+  const sections = [
+    { id: 'baking' as const, label: '🔥 Baking', count: baking.length, data: baking, empty: 'No items in the oven.' },
+    { id: 'queued' as const, label: '📋 Queued', count: queued.length, data: queued, empty: 'No queued orders.' },
+    { id: 'ready' as const, label: '✅ Ready', count: ready.length, data: ready, empty: 'Nothing ready yet.' }
+  ];
 
-      <div>
-        <h1 className="text-2xl font-extrabold text-foreground">Kitchen 🍳</h1>
-        <p className="text-foreground/50 text-sm">Track your production workflow</p>
+  return (
+    <div className="flex flex-col h-[calc(100vh-80px)] overflow-hidden -m-6 p-6 space-y-6">
+      <div className="flex-none space-y-4">
+        <KitchenTabs />
+        <div>
+          <h1 className="text-2xl font-extrabold text-foreground">Kitchen 🍳</h1>
+          <p className="text-foreground/50 text-sm">Track your production workflow</p>
+        </div>
+
+        {/* Tab Switcher */}
+        <div className="flex bg-muted/50 p-1 rounded-2xl border border-muted/50">
+          {sections.map(s => (
+            <button
+              key={s.id}
+              onClick={() => scrollToTab(s.id)}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                activeTab === s.id ? 'bg-white text-primary shadow-sm scale-[1.02]' : 'text-foreground/40'
+              }`}
+            >
+              {s.label}
+              {s.count > 0 && <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${activeTab === s.id ? 'bg-primary/10 text-primary' : 'bg-foreground/10 text-foreground/40'}`}>{s.count}</span>}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {loading ? (
-        <div className="space-y-4">{[1,2].map(i => <div key={i} className="h-48 bg-muted rounded-2xl animate-pulse" />)}</div>
-      ) : orders.length === 0 ? (
-        <div className="text-center py-16 space-y-2">
-          <div className="text-5xl">🎉</div>
-          <p className="text-foreground/50 font-medium">Kitchen is clear!</p>
-          <p className="text-foreground/40 text-sm">No active production tasks right now.</p>
-        </div>
-      ) : (
-        <>
-          {baking.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="font-bold text-foreground flex items-center gap-2">
-                🔥 Currently Baking
-                <span className="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full font-bold">{baking.length}</span>
-              </h2>
-              {baking.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadOrders} />)}
-            </section>
-          )}
-
-          {queued.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="font-bold text-foreground flex items-center gap-2">
-                📋 Queued
-                <span className="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full font-bold">{queued.length}</span>
-              </h2>
-              {queued.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadOrders} />)}
-            </section>
-          )}
-
-          {ready.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="font-bold text-foreground flex items-center gap-2">
-                ✅ Ready for Pickup/Delivery
-                <span className="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full font-bold">{ready.length}</span>
-              </h2>
-              {ready.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadOrders} />)}
-            </section>
-          )}
-        </>
-      )}
+      <div className="flex-1 min-h-0 relative">
+        {loading ? (
+          <div className="space-y-4">{[1,2].map(i => <div key={i} className="h-48 bg-muted rounded-2xl animate-pulse" />)}</div>
+        ) : orders.length === 0 ? (
+          <div className="text-center py-16 space-y-2">
+            <div className="text-5xl">🎉</div>
+            <p className="text-foreground/50 font-medium">Kitchen is clear!</p>
+            <p className="text-foreground/40 text-sm">No active production tasks right now.</p>
+          </div>
+        ) : (
+          <div 
+            id="production-scroll-container"
+            ref={scrollRef}
+            className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth"
+          >
+            {sections.map(s => (
+              <div key={s.id} className="w-full h-full flex-none snap-center px-0.5">
+                <div className="h-full overflow-y-auto pr-1 space-y-4 pb-20 no-scrollbar">
+                  {s.data.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-foreground/20 space-y-2 grayscale opacity-50">
+                      <div className="text-4xl">{s.id === 'baking' ? '🔥' : s.id === 'queued' ? '📋' : '✅'}</div>
+                      <p className="text-xs font-bold uppercase tracking-widest">{s.empty}</p>
+                    </div>
+                  ) : (
+                    s.data.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadOrders} />)
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
