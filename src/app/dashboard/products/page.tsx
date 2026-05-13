@@ -612,33 +612,40 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
           </div>
 
           {isNewIngredient ? (
-            <div className="flex gap-2">
-              <input placeholder="New Ingredient Name" value={form.new_name} onChange={e => setForm({ ...form, new_name: e.target.value })}
-                className="flex-[2] h-9 px-2 rounded-lg border border-muted text-sm focus:border-primary focus:outline-none" />
-              <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
-                className="flex-1 h-9 px-1 rounded-lg border border-muted text-xs focus:border-primary focus:outline-none bg-white">
-                {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u}>{u}</option>)}
-              </select>
+            <div>
+              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Ingredient Name</label>
+              <input placeholder="e.g. Premium Butter" value={form.new_name} onChange={e => setForm({ ...form, new_name: e.target.value })}
+                className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary outline-none" />
             </div>
           ) : (
-            <select value={form.ingredient_id} onChange={e => setForm({ ...form, ingredient_id: e.target.value, unit: ingredients.find(i=>i.id===e.target.value)?.unit || 'g' })}
-              className="w-full h-9 px-2 rounded-lg border border-muted text-sm focus:border-primary focus:outline-none bg-white">
-              <option value="">Select ingredient...</option>
-              {ingredients.map(i => <option key={i.id} value={i.id}>{i.name} ({i.unit})</option>)}
-            </select>
+            <div>
+              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Select Ingredient</label>
+              <select value={form.ingredient_id} onChange={e => setForm({ ...form, ingredient_id: e.target.value, unit: ingredients.find(i=>i.id===e.target.value)?.unit || 'g' })}
+                className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary outline-none bg-white">
+                <option value="">Choose from inventory...</option>
+                {ingredients.map(i => <option key={i.id} value={i.id}>{i.name} ({i.unit})</option>)}
+              </select>
+            </div>
           )}
-
+ 
           <div className="flex gap-2 items-end">
             <div className="flex-1">
               <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Qty</label>
               <input type="number" placeholder="0" value={form.quantity_needed || ''} onChange={e => setForm({ ...form, quantity_needed: +e.target.value })}
                 className="w-full h-10 px-2 rounded-xl border border-muted text-sm focus:border-primary outline-none" />
             </div>
-            <div className="w-16">
+            <div className="w-20">
               <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Unit</label>
-              <div className="h-10 px-2 bg-white border border-muted rounded-xl flex items-center justify-center text-xs font-bold text-foreground/50">
-                {isNewIngredient ? form.unit : ingredients.find(i => i.id === form.ingredient_id)?.unit || '-'}
-              </div>
+              {isNewIngredient ? (
+                <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
+                  className="w-full h-10 px-1 rounded-xl border border-muted text-[10px] font-bold focus:border-primary outline-none bg-white">
+                  {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
+                </select>
+              ) : (
+                <div className="h-10 px-2 bg-white border border-muted rounded-xl flex items-center justify-center text-xs font-bold text-foreground/50">
+                  {ingredients.find(i => i.id === form.ingredient_id)?.unit || '-'}
+                </div>
+              )}
             </div>
             <button onClick={handleAdd} disabled={(isNewIngredient ? !form.new_name : !form.ingredient_id) || form.quantity_needed <= 0} 
               className="h-10 px-4 bg-foreground text-white font-bold text-xs rounded-xl disabled:opacity-50 hover:bg-black transition-colors">
