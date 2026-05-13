@@ -7,6 +7,7 @@ export function KitchenTabs() {
   const pathname = usePathname();
   const tabs = [
     { label: 'Tasks 🍳', href: '/dashboard/production' },
+    { label: 'Planner 📅', href: '/dashboard/planner' },
     { label: 'Stock 📦', href: '/dashboard/inventory' },
   ];
 

@@ -24,6 +24,11 @@ CREATE TABLE baker_settings (
   toyyibpay_secret_key TEXT,
   toyyibpay_category_id TEXT,
   gmaps_api_key TEXT,
+  
+  -- Delivery Window
+  delivery_start_time TEXT DEFAULT '15:00',
+  delivery_end_time TEXT DEFAULT '18:00',
+
   is_setup_complete BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()

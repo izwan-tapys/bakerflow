@@ -12,6 +12,8 @@ export interface BakerSettings {
   bank_holder: string;
   toyyibpay_secret_key?: string;
   toyyibpay_category_id?: string;
+  delivery_start_time: string;
+  delivery_end_time: string;
   is_setup_complete: boolean;
 }
 
