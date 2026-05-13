@@ -153,7 +153,7 @@ export default function OrderPage() {
             <p className="text-foreground/50 text-sm">Select when you want your order delivered.</p>
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
+          <div className="flex overflow-x-auto gap-3 pb-4 pt-1 snap-x scrollbar-hide">
             {availableDates.map(date => {
               const dateStr = date.toISOString().split('T')[0];
               const isSelected = selectedDate === dateStr;
@@ -165,15 +165,15 @@ export default function OrderPage() {
                 <button
                   key={dateStr}
                   onClick={() => setSelectedDate(dateStr)}
-                  className={`flex flex-col items-center p-3 rounded-2xl border-2 transition-all ${
+                  className={`flex-shrink-0 w-[4.5rem] flex flex-col items-center p-3 rounded-2xl border-2 transition-all snap-center ${
                     isSelected
-                      ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20'
+                      ? 'border-primary bg-primary text-white shadow-lg shadow-primary/30 transform scale-105'
                       : 'border-muted bg-white text-foreground hover:border-primary/30'
                   }`}
                 >
-                  <span className={`text-xs font-medium ${isSelected ? 'text-white/70' : 'text-foreground/40'}`}>{dayName}</span>
-                  <span className="text-xl font-extrabold">{dayNum}</span>
-                  <span className={`text-xs ${isSelected ? 'text-white/70' : 'text-foreground/40'}`}>{month}</span>
+                  <span className={`text-xs font-medium ${isSelected ? 'text-white/80' : 'text-foreground/40'}`}>{dayName}</span>
+                  <span className="text-2xl font-extrabold mt-0.5">{dayNum}</span>
+                  <span className={`text-[10px] font-bold uppercase mt-1 ${isSelected ? 'text-white/80' : 'text-foreground/40'}`}>{month}</span>
                 </button>
               );
             })}
