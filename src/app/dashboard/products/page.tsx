@@ -56,6 +56,10 @@ export default function ProductsPage() {
   const [editingRecipe, setEditingRecipe] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
+  // Inline Edit State
+  const [inlineEdit, setInlineEdit] = useState<{ productId: string; field: 'price' | 'time' } | null>(null);
+  const [inlineVal, setInlineVal] = useState({ price: 0, prep: 0, bake: 0, cool: 0 });
+
   const loadData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -224,6 +228,25 @@ export default function ProductsPage() {
     loadData();
   };
 
+  const startInlineEdit = (product: Product, field: 'price' | 'time') => {
+    setInlineEdit({ productId: product.id, field });
+    setInlineVal({
+      price: product.price,
+      prep: product.prep_time || 0,
+      bake: product.bake_time || 0,
+      cool: product.cool_time || 0,
+    });
+  };
+
+  const saveInlineEdit = async (productId: string, field: 'price' | 'time') => {
+    const updateData = field === 'price'
+      ? { price: inlineVal.price }
+      : { prep_time: inlineVal.prep, bake_time: inlineVal.bake, cool_time: inlineVal.cool };
+    await supabase.from('products').update(updateData).eq('id', productId);
+    setInlineEdit(null);
+    loadData();
+  };
+
   return (
     <div className="space-y-5 pb-4">
       <div className="flex items-start justify-between">
@@ -379,16 +402,62 @@ export default function ProductsPage() {
                 <p className="text-xs text-foreground/50 line-clamp-2">{product.description || 'No description provided.'}</p>
               </div>
 
-              {/* Stats */}
+              {/* Stats - Inline Editable */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-primary/5 rounded-2xl p-3 border border-primary/10">
-                  <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-0.5">Price</p>
-                  <p className="font-black text-primary text-lg">RM {product.price.toFixed(2)}</p>
-                </div>
-                <div className="bg-muted/30 rounded-2xl p-3 border border-muted/50">
-                  <p className="text-[9px] font-black text-foreground/30 uppercase tracking-widest mb-0.5">Time DNA</p>
-                  <p className="font-bold text-foreground/70 text-xs">🥣{product.prep_time}m 🔥{product.bake_time}m</p>
-                </div>
+                {/* Price Box */}
+                {inlineEdit?.productId === product.id && inlineEdit.field === 'price' ? (
+                  <div className="bg-primary/5 rounded-2xl p-3 border-2 border-primary">
+                    <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">Price (RM)</p>
+                    <input
+                      type="number"
+                      autoFocus
+                      value={inlineVal.price || ''}
+                      onChange={e => setInlineVal(v => ({ ...v, price: +e.target.value }))}
+                      onBlur={() => saveInlineEdit(product.id, 'price')}
+                      onKeyDown={e => e.key === 'Enter' && saveInlineEdit(product.id, 'price')}
+                      className="w-full bg-transparent font-black text-primary text-lg outline-none border-none"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => startInlineEdit(product, 'price')}
+                    className="bg-primary/5 rounded-2xl p-3 border border-primary/10 cursor-pointer hover:border-primary/40 hover:bg-primary/10 transition-all"
+                  >
+                    <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-0.5">Price</p>
+                    <p className="font-black text-primary text-lg">RM {product.price.toFixed(2)}</p>
+                  </div>
+                )}
+
+                {/* Time DNA Box */}
+                {inlineEdit?.productId === product.id && inlineEdit.field === 'time' ? (
+                  <div className="bg-muted/30 rounded-2xl p-3 border-2 border-primary/50 space-y-1">
+                    <p className="text-[9px] font-black text-foreground/40 uppercase tracking-widest">Time DNA (min)</p>
+                    <div className="flex gap-1">
+                      <input autoFocus type="number" placeholder="Prep" value={inlineVal.prep || ''}
+                        onChange={e => setInlineVal(v => ({ ...v, prep: +e.target.value }))}
+                        className="w-full bg-white rounded-lg px-1.5 py-1 text-[11px] font-bold outline-none border border-muted text-center"
+                      />
+                      <input type="number" placeholder="Bake" value={inlineVal.bake || ''}
+                        onChange={e => setInlineVal(v => ({ ...v, bake: +e.target.value }))}
+                        className="w-full bg-white rounded-lg px-1.5 py-1 text-[11px] font-bold outline-none border border-muted text-center"
+                      />
+                      <input type="number" placeholder="Cool" value={inlineVal.cool || ''}
+                        onChange={e => setInlineVal(v => ({ ...v, cool: +e.target.value }))}
+                        onBlur={() => saveInlineEdit(product.id, 'time')}
+                        onKeyDown={e => e.key === 'Enter' && saveInlineEdit(product.id, 'time')}
+                        className="w-full bg-white rounded-lg px-1.5 py-1 text-[11px] font-bold outline-none border border-muted text-center"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => startInlineEdit(product, 'time')}
+                    className="bg-muted/30 rounded-2xl p-3 border border-muted/50 cursor-pointer hover:border-primary/40 hover:bg-muted/60 transition-all"
+                  >
+                    <p className="text-[9px] font-black text-foreground/30 uppercase tracking-widest mb-0.5">Time DNA</p>
+                    <p className="font-bold text-foreground/70 text-xs">🥣{product.prep_time}m 🔥{product.bake_time}m ❄️{product.cool_time}m</p>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
