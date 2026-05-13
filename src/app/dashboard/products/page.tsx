@@ -57,8 +57,8 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   // Inline Edit State
-  const [inlineEdit, setInlineEdit] = useState<{ productId: string; field: 'price' | 'time' } | null>(null);
-  const [inlineVal, setInlineVal] = useState({ price: 0, prep: 0, bake: 0, cool: 0 });
+  const [inlineEdit, setInlineEdit] = useState<{ productId: string; field: 'price' | 'time' | 'info' } | null>(null);
+  const [inlineVal, setInlineVal] = useState({ name: '', description: '', price: 0, prep: 0, bake: 0, cool: 0 });
 
   const loadData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -228,9 +228,11 @@ export default function ProductsPage() {
     loadData();
   };
 
-  const startInlineEdit = (product: Product, field: 'price' | 'time') => {
+  const startInlineEdit = (product: Product, field: 'price' | 'time' | 'info') => {
     setInlineEdit({ productId: product.id, field });
     setInlineVal({
+      name: product.name,
+      description: product.description || '',
       price: product.price,
       prep: product.prep_time || 0,
       bake: product.bake_time || 0,
@@ -238,10 +240,12 @@ export default function ProductsPage() {
     });
   };
 
-  const saveInlineEdit = async (productId: string, field: 'price' | 'time') => {
-    const updateData = field === 'price'
-      ? { price: inlineVal.price }
-      : { prep_time: inlineVal.prep, bake_time: inlineVal.bake, cool_time: inlineVal.cool };
+  const saveInlineEdit = async (productId: string, field: 'price' | 'time' | 'info') => {
+    let updateData = {};
+    if (field === 'price') updateData = { price: inlineVal.price };
+    else if (field === 'time') updateData = { prep_time: inlineVal.prep, bake_time: inlineVal.bake, cool_time: inlineVal.cool };
+    else if (field === 'info') updateData = { name: inlineVal.name, description: inlineVal.description };
+    
     await supabase.from('products').update(updateData).eq('id', productId);
     setInlineEdit(null);
     loadData();
@@ -388,19 +392,44 @@ export default function ProductsPage() {
           {products.map(product => (
             <div key={product.id} className={`bg-white rounded-3xl p-5 border-2 transition-all flex flex-col gap-4 ${product.is_active ? 'border-muted/50 hover:border-primary/30' : 'border-muted/20 opacity-60'}`}>
               
-              {/* Clickable Info Area */}
-              <div
-                onClick={() => handleEditProduct(product)}
-                className="cursor-pointer active:scale-[0.99] transition-all"
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-black text-lg text-foreground leading-tight">{product.name}</h3>
-                  {!product.is_active && (
-                    <span className="text-[10px] uppercase font-black bg-muted text-foreground/50 px-2 py-0.5 rounded-md">Draft</span>
-                  )}
+              {/* Clickable Info Area - Inline Editable */}
+              {inlineEdit?.productId === product.id && inlineEdit.field === 'info' ? (
+                <div className="space-y-2 bg-primary/5 p-3 rounded-2xl border-2 border-primary">
+                  <div>
+                    <label className="text-[9px] font-black text-primary uppercase tracking-widest">Name</label>
+                    <input
+                      autoFocus
+                      value={inlineVal.name}
+                      onChange={e => setInlineVal(v => ({ ...v, name: e.target.value }))}
+                      className="w-full bg-transparent font-black text-lg text-foreground outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-black text-primary uppercase tracking-widest">Description</label>
+                    <textarea
+                      value={inlineVal.description}
+                      onChange={e => setInlineVal(v => ({ ...v, description: e.target.value }))}
+                      onBlur={() => saveInlineEdit(product.id, 'info')}
+                      rows={2}
+                      className="w-full bg-transparent text-xs text-foreground/70 outline-none resize-none"
+                    />
+                    <p className="text-[9px] text-primary/50 text-right italic">Click away to save</p>
+                  </div>
                 </div>
-                <p className="text-xs text-foreground/50 line-clamp-2">{product.description || 'No description provided.'}</p>
-              </div>
+              ) : (
+                <div
+                  onClick={() => startInlineEdit(product, 'info')}
+                  className="cursor-pointer active:scale-[0.99] transition-all hover:bg-muted/30 p-2 rounded-2xl"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-black text-lg text-foreground leading-tight">{product.name}</h3>
+                    {!product.is_active && (
+                      <span className="text-[10px] uppercase font-black bg-muted text-foreground/50 px-2 py-0.5 rounded-md">Draft</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-foreground/50 line-clamp-2">{product.description || 'No description provided.'}</p>
+                </div>
+              )}
 
               {/* Stats - Inline Editable */}
               <div className="grid grid-cols-2 gap-3">
