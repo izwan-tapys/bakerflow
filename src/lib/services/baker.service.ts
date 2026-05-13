@@ -64,7 +64,7 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
   return !error;
 }
 
-export async function updatePaymentStatus(orderId: string, payment_status: 'pending' | 'paid'): Promise<boolean> {
+export async function updatePaymentStatus(orderId: string, payment_status: 'unpaid' | 'paid'): Promise<boolean> {
   const { error } = await supabase
     .from('orders')
     .update({ payment_status, updated_at: new Date().toISOString() })

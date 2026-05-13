@@ -40,7 +40,7 @@ function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; on
         </div>
         <button 
           onClick={async () => {
-            const newStatus = order.payment_status === 'paid' ? 'pending' : 'paid';
+            const newStatus = order.payment_status === 'paid' ? 'unpaid' : 'paid';
             const { updatePaymentStatus } = await import('@/lib/services/baker.service');
             const success = await updatePaymentStatus(order.id!, newStatus);
             if (success && onRefresh) onRefresh();
