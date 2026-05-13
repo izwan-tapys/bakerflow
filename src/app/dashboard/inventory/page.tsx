@@ -13,6 +13,7 @@ interface Ingredient {
   low_stock_threshold: number;
   pack_size?: number | null;
   pack_unit?: string | null;
+  pack_size_unit?: string | null;
 }
 
 interface ShoppingItem {
@@ -140,9 +141,16 @@ export default function InventoryPage() {
           <p className="font-bold text-orange-800 text-sm flex items-center gap-2">🛒 Shopping List <span className="bg-orange-200 text-orange-800 px-2 py-0.5 rounded text-[10px]">{shoppingList.length}</span></p>
           <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
             {shoppingList.map(item => {
-              const packs = item.ingredient.pack_size
-                ? Math.ceil(item.shortfall / item.ingredient.pack_size)
-                : null;
+              let packs = null;
+              if (item.ingredient.pack_size) {
+                let sizeInBase = item.ingredient.pack_size;
+                // Convert pack size to base unit for division
+                if ((item.ingredient.pack_size_unit === 'kg' && item.ingredient.unit === 'g') || 
+                    (item.ingredient.pack_size_unit === 'L' && item.ingredient.unit === 'ml')) {
+                  sizeInBase = item.ingredient.pack_size * 1000;
+                }
+                packs = Math.ceil(item.shortfall / sizeInBase);
+              }
               return (
                 <div key={item.ingredient.id} onClick={() => setSelectedIngredient(item.ingredient)} className="flex-none bg-white p-2 px-3 rounded-xl border border-orange-200 cursor-pointer hover:border-orange-400 transition-all">
                   <p className="font-black text-xs text-orange-900">{item.ingredient.name}</p>
@@ -304,6 +312,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
     low_stock_threshold: ingredient.low_stock_threshold,
     pack_size: ingredient.pack_size ?? '' as number | '',
     pack_unit: ingredient.pack_unit ?? '',
+    pack_size_unit: ingredient.pack_size_unit ?? ingredient.unit,
   });
 
   useEffect(() => {
@@ -531,22 +540,28 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">📦 Pack Setting (Optional)</p>
               <p className="text-[9px] text-blue-400">Tetapkan saiz pek supaya Shopping List tunjuk bilangan pek yang perlu dibeli.</p>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Saiz 1 Pek</label>
-                  <div className="relative">
-                    <input type="number" placeholder={`e.g. 25`} value={editForm.pack_size} onChange={e => setEditForm({...editForm, pack_size: e.target.value === '' ? '' : +e.target.value})}
-                      className="w-full h-11 px-3 pr-8 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold opacity-30">{ingredient.unit}</span>
+                <div className="col-span-2 grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Saiz 1 Pek</label>
+                    <input type="number" placeholder={`e.g. 1`} value={editForm.pack_size} onChange={e => setEditForm({...editForm, pack_size: e.target.value === '' ? '' : +e.target.value})}
+                      className="w-full h-11 px-3 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Unit Saiz</label>
+                    <select value={editForm.pack_size_unit} onChange={e => setEditForm({...editForm, pack_size_unit: e.target.value})}
+                      className="w-full h-11 px-3 rounded-xl border border-muted font-bold bg-white focus:border-primary outline-none text-xs">
+                      {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
+                    </select>
                   </div>
                 </div>
-                <div>
-                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Nama Unit</label>
-                  <input placeholder="e.g. botol, pek, tin" value={editForm.pack_unit} onChange={e => setEditForm({...editForm, pack_unit: e.target.value})}
+                <div className="col-span-2">
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Nama Unit Pek (cth: botol, pek, tin)</label>
+                  <input placeholder="e.g. botol" value={editForm.pack_unit} onChange={e => setEditForm({...editForm, pack_unit: e.target.value})}
                     className="w-full h-11 px-3 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
                 </div>
               </div>
               {editForm.pack_size && editForm.pack_unit && (
-                <p className="text-[10px] font-bold text-blue-600">✓ 1 {editForm.pack_unit} = {editForm.pack_size}{ingredient.unit}</p>
+                <p className="text-[10px] font-bold text-blue-600">✓ 1 {editForm.pack_unit} = {editForm.pack_size}{editForm.pack_size_unit}</p>
               )}
             </div>
             
