@@ -280,6 +280,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
   const [isBulk, setIsBulk] = useState(false);
   const [numPacks, setNumPacks] = useState<number | ''>('');
   const [packSize, setPackSize] = useState<number | ''>('');
+  const [packSizeUnit, setPackSizeUnit] = useState(ingredient.unit);
   const [pricePerPack, setPricePerPack] = useState<number | ''>('');
 
   // Edit State
@@ -292,9 +293,14 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
 
   useEffect(() => {
     if (isBulk && numPacks && packSize) {
-      setQty(Number(numPacks) * Number(packSize));
+      // Handle unit conversion for bulk mode
+      let sizeInBase = Number(packSize);
+      if ((packSizeUnit === 'kg' && ingredient.unit === 'g') || (packSizeUnit === 'L' && ingredient.unit === 'ml')) {
+        sizeInBase = Number(packSize) * 1000;
+      }
+      setQty(Number(numPacks) * sizeInBase);
     }
-  }, [isBulk, numPacks, packSize]);
+  }, [isBulk, numPacks, packSize, packSizeUnit, ingredient.unit]);
 
   useEffect(() => {
     if (isBulk && numPacks && pricePerPack) {
@@ -324,9 +330,18 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
     let finalQty = finalQtyVal;
     let finalCostPerBaseUnit = finalTotalVal / finalQtyVal;
     
-    if ((purchaseUnit === 'kg' && ingredient.unit === 'g') || (purchaseUnit === 'L' && ingredient.unit === 'ml')) {
-      finalQty = finalQtyVal * 1000;
-      finalCostPerBaseUnit = (finalTotalVal / finalQtyVal) / 1000;
+    if (isBulk) {
+      let sizeInBase = Number(packSize);
+      if ((packSizeUnit === 'kg' && ingredient.unit === 'g') || (packSizeUnit === 'L' && ingredient.unit === 'ml')) {
+        sizeInBase = Number(packSize) * 1000;
+      }
+      finalQty = Number(numPacks) * sizeInBase;
+      finalCostPerBaseUnit = Number(finalTotalVal) / finalQty;
+    } else {
+      if ((purchaseUnit === 'kg' && ingredient.unit === 'g') || (purchaseUnit === 'L' && ingredient.unit === 'ml')) {
+        finalQty = finalQtyVal * 1000;
+        finalCostPerBaseUnit = (finalTotalVal / finalQtyVal) / 1000;
+      }
     }
     
     await onRestock(ingredient, finalQty, finalCostPerBaseUnit);
@@ -389,27 +404,38 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
               <div className="grid grid-cols-3 gap-2 bg-muted/20 p-4 rounded-3xl border border-muted/50">
                 <div>
                   <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">How many?</label>
-                  <input type="number" placeholder="e.g. 22" value={numPacks} onChange={e => setNumPacks(e.target.value === '' ? '' : +e.target.value)}
+                  <input type="number" placeholder="e.g. 10" value={numPacks} onChange={e => setNumPacks(e.target.value === '' ? '' : +e.target.value)}
                     className="w-full h-11 px-3 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
                   <p className="text-[9px] font-bold text-foreground/30 mt-1 text-center">Packs/Bottles</p>
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Size each</label>
-                  <div className="relative">
-                    <input type="number" placeholder="e.g. 25" value={packSize} onChange={e => setPackSize(e.target.value === '' ? '' : +e.target.value)}
-                      className="w-full h-11 px-3 pr-8 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold opacity-30">{ingredient.unit}</span>
-                  </div>
+                  <input type="number" placeholder="e.g. 1" value={packSize} onChange={e => setPackSize(e.target.value === '' ? '' : +e.target.value)}
+                    className="w-full h-11 px-3 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Price each</label>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Unit</label>
+                  <select value={packSizeUnit} onChange={e => setPackSizeUnit(e.target.value)}
+                    className="w-full h-11 px-2 rounded-xl border border-muted text-xs font-black bg-white focus:border-primary">
+                    {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                </div>
+                <div className="col-span-3">
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Price each (RM)</label>
                   <div className="relative">
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] font-bold opacity-30">RM</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground/30">RM</span>
                     <input type="number" placeholder="e.g. 2.50" value={pricePerPack} onChange={e => setPricePerPack(e.target.value === '' ? '' : +e.target.value)}
-                      className="w-full h-11 pl-7 pr-2 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
+                      className="w-full h-11 pl-10 pr-2 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
                   </div>
                 </div>
               </div>
+              {/* Live summary */}
+              {numPacks && packSize && pricePerPack && (
+                <div className="bg-green-50 border border-green-100 rounded-2xl px-4 py-3 flex justify-between items-center text-sm">
+                  <span className="font-bold text-green-700">📦 {numPacks} pek × {packSize}{packSizeUnit} =</span>
+                  <span className="font-black text-green-800">{qty}{ingredient.unit} · RM {(Number(numPacks) * Number(pricePerPack)).toFixed(2)}</span>
+                </div>
+              )}
             ) : (
               <div className="flex items-center gap-2">
                 <div className="w-24">
