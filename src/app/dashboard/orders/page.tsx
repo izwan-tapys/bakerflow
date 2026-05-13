@@ -35,7 +35,7 @@ export default function OrdersPage() {
     delivery_date: new Date().toISOString().split('T')[0],
     delivery_time: '15:00',
     special_notes: '',
-    payment_status: 'unpaid' as const
+    payment_status: 'unpaid' as PaymentStatus
   });
 
   const loadData = useCallback(async () => {
