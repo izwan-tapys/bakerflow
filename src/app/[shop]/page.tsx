@@ -70,11 +70,11 @@ export default function OrderPage() {
 
   useEffect(() => { loadBakerData(); }, [loadBakerData]);
 
-  // Generate next 14 days for the calendar
+  // Generate today and next 14 days for the calendar
   const getAvailableDates = () => {
     const dates = [];
     const today = new Date();
-    for (let i = 1; i <= 14; i++) {
+    for (let i = 0; i <= 14; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       dates.push(date);
