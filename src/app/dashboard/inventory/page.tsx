@@ -510,7 +510,11 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
               <div className="flex justify-between items-center text-xs">
                 <span className="text-foreground/40 font-bold uppercase tracking-tighter">Summary:</span>
                 <span className="font-black text-primary">
-                  {qty ? `${qty}${purchaseUnit}` : '-'} @ RM {totalPrice ? Number(totalPrice).toFixed(2) : '-'}
+                  {isBulk ? (
+                    numPacks && packSize ? `${Number(numPacks) * Number(packSize)}${packSizeUnit} @ RM ${(Number(numPacks) * Number(pricePerPack)).toFixed(2)}` : '-'
+                  ) : (
+                    qty && totalPrice ? `${qty}${purchaseUnit} @ RM ${Number(totalPrice).toFixed(2)}` : '-'
+                  )}
                 </span>
               </div>
             </div>
