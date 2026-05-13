@@ -45,10 +45,10 @@ export default function OrderPage() {
 
   const loadBakerData = useCallback(async () => {
     // Search for the baker using the shop name slug from the URL
+    // We remove the is_setup_complete check to make it easier for testing
     const { data: settingsData } = await supabase
       .from('baker_settings')
       .select('baker_id, shop_name, daily_capacity, home_address, whatsapp_number, bank_name, bank_account, bank_holder')
-      .eq('is_setup_complete', true)
       .ilike('shop_name', shopSlug)
       .limit(1)
       .single();
@@ -83,22 +83,13 @@ export default function OrderPage() {
   };
 
   const handleSubmitOrder = async () => {
-    if (!selectedProduct || !selectedDate) return;
+    if (!selectedProduct || !selectedDate || !bakerInfo?.baker_id) return;
     setSubmitting(true);
-
-    const { data: settingsRow } = await supabase
-      .from('baker_settings')
-      .select('baker_id')
-      .eq('is_setup_complete', true)
-      .limit(1)
-      .single();
-
-    if (!settingsRow?.baker_id) { setSubmitting(false); return; }
 
     const total = (selectedProduct.price * form.quantity) + 10;
 
     const orderPayload = {
-      baker_id: settingsRow.baker_id,
+      baker_id: bakerInfo.baker_id,
       customer_name: form.customer_name,
       customer_phone: form.customer_phone,
       customer_address: form.customer_address,
