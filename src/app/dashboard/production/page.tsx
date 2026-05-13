@@ -146,7 +146,7 @@ export default function ProductionPage() {
                 🔥 Currently Baking
                 <span className="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full font-bold">{baking.length}</span>
               </h2>
-              {baking.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadData} />)}
+              {baking.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadOrders} />)}
             </section>
           )}
 
@@ -156,7 +156,7 @@ export default function ProductionPage() {
                 📋 Queued
                 <span className="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full font-bold">{queued.length}</span>
               </h2>
-              {queued.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadData} />)}
+              {queued.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadOrders} />)}
             </section>
           )}
 
@@ -166,7 +166,7 @@ export default function ProductionPage() {
                 ✅ Ready for Pickup/Delivery
                 <span className="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full font-bold">{ready.length}</span>
               </h2>
-              {ready.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} />)}
+              {ready.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadOrders} />)}
             </section>
           )}
         </>
