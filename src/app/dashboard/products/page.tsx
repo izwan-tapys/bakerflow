@@ -364,6 +364,13 @@ export default function ProductsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {products.map(product => (
             <div key={product.id} className={`bg-white rounded-3xl p-5 border-2 transition-all group relative ${product.is_active ? 'border-muted/50 hover:border-primary/30' : 'border-muted/20 opacity-60'}`}>
+              {/* Edit Icon Button - Top Right */}
+              <button 
+                onClick={() => setEditingProduct(product)}
+                className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-md border border-muted rounded-full text-foreground/40 hover:text-primary hover:border-primary transition-all shadow-sm"
+              >
+                ⚙️
+              </button>
               <div className="flex flex-col h-full justify-between gap-4">
                 <div>
                   <div className="flex items-start justify-between mb-2">
