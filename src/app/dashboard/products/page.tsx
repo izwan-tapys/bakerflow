@@ -615,7 +615,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
             <div>
               <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Ingredient Name</label>
               <input placeholder="e.g. Premium Butter" value={form.new_name} onChange={e => setForm({ ...form, new_name: e.target.value })}
-                className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary outline-none" />
+                className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary outline-none bg-white" />
             </div>
           ) : (
             <div>
@@ -632,7 +632,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
             <div className="flex-1">
               <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Qty</label>
               <input type="number" placeholder="0" value={form.quantity_needed || ''} onChange={e => setForm({ ...form, quantity_needed: +e.target.value })}
-                className="w-full h-10 px-2 rounded-xl border border-muted text-sm focus:border-primary outline-none" />
+                className="w-full h-10 px-2 rounded-xl border border-muted text-sm focus:border-primary outline-none bg-white" />
             </div>
             <div className="w-20">
               <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Unit</label>
