@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 const navItems = [
   { href: '/dashboard', label: 'Home', icon: '🏠' },
   { href: '/dashboard/orders', label: 'Orders', icon: '📋' },
-  { href: '/dashboard/production', label: 'Kitchen', icon: '🍳' },
+  { href: '/dashboard/production', label: 'Production', icon: '🥣' },
   { href: '/dashboard/products', label: 'Menu', icon: '🧁' },
   { href: '/dashboard/settings', label: 'Settings', icon: '⚙️' },
 ];

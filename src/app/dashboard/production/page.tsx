@@ -133,7 +133,7 @@ export default function ProductionPage() {
       <KitchenTabs />
 
       <div>
-        <h1 className="text-2xl font-extrabold text-foreground">Kitchen 🍳</h1>
+        <h1 className="text-2xl font-extrabold text-foreground">Production Line 🥣</h1>
         <p className="text-foreground/50 text-sm">Track your production workflow</p>
       </div>
 
