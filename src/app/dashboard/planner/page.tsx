@@ -32,7 +32,7 @@ export default function PlannerPage() {
 
     const [settingsRes, ordersRes, productsRes] = await Promise.all([
       supabase.from('baker_settings').select('*').eq('baker_id', user.id).single(),
-      supabase.from('orders').select('*').eq('baker_id', user.id).eq('delivery_date', selectedDate).in('status', ['pending', 'approved', 'production']),
+      supabase.from('orders').select('*').eq('baker_id', user.id).eq('delivery_date', selectedDate).in('status', ['pending', 'approved', 'production', 'ready', 'otw']),
       supabase.from('products').select('*').eq('baker_id', user.id)
     ]);
 
@@ -57,9 +57,9 @@ export default function PlannerPage() {
 
   // Generate Timeline
   const generateSchedule = () => {
-    if (!settings || orders.length === 0) return [];
+    if (orders.length === 0) return [];
 
-    const deadline = settings.delivery_start_time; // e.g. "15:00"
+    const deadline = settings?.delivery_start_time || '15:00'; // e.g. "15:00"
     const [deadH, deadM] = deadline.split(':').map(Number);
     const deadlineDate = new Date();
     deadlineDate.setHours(deadH, deadM, 0, 0);
