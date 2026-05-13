@@ -131,6 +131,7 @@ export default function OrderPage() {
       <div className="p-8 text-center space-y-3 py-16">
         <div className="text-4xl">😔</div>
         <p className="text-foreground/60">This order portal is not available yet.</p>
+        <p className="text-[10px] text-foreground/20 font-mono">Debug: Looking for &quot;{shopSlug}&quot;</p>
       </div>
     );
   }
