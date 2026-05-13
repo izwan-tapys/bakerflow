@@ -104,6 +104,12 @@ export default function InventoryPage() {
     loadIngredients();
   };
 
+  const handleDeleteIngredient = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this ingredient? It will also be removed from any recipes using it.')) return;
+    await supabase.from('ingredients').delete().eq('id', id);
+    loadIngredients();
+  };
+
   const lowStock = ingredients.filter(i => i.current_stock <= i.low_stock_threshold && !shoppingList.find(s => s.ingredient.id === i.id));
 
   return (
@@ -215,7 +221,17 @@ export default function InventoryPage() {
                     <p className="font-bold">{ingredient.low_stock_threshold}{ingredient.unit}</p>
                   </div>
                 </div>
-                <RestockModal ingredient={ingredient} onRestock={handleRestock} />
+                <div className="flex gap-2 mt-3">
+                  <div className="flex-1">
+                    <RestockModal ingredient={ingredient} onRestock={handleRestock} />
+                  </div>
+                  <button 
+                    onClick={() => handleDeleteIngredient(ingredient.id)}
+                    className="mt-3 px-3 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors text-xs font-bold"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             );
           })}
