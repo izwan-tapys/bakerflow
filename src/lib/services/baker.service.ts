@@ -55,14 +55,13 @@ export async function getProductionOrders(bakerId: string): Promise<Order[]> {
   return data || [];
 }
 
-export async function updateOrderStatus(orderId: string, status: Order['status']): Promise<{ success: boolean; message?: string }> {
+export async function updateOrderStatus(orderId: string, status: Order['status']): Promise<{ success: boolean; message?: string; warning?: string }> {
   // 1. Get current order
   const { data: order } = await supabase.from('orders').select('*').eq('id', orderId).single();
   if (!order) return { success: false, message: 'Order tidak dijumpai.' };
 
-  // 2. Pre-check: If starting production or marking ready, check physical stock sufficiency first
-  if (status === 'production' || status === 'ready') {
-    // Only check if product_id exists. If manual order with no product link, we can't check recipes.
+  // 2. Pre-check: Stock validation
+  if (status === 'approved' || status === 'production' || status === 'ready') {
     if (order.product_id) {
       const { data: recipes } = await supabase
         .from('recipes')
@@ -73,14 +72,28 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
         const missing = recipes.filter(r => {
           const needed = r.quantity_needed * order.quantity;
           const current = (r.ingredient as any)?.current_stock || 0;
-          return current < (needed - 0.001); // Small buffer for float precision
+          return current < (needed - 0.001);
         });
 
         if (missing.length > 0) {
           const missingItems = missing.map(m => 
-            `${(m.ingredient as any)?.name} (Perlu: ${m.quantity_needed * order.quantity}${(m.ingredient as any)?.unit}, Ada: ${(m.ingredient as any)?.current_stock}${(m.ingredient as any)?.unit})`
+            `- ${(m.ingredient as any)?.name} (Perlu: ${m.quantity_needed * order.quantity}${(m.ingredient as any)?.unit}, Ada: ${(m.ingredient as any)?.current_stock}${(m.ingredient as any)?.unit})`
           ).join('\n');
-          return { success: false, message: `Bahan tak cukup untuk ${status === 'production' ? 'mula baking' : 'siapkan order'}:\n${missingItems}` };
+          
+          const msg = `Bahan tak cukup:\n${missingItems}\n\nSila restock sebelum mula baking.`;
+          
+          if (status === 'approved') {
+            // Allow approval but with warning
+            const { error } = await supabase
+              .from('orders')
+              .update({ status, updated_at: new Date().toISOString() })
+              .eq('id', orderId);
+            if (error) return { success: false, message: error.message };
+            return { success: true, warning: msg };
+          } else {
+            // Hard block for production/ready
+            return { success: false, message: `Tak boleh mula! ${msg}` };
+          }
         }
       }
     }

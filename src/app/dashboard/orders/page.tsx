@@ -161,6 +161,12 @@ export default function OrdersPage() {
       }
       return;
     }
+
+    if (result.warning) {
+      if (confirm(`${result.warning}\n\nOrder telah di-approve. Nak ke page Inventory untuk tengok Shopping List?`)) {
+        window.location.href = '/dashboard/inventory';
+      }
+    }
     loadData();
   };
 
