@@ -579,11 +579,6 @@ export default function ProductsPage() {
 function RecipeModal({ product, ingredients, onClose }: { product: Product, ingredients: Ingredient[], onClose: () => void }) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
-  const [times, setTimes] = useState({ 
-    prep: product.prep_time || 30, 
-    bake: product.bake_time || 45, 
-    cool: product.cool_time || 60 
-  });
   
   // Modal Inline Add State
   const [isNewIngredient, setIsNewIngredient] = useState(false);
@@ -643,13 +638,6 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
   };
 
   const handleSaveAll = async () => {
-    // Update times first
-    await supabase.from('products').update({
-      prep_time: times.prep,
-      bake_time: times.bake,
-      cool_time: times.cool
-    }).eq('id', product.id);
-    
     onClose();
   };
 
@@ -667,29 +655,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-5 pr-1 custom-scrollbar">
-          {/* Cooking Times Setup */}
-          <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-3">
-            <p className="text-[10px] font-black text-primary uppercase tracking-widest">🕒 Production Timing (Mins)</p>
-            <div className="grid grid-cols-3 gap-2">
-              <div>
-                <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Prep</label>
-                <input type="number" value={times.prep || ''} placeholder="0" onChange={e => setTimes({...times, prep: e.target.value === '' ? 0 : +e.target.value})}
-                  className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Bake</label>
-                <input type="number" value={times.bake || ''} placeholder="0" onChange={e => setTimes({...times, bake: e.target.value === '' ? 0 : +e.target.value})}
-                  className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Cool</label>
-                <input type="number" value={times.cool || ''} placeholder="0" onChange={e => setTimes({...times, cool: e.target.value === '' ? 0 : +e.target.value})}
-                  className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-muted pt-4 space-y-3">
+          <div className="space-y-3">
             <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">🥣 Ingredients List</p>
             {/* Existing Recipe Items - SCROLLABLE (max 3 items visible) */}
             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
@@ -761,7 +727,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
 
         <div className="flex-none pt-2">
           <button onClick={handleSaveAll} className="w-full h-12 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-            Save Recipe &amp; Times
+            Close & Update
           </button>
         </div>
       </div>
