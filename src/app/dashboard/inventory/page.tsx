@@ -12,6 +12,8 @@ interface Ingredient {
   low_stock_threshold: number;
 }
 
+import { KitchenTabs } from '@/components/dashboard/KitchenTabs';
+
 export default function InventoryPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +67,8 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-5 pb-4">
+      <KitchenTabs />
+
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-foreground">Inventory 📦</h1>

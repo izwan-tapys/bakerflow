@@ -78,6 +78,8 @@ function ProductionCard({ order, onStatusChange }: { order: Order; onStatusChang
   );
 }
 
+import { KitchenTabs } from '@/components/dashboard/KitchenTabs';
+
 export default function ProductionPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,6 +112,8 @@ export default function ProductionPage() {
 
   return (
     <div className="space-y-6 pb-4">
+      <KitchenTabs />
+
       <div>
         <h1 className="text-2xl font-extrabold text-foreground">Kitchen 🍳</h1>
         <p className="text-foreground/50 text-sm">Track your production workflow</p>
