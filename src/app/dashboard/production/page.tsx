@@ -113,7 +113,7 @@ export default function ProductionPage() {
   useEffect(() => { loadOrders(); }, [loadOrders]);
 
   const handleStatusChange = async (orderId: string, status: OrderStatus) => {
-    // If starting production, check stock first
+    // 1. Validation: If starting production, check stock sufficiency first
     if (status === 'production') {
       const { data: order } = await supabase.from('orders').select('*').eq('id', orderId).single();
       if (order && order.product_id) {
@@ -135,6 +135,27 @@ export default function ProductionPage() {
             
             alert(`⚠️ Stock Tak Cukup!\n\nAnda tak boleh mula baking sebab bahan tak cukup:\n\n${missingText}`);
             return;
+          }
+        }
+      }
+    }
+
+    // 2. Logic: If finishing production (Mark Ready), deduct actual stock
+    if (status === 'ready') {
+      const { data: order } = await supabase.from('orders').select('*').eq('id', orderId).single();
+      if (order && order.product_id && order.status === 'production') {
+        const { data: recipes } = await supabase.from('recipes').select('*').eq('product_id', order.product_id);
+        
+        if (recipes && recipes.length > 0) {
+          for (const recipe of recipes) {
+            const amountToDeduct = recipe.quantity_needed * order.quantity;
+            // Update ingredient stock
+            const { data: currentIng } = await supabase.from('ingredients').select('current_stock').eq('id', recipe.ingredient_id).single();
+            if (currentIng) {
+              await supabase.from('ingredients')
+                .update({ current_stock: Math.max(0, currentIng.current_stock - amountToDeduct) })
+                .eq('id', recipe.ingredient_id);
+            }
           }
         }
       }
