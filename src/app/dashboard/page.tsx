@@ -110,74 +110,107 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="space-y-6 pb-10">
-      {/* Greeting */}
-      <div>
-        <h1 className="text-2xl font-extrabold text-foreground">
-          {getGreeting()}, {shopName}! 👋
-        </h1>
-        <p className="text-foreground/50 text-sm mt-1">
-          {new Date().toLocaleDateString('en-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
+    <div className="space-y-6 pb-20">
+      {/* Morning Briefing Header */}
+      <div className="bg-gradient-to-br from-primary to-primary-dark rounded-3xl p-6 text-white shadow-xl shadow-primary/20">
+        <p className="text-primary-foreground/70 font-bold text-xs uppercase tracking-widest mb-1">Morning Briefing ☀️</p>
+        <h1 className="text-2xl font-black mb-4 italic">Good Morning, {shopName}!</h1>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white/10 rounded-2xl p-3 backdrop-blur-sm border border-white/10">
+            <p className="text-[10px] font-bold uppercase opacity-60">Today&apos;s Orders</p>
+            <p className="text-xl font-black">{todayOrders.length}</p>
+          </div>
+          <div className="bg-white/10 rounded-2xl p-3 backdrop-blur-sm border border-white/10">
+            <p className="text-[10px] font-bold uppercase opacity-60">To Collect</p>
+            <p className="text-xl font-black text-green-300">RM {todayCollection.toFixed(2)}</p>
+          </div>
+        </div>
+
+        {nextTask && (
+          <div className="mt-5 pt-5 border-t border-white/10 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center text-xl animate-bounce">⏰</div>
+            <div>
+              <p className="text-[10px] font-bold uppercase opacity-60">Next Action</p>
+              <p className="font-black text-sm">Prep {nextTask.product.name} at {nextTask.startPrep.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Smart Timeline */}
-      <SmartTimeline orders={allOrdersForTimeline} />
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-2xl p-4 border border-muted/50 text-center">
-          <p className="text-3xl font-extrabold text-primary">{todayOrders.length}</p>
-          <p className="text-xs text-foreground/60 mt-1 font-medium">Today&apos;s Deliveries</p>
+      {/* Quick Stats Grid */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white rounded-3xl p-5 border border-muted/50 shadow-sm">
+          <p className="text-[10px] font-black text-foreground/30 uppercase tracking-widest mb-1">Monthly Sales</p>
+          <p className="text-2xl font-black text-primary">RM {monthlyRevenue.toLocaleString()}</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-muted/50 text-center">
-          <p className="text-3xl font-extrabold text-orange-500">{pendingOrders.length}</p>
-          <p className="text-xs text-foreground/60 mt-1 font-medium">Pending Approval</p>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-muted/50 text-center">
-          <p className="text-xl font-extrabold text-green-600">RM{todayCollection.toFixed(0)}</p>
-          <p className="text-xs text-foreground/60 mt-1 font-medium">Collect Today</p>
+        <div className="bg-white rounded-3xl p-5 border border-muted/50 shadow-sm flex flex-col justify-center items-center gap-1">
+          <Link href="/dashboard/planner" className="text-xs font-bold text-primary bg-primary/5 px-4 py-2 rounded-xl hover:bg-primary/10 transition-all">
+            View Full Schedule 📅
+          </Link>
         </div>
       </div>
 
-      {/* Monthly Revenue */}
-      <div className="bg-gradient-to-r from-primary to-accent rounded-2xl p-5 text-white">
-        <p className="text-sm font-medium opacity-80">Monthly Revenue</p>
-        <p className="text-3xl font-extrabold mt-1">RM {monthlyRevenue.toFixed(2)}</p>
-        <p className="text-xs opacity-70 mt-1">{new Date().toLocaleDateString('en-MY', { month: 'long', year: 'numeric' })}</p>
+      {/* Today's Agenda Summary */}
+      <div className="bg-white rounded-3xl p-5 border border-muted/50 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-black text-foreground flex items-center gap-2">
+            Today&apos;s Agenda
+            <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full uppercase font-black">Timeline</span>
+          </h2>
+        </div>
+
+        {schedule.length === 0 ? (
+          <div className="text-center py-10 bg-muted/5 rounded-2xl border-2 border-dashed border-muted">
+            <p className="text-sm font-bold text-foreground/40 italic">Nothing scheduled for today yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {schedule.slice(0, 3).map((item: any, idx: number) => (
+              <div key={idx} className="flex items-center justify-between py-2 border-b border-muted last:border-0">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-muted/30 flex flex-col items-center justify-center">
+                    <p className="text-[10px] font-black text-primary">{item.startPrep.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-foreground leading-tight">{item.product.name}</p>
+                    <p className="text-xs text-foreground/40">For {item.customer_name}</p>
+                  </div>
+                </div>
+                <div className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase ${
+                  item.status === 'pending' ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'
+                }`}>
+                  {item.status}
+                </div>
+              </div>
+            ))}
+            {schedule.length > 3 && (
+              <Link href="/dashboard/planner" className="block text-center text-xs font-bold text-primary/60 hover:text-primary transition-colors pt-2">
+                + See {schedule.length - 3} more tasks in Planner
+              </Link>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Pending Approvals */}
+      {/* Pending Approval Section */}
       {pendingOrders.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-            ⏳ Pending Approvals
-            <span className="bg-orange-100 text-orange-600 text-xs font-bold px-2 py-0.5 rounded-full">{pendingOrders.length}</span>
+          <h2 className="text-lg font-black text-foreground flex items-center gap-2">
+            🚨 Needs Attention
+            <span className="bg-red-100 text-red-600 text-xs font-black px-2 py-0.5 rounded-full tracking-tighter">{pendingOrders.length}</span>
           </h2>
           {pendingOrders.map(order => (
             <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} onRefresh={loadDashboardData} />
           ))}
         </div>
       )}
-
-      {/* Production Orders */}
-      {productionOrders.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-            🍳 Kitchen Tasks
-          </h2>
-          {productionOrders.map(order => (
-            <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} onRefresh={loadDashboardData} />
-          ))}
-        </div>
-      )}
-
+      
       {/* Empty State */}
-      {pendingOrders.length === 0 && productionOrders.length === 0 && (
+      {pendingOrders.length === 0 && productionOrders.length === 0 && schedule.length === 0 && (
         <div className="text-center py-12 space-y-3">
           <div className="text-5xl">🎉</div>
           <p className="text-foreground/60 font-medium">All clear! No pending tasks.</p>
-          <p className="text-foreground/40 text-sm">New orders will appear here automatically.</p>
         </div>
       )}
     </div>
