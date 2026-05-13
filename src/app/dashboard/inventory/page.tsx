@@ -329,7 +329,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
   const [loading, setLoading] = useState(false);
 
   // Restock State - Single Unit
-  const [qty, setQty] = useState<number | ''>('');
+  const [qtyInput, setQtyInput] = useState<number | ''>('');
   const [purchaseUnit, setPurchaseUnit] = useState(ingredient.unit);
   const [totalPrice, setTotalPrice] = useState<number | ''>('');
 
@@ -351,31 +351,33 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
     pack_size_unit: ingredient.pack_size_unit ?? ingredient.unit,
   });
 
+  // Dynamic Calculations for UI Display
+  const isKgToG = (isBulk ? packSizeUnit : purchaseUnit) === 'kg' && ingredient.unit === 'g';
+  const isGToKg = (isBulk ? packSizeUnit : purchaseUnit) === 'g' && ingredient.unit === 'kg';
+  const isLToMl = (isBulk ? packSizeUnit : purchaseUnit) === 'L' && ingredient.unit === 'ml';
+  const isMlToL = (isBulk ? packSizeUnit : purchaseUnit) === 'ml' && ingredient.unit === 'L';
+
+  let displayQty = 0;
+  if (isBulk) {
+    let sizeInBase = Number(packSize);
+    if (isKgToG || isLToMl) sizeInBase = Number(packSize) * 1000;
+    if (isGToKg || isMlToL) sizeInBase = Number(packSize) / 1000;
+    displayQty = Number(numPacks) * sizeInBase;
+  } else {
+    if (isKgToG || isLToMl) displayQty = Number(qtyInput) * 1000;
+    else if (isGToKg || isMlToL) displayQty = Number(qtyInput) / 1000;
+    else displayQty = Number(qtyInput);
+  }
+
+  const displayTotal = isBulk ? (Number(numPacks) * Number(pricePerPack)) : Number(totalPrice);
+
   const handleRestockSubmit = async () => {
-    let finalQty = isBulk ? (Number(numPacks) * Number(packSize)) : Number(qty);
-    let finalTotalVal = isBulk ? (Number(numPacks) * Number(pricePerPack)) : Number(totalPrice);
-    
-    if (!finalQty || !finalTotalVal) return;
+    if (!displayQty || !displayTotal) return;
     
     setLoading(true);
-    const isKgToG = (isBulk ? packSizeUnit : purchaseUnit) === 'kg' && ingredient.unit === 'g';
-    const isGToKg = (isBulk ? packSizeUnit : purchaseUnit) === 'g' && ingredient.unit === 'kg';
-    const isLToMl = (isBulk ? packSizeUnit : purchaseUnit) === 'L' && ingredient.unit === 'ml';
-    const isMlToL = (isBulk ? packSizeUnit : purchaseUnit) === 'ml' && ingredient.unit === 'L';
-
-    if (isBulk) {
-      let sizeInBase = Number(packSize);
-      if (isKgToG || isLToMl) sizeInBase = Number(packSize) * 1000;
-      if (isGToKg || isMlToL) sizeInBase = Number(packSize) / 1000;
-      
-      finalQty = Number(numPacks) * sizeInBase;
-    } else {
-      if (isKgToG || isLToMl) finalQty = Number(qty) * 1000;
-      else if (isGToKg || isMlToL) finalQty = Number(qty) / 1000;
-      else finalQty = Number(qty);
-    }
-
-    let finalCostPerBaseUnit = finalTotalVal / finalQty;
+    const finalQty = displayQty;
+    const finalTotalVal = displayTotal;
+    const finalCostPerBaseUnit = finalTotalVal / finalQty;
     
     await onRestock(ingredient, finalQty, finalCostPerBaseUnit);
     onClose();
@@ -477,7 +479,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
                 {numPacks && packSize && pricePerPack && (
                   <div className="bg-green-50 border border-green-100 rounded-2xl px-4 py-3 flex justify-between items-center text-sm">
                     <span className="font-bold text-green-700">📦 {numPacks} pek × {packSize}{packSizeUnit} =</span>
-                    <span className="font-black text-green-800">{qty}{ingredient.unit} · RM {(Number(numPacks) * Number(pricePerPack)).toFixed(2)}</span>
+                    <span className="font-black text-green-800">{displayQty}{ingredient.unit} · RM {displayTotal.toFixed(2)}</span>
                   </div>
                 )}
               </>
@@ -485,7 +487,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
               <div className="flex items-center gap-2">
                 <div className="w-24">
                   <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Qty</label>
-                  <input type="number" placeholder="0" value={qty} onChange={e => setQty(e.target.value === '' ? '' : +e.target.value)}
+                  <input type="number" placeholder="0" value={qtyInput} onChange={e => setQtyInput(e.target.value === '' ? '' : +e.target.value)}
                     className="w-full h-12 px-3 rounded-2xl border border-muted text-sm font-black focus:outline-none focus:border-primary text-center" />
                 </div>
                 <div className="w-20">
@@ -510,16 +512,12 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
               <div className="flex justify-between items-center text-xs">
                 <span className="text-foreground/40 font-bold uppercase tracking-tighter">Summary:</span>
                 <span className="font-black text-primary">
-                  {isBulk ? (
-                    numPacks && packSize ? `${Number(numPacks) * Number(packSize)}${packSizeUnit} @ RM ${(Number(numPacks) * Number(pricePerPack)).toFixed(2)}` : '-'
-                  ) : (
-                    qty && totalPrice ? `${qty}${purchaseUnit} @ RM ${Number(totalPrice).toFixed(2)}` : '-'
-                  )}
+                  {displayQty > 0 ? `${displayQty}${ingredient.unit} @ RM ${displayTotal.toFixed(2)}` : '-'}
                 </span>
               </div>
             </div>
 
-            <button onClick={handleRestockSubmit} disabled={loading || !qty || !totalPrice} className="w-full h-14 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20 disabled:opacity-50">
+            <button onClick={handleRestockSubmit} disabled={loading || !displayQty || !displayTotal} className="w-full h-14 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20 disabled:opacity-50">
               {loading ? 'Processing...' : 'Confirm Restock'}
             </button>
           </div>
