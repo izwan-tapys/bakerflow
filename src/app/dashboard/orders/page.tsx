@@ -27,6 +27,8 @@ export default function OrdersPage() {
   const [showManual, setShowManual] = useState(false);
   const [manualForm, setManualForm] = useState({
     customer_name: '',
+    customer_phone: '',
+    customer_address: 'Self Pickup / Manual',
     product_id: '',
     quantity: 1,
     delivery_date: new Date().toISOString().split('T')[0],
@@ -56,28 +58,41 @@ export default function OrdersPage() {
     if (!user) return;
 
     const product = products.find(p => p.id === manualForm.product_id);
-    if (!product) return;
+    if (!product) {
+      alert('Sila pilih produk!');
+      return;
+    }
 
     const total_amount = product.price * manualForm.quantity;
 
-    await supabase.from('orders').insert({
+    const { error } = await supabase.from('orders').insert({
       baker_id: user.id,
       customer_name: manualForm.customer_name,
+      customer_phone: manualForm.customer_phone || '000000000',
+      customer_address: manualForm.customer_address,
       product_id: product.id,
       product_name: product.name,
       quantity: manualForm.quantity,
+      unit_price: product.price,
       total_amount,
       payment_status: manualForm.payment_status,
       delivery_date: manualForm.delivery_date,
       delivery_time: manualForm.delivery_time,
-      status: 'approved', // Manual orders are usually already approved
+      status: 'approved',
       special_notes: manualForm.special_notes,
       order_number: `M-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
     });
 
+    if (error) {
+      alert('Gagal simpan: ' + error.message);
+      return;
+    }
+
     setShowManual(false);
     setManualForm({
       customer_name: '',
+      customer_phone: '',
+      customer_address: 'Self Pickup / Manual',
       product_id: '',
       quantity: 1,
       delivery_date: new Date().toISOString().split('T')[0],
@@ -120,9 +135,22 @@ export default function OrdersPage() {
           <p className="font-black text-foreground">Add Manual Order</p>
           
           <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-black uppercase text-foreground/40">Customer Name</label>
+                <input value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})}
+                  className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase text-foreground/40">Customer Phone</label>
+                <input value={manualForm.customer_phone} onChange={e => setManualForm({...manualForm, customer_phone: e.target.value})} placeholder="0123456789"
+                  className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+              </div>
+            </div>
+
             <div>
-              <label className="text-[10px] font-black uppercase text-foreground/40">Customer Name</label>
-              <input value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})}
+              <label className="text-[10px] font-black uppercase text-foreground/40">Delivery/Pickup Address</label>
+              <input value={manualForm.customer_address} onChange={e => setManualForm({...manualForm, customer_address: e.target.value})}
                 className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
             </div>
 
