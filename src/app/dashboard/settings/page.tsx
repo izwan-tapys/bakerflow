@@ -59,6 +59,29 @@ export default function SettingsPage() {
         <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-14 bg-muted rounded-2xl animate-pulse" />)}</div>
       ) : (
         <div className="space-y-6">
+          {/* Production & Delivery Schedule */}
+          <section className="bg-white rounded-2xl border border-muted p-5 space-y-4">
+            <h2 className="font-bold text-foreground">🕒 Production & Delivery Schedule</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-foreground/70 block mb-2">Delivery Starts</label>
+                <input type="time" value={settings.delivery_start_time || '15:00'} onChange={e => updateField('delivery_start_time', e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-foreground/70 block mb-2">Delivery Ends</label>
+                <input type="time" value={settings.delivery_end_time || '18:00'} onChange={e => updateField('delivery_end_time', e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm" />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-foreground/70 block mb-2">Daily Order Capacity (Slots)</label>
+              <input type="number" value={settings.daily_capacity || 5} onChange={e => updateField('daily_capacity', +e.target.value)}
+                className="w-full h-11 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm" />
+              <p className="text-[10px] text-foreground/40 mt-1 font-medium">Sistem akan beri amaran jika order melebihi kapasiti ini.</p>
+            </div>
+          </section>
+
           {/* Shop Info */}
           <section className="bg-white rounded-2xl border border-muted p-5 space-y-4">
             <h2 className="font-bold text-foreground">🏪 Shop Information</h2>
@@ -68,11 +91,6 @@ export default function SettingsPage() {
               <label className="text-sm font-semibold text-foreground/70 block mb-2">Home Address</label>
               <textarea rows={2} value={settings.home_address || ''} onChange={e => updateField('home_address', e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm resize-none" />
-            </div>
-            <div>
-              <label className="text-sm font-semibold text-foreground/70 block mb-2">Daily Order Capacity</label>
-              <input type="number" value={settings.daily_capacity || 5} onChange={e => updateField('daily_capacity', +e.target.value)}
-                className="w-full h-11 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm" />
             </div>
           </section>
 
