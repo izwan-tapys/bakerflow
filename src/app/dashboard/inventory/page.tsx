@@ -225,39 +225,60 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {/* Add Form */}
+      {/* Add Ingredient Modal */}
       {showAdd && (
-        <div className="bg-white rounded-3xl border-2 border-primary/20 p-5 space-y-4 shadow-xl">
-          <p className="font-black text-lg text-primary">New Ingredient</p>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Name</label>
-              <input placeholder="e.g. Premium Flour" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                className="w-full h-11 px-4 rounded-xl border border-muted focus:border-primary outline-none font-bold" />
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+          <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-6 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center mb-6 flex-none">
+              <p className="font-black text-xl text-primary">New Ingredient</p>
+              <button onClick={() => setShowAdd(false)} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold">&times;</button>
             </div>
-            <div>
-              <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Unit</label>
-              <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
-                className="w-full h-11 px-4 rounded-xl border border-muted focus:border-primary outline-none bg-white font-bold">
-                {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u}>{u}</option>)}
-              </select>
+
+            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Ingredient Name</label>
+                  <input 
+                    placeholder="e.g. Premium Flour" 
+                    value={form.name} 
+                    onChange={e => {
+                      const name = e.target.value;
+                      setForm({ ...form, name, category: getAutoCategory(name) });
+                    }}
+                    className="w-full h-12 px-4 rounded-2xl border border-muted focus:border-primary outline-none font-bold shadow-sm" 
+                  />
+                  <p className="text-[9px] text-blue-500 mt-1 font-bold">Auto-detected: {form.category}</p>
+                </div>
+
+                <div className="col-span-2">
+                  <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Category</label>
+                  <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
+                    className="w-full h-12 px-4 rounded-2xl border border-muted focus:border-primary outline-none bg-white font-bold shadow-sm">
+                    {CATEGORIES.filter(c => c !== 'Semua').map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Base Unit</label>
+                  <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
+                    className="w-full h-12 px-4 rounded-2xl border border-muted focus:border-primary outline-none bg-white font-bold shadow-sm">
+                    {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u}>{u}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Initial Stock</label>
+                  <input type="number" placeholder="0" value={form.current_stock || ''} onChange={e => setForm({ ...form, current_stock: +e.target.value })}
+                    className="w-full h-12 px-4 rounded-2xl border border-muted focus:border-primary outline-none font-bold shadow-sm" />
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Initial Stock</label>
-              <input type="number" value={form.current_stock || ''} onChange={e => setForm({ ...form, current_stock: +e.target.value })}
-                className="w-full h-11 px-4 rounded-xl border border-muted focus:border-primary outline-none font-bold" />
+
+            <div className="pt-6 flex-none">
+              <button onClick={handleAddIngredient} className="w-full h-14 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20">
+                Create Ingredient
+              </button>
             </div>
-            <div className="col-span-2">
-              <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Category</label>
-              <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
-                className="w-full h-11 px-4 rounded-xl border border-muted focus:border-primary outline-none bg-white font-bold">
-                {CATEGORIES.filter(c => c !== 'Semua').map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => setShowAdd(false)} className="flex-1 h-12 rounded-xl border border-muted font-bold text-foreground/50">Cancel</button>
-            <button onClick={handleAddIngredient} className="flex-[2] h-12 bg-primary text-white rounded-xl font-black shadow-lg shadow-primary/20">Create Ingredient</button>
           </div>
         </div>
       )}
