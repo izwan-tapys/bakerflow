@@ -54,6 +54,7 @@ export default function ProductsPage() {
 
   // Recipe Modal State
   const [editingRecipe, setEditingRecipe] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const loadData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -180,6 +181,44 @@ export default function ProductsPage() {
   const toggleActive = async (product: Product) => {
     await supabase.from('products').update({ is_active: !product.is_active }).eq('id', product.id);
     loadData();
+  };
+
+    loadData();
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setForm({
+      name: product.name,
+      description: product.description || '',
+      price: product.price,
+      prep_time: product.prep_time || 30,
+      bake_time: product.bake_time || 45,
+      cool_time: product.cool_time || 60
+    });
+  };
+
+  const handleUpdateProduct = async () => {
+    if (!editingProduct || !form.name || form.price <= 0) return;
+    setSavingProduct(true);
+
+    const { error } = await supabase.from('products').update({
+      name: form.name,
+      description: form.description,
+      price: form.price,
+      prep_time: form.prep_time,
+      bake_time: form.bake_time,
+      cool_time: form.cool_time
+    }).eq('id', editingProduct.id);
+
+    if (error) {
+      alert('Error updating product: ' + error.message);
+    } else {
+      setEditingProduct(null);
+      setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 });
+      loadData();
+    }
+    setSavingProduct(false);
   };
 
   const deleteProduct = async (id: string) => {
@@ -343,6 +382,10 @@ export default function ProductsPage() {
                       <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-wider">Selling Price</p>
                       <p className="font-extrabold text-primary text-xl">RM {product.price.toFixed(2)}</p>
                     </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-wider">Time DNA</p>
+                      <p className="text-xs font-bold text-foreground/70">🥣{product.prep_time}m 🔥{product.bake_time}m ❄️{product.cool_time}m</p>
+                    </div>
                     {product.cogs !== undefined && product.cogs > 0 && (
                       <>
                         <div>
@@ -361,21 +404,24 @@ export default function ProductsPage() {
                 </div>
                 
                 <div className="flex flex-col items-end gap-2">
-                  <button 
-                    onClick={() => toggleActive(product)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold w-24 transition-colors ${product.is_active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-muted text-foreground/60 hover:bg-muted/80'}`}
-                  >
-                    {product.is_active ? '✅ Active' : '❌ Hidden'}
-                  </button>
+                  <div className="flex gap-2">
+                    <button onClick={() => handleEditProduct(product)} className="p-2 hover:bg-muted rounded-xl transition-colors text-sm">✏️</button>
+                    <button 
+                      onClick={() => toggleActive(product)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold w-24 transition-colors ${product.is_active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-muted text-foreground/60 hover:bg-muted/80'}`}
+                    >
+                      {product.is_active ? '✅ Active' : '❌ Hidden'}
+                    </button>
+                  </div>
                   <button 
                     onClick={() => setEditingRecipe(product)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 w-24"
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 w-full"
                   >
                     📝 Recipe
                   </button>
                   <button 
                     onClick={() => deleteProduct(product.id)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 w-24"
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 w-full"
                   >
                     Delete
                   </button>
@@ -393,6 +439,55 @@ export default function ProductsPage() {
           ingredients={ingredients} 
           onClose={() => { setEditingRecipe(null); loadData(); }} 
         />
+      )}
+
+      {/* Edit Product Modal */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-5">
+            <div>
+              <h2 className="text-xl font-bold text-foreground">Edit Product</h2>
+              <p className="text-sm text-foreground/50">Update details for {editingProduct.name}</p>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-foreground/70 block mb-1">Product Name</label>
+                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary outline-none" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-foreground/70 block mb-1">Price (RM)</label>
+                <input type="number" value={form.price} onChange={e => setForm({ ...form, price: +e.target.value })}
+                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary outline-none" />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Prep (Min)</label>
+                  <input type="number" value={form.prep_time} onChange={e => setForm({...form, prep_time: +e.target.value})}
+                    className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Bake (Min)</label>
+                  <input type="number" value={form.bake_time} onChange={e => setForm({...form, bake_time: +e.target.value})}
+                    className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Cool (Min)</label>
+                  <input type="number" value={form.cool_time} onChange={e => setForm({...form, cool_time: +e.target.value})}
+                    className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button onClick={() => { setEditingProduct(null); setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 }); }} className="flex-1 h-12 rounded-xl border border-muted font-bold">Cancel</button>
+              <button onClick={handleUpdateProduct} disabled={savingProduct} className="flex-[2] h-12 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20">
+                {savingProduct ? 'Updating...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
