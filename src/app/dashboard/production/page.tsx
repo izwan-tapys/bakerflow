@@ -38,12 +38,22 @@ function ProductionCard({ order, onStatusChange }: { order: Order; onStatusChang
             {new Date(order.delivery_date).toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short' })}
           </p>
         </div>
-        <div className="bg-muted/40 rounded-xl p-3">
-          <p className="text-foreground/50 text-xs font-medium">Payment</p>
-          <p className={`font-bold mt-0.5 ${order.payment_status === 'paid' ? 'text-green-600' : 'text-orange-500'}`}>
-            {order.payment_status === 'paid' ? '✅ Paid' : '⏳ Pending'}
+        <button 
+          onClick={async () => {
+            const newStatus = order.payment_status === 'paid' ? 'pending' : 'paid';
+            const { updatePaymentStatus } = await import('@/lib/services/baker.service');
+            await updatePaymentStatus(order.id!, newStatus);
+            onStatusChange(order.id!, order.status);
+          }}
+          className={`rounded-xl p-3 text-left transition-colors border-2 ${
+            order.payment_status === 'paid' ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200 hover:bg-orange-100'
+          }`}
+        >
+          <p className={`text-xs font-bold uppercase ${order.payment_status === 'paid' ? 'text-green-700/60' : 'text-orange-700/60'}`}>Payment</p>
+          <p className={`font-black mt-0.5 ${order.payment_status === 'paid' ? 'text-green-600' : 'text-orange-600'}`}>
+            {order.payment_status === 'paid' ? '✅ Paid' : '⏳ Mark Paid'}
           </p>
-        </div>
+        </button>
       </div>
 
       {order.special_notes && (

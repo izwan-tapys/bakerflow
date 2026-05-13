@@ -71,17 +71,45 @@ export function OrderCard({ order, onStatusChange }: OrderCardProps) {
       <div className="flex items-center gap-4 text-sm text-foreground/60">
         <span>📅 {order.delivery_date}</span>
         {order.distance_km && <span>📍 {order.distance_km} km</span>}
-        <span className="ml-auto font-bold text-foreground">{formatCurrency(order.total_amount)}</span>
+        <div className="ml-auto flex items-center gap-2">
+          {order.payment_status === 'paid' ? (
+            <span className="text-[10px] font-bold uppercase bg-green-100 text-green-700 px-2 py-0.5 rounded-md">Paid</span>
+          ) : (
+            <span className="text-[10px] font-bold uppercase bg-orange-100 text-orange-700 px-2 py-0.5 rounded-md">Unpaid</span>
+          )}
+          <span className="font-bold text-foreground">{formatCurrency(order.total_amount)}</span>
+        </div>
       </div>
 
-      {nextStatus && onStatusChange && (
-        <button
-          onClick={() => onStatusChange(order.id!, nextStatus)}
-          className="w-full h-10 rounded-xl bg-primary/10 text-primary font-semibold text-sm hover:bg-primary hover:text-white transition-all"
-        >
-          {nextStatusLabel[order.status]} →
-        </button>
-      )}
+      <div className="flex gap-2">
+        {onStatusChange && (
+          <button
+            onClick={async () => {
+              const newStatus = order.payment_status === 'paid' ? 'pending' : 'paid';
+              const { updatePaymentStatus } = await import('@/lib/services/baker.service');
+              await updatePaymentStatus(order.id!, newStatus);
+              // We'll pass the same status to trigger a refresh on the parent
+              onStatusChange(order.id!, order.status); 
+            }}
+            className={`flex-1 h-10 rounded-xl font-bold text-sm transition-all border-2 ${
+              order.payment_status === 'paid' 
+                ? 'border-muted text-foreground/50 hover:bg-muted' 
+                : 'border-green-200 text-green-600 bg-green-50 hover:bg-green-100'
+            }`}
+          >
+            {order.payment_status === 'paid' ? 'Mark Unpaid' : 'Mark as Paid'}
+          </button>
+        )}
+
+        {nextStatus && onStatusChange && (
+          <button
+            onClick={() => onStatusChange(order.id!, nextStatus)}
+            className="flex-[2] h-10 rounded-xl bg-primary text-white font-bold text-sm shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+          >
+            {nextStatusLabel[order.status]} →
+          </button>
+        )}
+      </div>
     </div>
   );
 }

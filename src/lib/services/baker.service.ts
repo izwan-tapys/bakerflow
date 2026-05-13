@@ -64,6 +64,15 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
   return !error;
 }
 
+export async function updatePaymentStatus(orderId: string, payment_status: 'pending' | 'paid'): Promise<boolean> {
+  const { error } = await supabase
+    .from('orders')
+    .update({ payment_status, updated_at: new Date().toISOString() })
+    .eq('id', orderId);
+
+  return !error;
+}
+
 export async function getMonthlyRevenue(bakerId: string): Promise<number> {
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
