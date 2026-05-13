@@ -71,7 +71,9 @@ export default function AdminDashboardPage() {
   const handleStatusChange = async (orderId: string, status: OrderStatus) => {
     const result = await updateOrderStatus(orderId, status);
     if (!result.success) {
-      alert(result.message);
+      if (confirm(`${result.message}\n\nNak pergi ke Inventory untuk restock sekarang?`)) {
+        window.location.href = '/dashboard/inventory';
+      }
       return;
     }
     loadDashboardData(); // Refresh
