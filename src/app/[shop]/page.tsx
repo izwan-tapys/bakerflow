@@ -13,6 +13,7 @@ interface Product {
 }
 
 interface BakerInfo {
+  baker_id?: string;
   shop_name: string;
   daily_capacity: number;
   home_address: string;
