@@ -556,56 +556,60 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
   const selectedIng = ingredients.find(i => i.id === form.ingredient_id);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-5 overflow-y-auto max-h-[90vh]">
-        <div>
-          <h2 className="text-xl font-black text-foreground">Recipe Setup</h2>
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center">
+      <div className="bg-white w-full max-w-md md:rounded-3xl rounded-t-[40px] p-6 shadow-2xl space-y-5 flex flex-col h-[calc(100vh-80px)] md:h-auto md:max-h-[85vh] mb-[72px] md:mb-0 overflow-hidden">
+        <div className="flex-none">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-xl font-black text-foreground">Recipe Setup</h2>
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
+          </div>
           <p className="text-sm text-foreground/50">Details for {product.name}</p>
         </div>
 
-        {/* Cooking Times Setup */}
-        <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-3">
-          <p className="text-[10px] font-black text-primary uppercase tracking-widest">🕒 Production Timing (Mins)</p>
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Prep</label>
-              <input type="number" value={times.prep} onChange={e => setTimes({...times, prep: +e.target.value})}
-                className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Bake</label>
-              <input type="number" value={times.bake} onChange={e => setTimes({...times, bake: +e.target.value})}
-                className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Cool</label>
-              <input type="number" value={times.cool} onChange={e => setTimes({...times, cool: +e.target.value})}
-                className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
+        <div className="flex-1 overflow-y-auto pr-1 space-y-5">
+          {/* Cooking Times Setup */}
+          <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-3">
+            <p className="text-[10px] font-black text-primary uppercase tracking-widest">🕒 Production Timing (Mins)</p>
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Prep</label>
+                <input type="number" value={times.prep} onChange={e => setTimes({...times, prep: +e.target.value})}
+                  className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Bake</label>
+                <input type="number" value={times.bake} onChange={e => setTimes({...times, bake: +e.target.value})}
+                  className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Cool</label>
+                <input type="number" value={times.cool} onChange={e => setTimes({...times, cool: +e.target.value})}
+                  className="w-full h-10 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm bg-white" />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="border-t border-muted pt-4 space-y-3">
-          <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">🥣 Ingredients List</p>
-          {/* Existing Recipe Items */}
-          <div className="space-y-2">
-            {loading ? <p className="text-sm text-foreground/40">Loading...</p> : 
-             recipes.length === 0 ? <p className="text-sm text-foreground/40 italic">No ingredients added yet.</p> :
-             recipes.map(r => (
-               <div key={r.id} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
-                 <div>
-                   <p className="font-bold text-sm text-foreground">{r.ingredient?.name}</p>
-                   <p className="text-xs text-foreground/50">{r.quantity_needed}{r.ingredient?.unit}</p>
+          <div className="border-t border-muted pt-4 space-y-3">
+            <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">🥣 Ingredients List</p>
+            {/* Existing Recipe Items - SCROLLABLE (max 3 items visible) */}
+            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
+              {loading ? <p className="text-sm text-foreground/40 text-center py-4">Loading...</p> : 
+               recipes.length === 0 ? <p className="text-sm text-foreground/40 italic text-center py-4">No ingredients added yet.</p> :
+               recipes.map(r => (
+                 <div key={r.id} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
+                   <div>
+                     <p className="font-bold text-sm text-foreground">{r.ingredient?.name}</p>
+                     <p className="text-xs text-foreground/50">{r.quantity_needed}{r.ingredient?.unit}</p>
+                   </div>
+                   <button onClick={() => handleRemove(r.id)} className="text-red-400 hover:text-red-600 text-lg px-2">×</button>
                  </div>
-                 <button onClick={() => handleRemove(r.id)} className="text-red-400 hover:text-red-600 text-lg">×</button>
-               </div>
-             ))
-            }
+               ))
+              }
+            </div>
           </div>
-        </div>
 
-        {/* Add New Item */}
-        <div className="bg-muted/30 p-3 rounded-xl border border-muted/50 space-y-3">
+          {/* Add New Item */}
+          <div className="bg-muted/30 p-3 rounded-xl border border-muted/50 space-y-3">
           <div className="flex gap-2 bg-white p-1 rounded-lg border border-muted">
             <button onClick={() => setIsNewIngredient(false)} className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${!isNewIngredient ? 'bg-primary text-white shadow-sm' : 'text-foreground/50'}`}>Select Existing</button>
             <button onClick={() => setIsNewIngredient(true)} className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${isNewIngredient ? 'bg-primary text-white shadow-sm' : 'text-foreground/50'}`}>Create New</button>
