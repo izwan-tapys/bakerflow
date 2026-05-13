@@ -7,6 +7,7 @@ import { Order, OrderStatus, Product, BakerSettings } from '@/lib/types';
 import { SmartTimeline } from '@/components/dashboard/SmartTimeline';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { updateOrderStatus } from '@/lib/services/baker.service';
+import { formatDate } from '@/lib/utils';
 
 function getGreeting() {
   const hour = new Date().getHours();

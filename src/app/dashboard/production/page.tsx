@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Order, OrderStatus } from '@/lib/types';
 import { updateOrderStatus } from '@/lib/services/baker.service';
+import { formatDate } from '@/lib/utils';
 
 function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; onStatusChange: (id: string, s: OrderStatus) => void; onRefresh?: () => void }) {
   const nextStatus: Record<string, { label: string; status: OrderStatus; color: string }> = {
@@ -35,7 +36,7 @@ function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; on
         <div className="bg-muted/40 rounded-xl p-3">
           <p className="text-foreground/50 text-xs font-medium">Delivery Date</p>
           <p className="font-bold text-foreground mt-0.5">
-            {new Date(order.delivery_date).toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short' })}
+            {formatDate(order.delivery_date)}
           </p>
         </div>
         <button 

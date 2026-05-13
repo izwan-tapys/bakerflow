@@ -1,6 +1,7 @@
 'use client';
 
 import { Order, OrderStatus } from '@/lib/types';
+import { formatDate } from '@/lib/utils';
 
 interface StatusBadgeProps {
   status: OrderStatus;
@@ -119,7 +120,7 @@ export function OrderCard({ order, onStatusChange, onEdit, onRefresh }: OrderCar
       )}
 
       <div className="flex items-center gap-4 text-xs font-bold text-foreground/40">
-        <span className={isToday ? 'text-red-500' : ''}>📅 {order.delivery_date}</span>
+        <span className={isToday ? 'text-red-500' : ''}>📅 {formatDate(order.delivery_date)}</span>
         {order.distance_km && <span>📍 {order.distance_km} km</span>}
         <div className="ml-auto flex items-center gap-2">
           {order.payment_status === 'paid' ? (

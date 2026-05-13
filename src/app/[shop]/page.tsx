@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useParams } from 'next/navigation';
+import { formatDate } from '@/lib/utils';
 
 interface Product {
   id?: string;
@@ -235,7 +236,7 @@ export default function OrderPage() {
           <div className="bg-primary/5 rounded-2xl p-4 border border-primary/20 space-y-1">
             <p className="text-sm font-bold text-primary">{selectedProduct?.name}</p>
             <p className="text-xs text-foreground/60">
-              📅 {new Date(selectedDate).toLocaleDateString('en-MY', { weekday: 'long', day: 'numeric', month: 'long' })}
+              📅 {formatDate(selectedDate)}
             </p>
           </div>
 

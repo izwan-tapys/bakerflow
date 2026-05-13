@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Order, Product, BakerSettings } from '@/lib/types';
 import { KitchenTabs } from '@/components/dashboard/KitchenTabs';
+import { formatDate } from '@/lib/utils';
 
 interface Task {
   id: string;
@@ -111,7 +112,7 @@ export default function PlannerPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-foreground">Planner 📅</h1>
-          <p className="text-foreground/50 text-sm">Automated schedule for {selectedDate === new Date().toISOString().split('T')[0] ? 'Today' : 'Tomorrow'}</p>
+          <p className="text-foreground/50 text-sm">Automated schedule for {formatDate(selectedDate)}</p>
         </div>
         <input 
           type="date" 
@@ -211,7 +212,7 @@ export default function PlannerPage() {
       {schedule.length > 0 && (
         <button 
           onClick={() => {
-            const text = `📅 *Task List BakerFlow (${selectedDate})*\n\n` + 
+            const text = `📅 *Task List BakerFlow (${formatDate(selectedDate)})*\n\n` + 
               schedule.map((item, i) => 
                 `${i+1}. *${item.customer}* (${item.product})\n` +
                 `   🥣 Prep: ${item.prepStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n` +
