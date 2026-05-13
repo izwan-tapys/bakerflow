@@ -217,7 +217,7 @@ export default function InventoryPage() {
                         </div>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <p className={`font-black ${isLow ? 'text-red-500' : 'text-foreground/70'}`}>
+                        <p className={`font-black ${ing.current_stock < 0 ? 'text-red-600' : isLow ? 'text-orange-500' : 'text-foreground/70'}`}>
                           {ing.current_stock.toLocaleString()}<span className="text-[10px] font-bold ml-0.5 opacity-40">{ing.unit}</span>
                         </p>
                       </td>
@@ -309,7 +309,16 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-xl font-black text-foreground">{ingredient.name}</h2>
-            <p className="text-xs font-bold text-foreground/40">Current: {ingredient.current_stock}{ingredient.unit}</p>
+            <div className="flex items-center gap-2">
+              <p className={`text-xs font-bold ${ingredient.current_stock < 0 ? 'text-red-600' : 'text-foreground/40'}`}>
+                Current: {ingredient.current_stock}{ingredient.unit}
+              </p>
+              {ingredient.current_stock < 0 && (
+                <span className="bg-red-100 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                  ⚠️ SHORT: {Math.abs(ingredient.current_stock)}{ingredient.unit}
+                </span>
+              )}
+            </div>
           </div>
           <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold">&times;</button>
         </div>
