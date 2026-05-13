@@ -32,7 +32,7 @@ interface OrderCardProps {
   onRefresh?: () => void;
 }
 
-export function OrderCard({ order, onStatusChange, onRefresh }: OrderCardProps) {
+export function OrderCard({ order, onStatusChange, onEdit, onRefresh }: OrderCardProps) {
   const formatCurrency = (amount: number) => `RM ${amount.toFixed(2)}`;
 
   const getNextStatus = (current: OrderStatus): OrderStatus | null => {
