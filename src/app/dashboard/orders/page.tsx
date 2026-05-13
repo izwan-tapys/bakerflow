@@ -159,11 +159,16 @@ export default function OrdersPage() {
     loadData();
   };
 
-  const filtered = orders.filter(o =>
-    o.customer_name.toLowerCase().includes(search.toLowerCase()) ||
-    o.product_name.toLowerCase().includes(search.toLowerCase()) ||
-    o.order_number?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = orders.filter(o => {
+    const matchesSearch = 
+      o.customer_name.toLowerCase().includes(search.toLowerCase()) ||
+      o.product_name.toLowerCase().includes(search.toLowerCase()) ||
+      o.order_number?.toLowerCase().includes(search.toLowerCase());
+    
+    const matchesStatus = filter === 'all' || o.status === filter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="space-y-5 pb-4">
