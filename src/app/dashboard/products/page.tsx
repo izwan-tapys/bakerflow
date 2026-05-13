@@ -350,7 +350,7 @@ export default function ProductsPage() {
 
       {/* Product List */}
       {loading ? (
-        <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-muted rounded-2xl animate-pulse" />)}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{[1,2,3,4].map(i => <div key={i} className="h-40 bg-muted rounded-2xl animate-pulse" />)}</div>
       ) : products.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-muted mt-4">
           <div className="text-5xl mb-3">🍩</div>
@@ -361,66 +361,52 @@ export default function ProductsPage() {
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {products.map(product => (
-            <div key={product.id} className={`bg-white rounded-2xl p-5 border-2 transition-all ${product.is_active ? 'border-muted/50' : 'border-muted/20 opacity-60'}`}>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-lg text-foreground">{product.name}</h3>
-                    {!product.is_active && (
-                      <span className="text-[10px] uppercase font-black bg-muted text-foreground/50 px-2 py-0.5 rounded-md">Draft</span>
-                    )}
+            <div key={product.id} className={`bg-white rounded-3xl p-5 border-2 transition-all group relative ${product.is_active ? 'border-muted/50 hover:border-primary/30' : 'border-muted/20 opacity-60'}`}>
+              <div className="flex flex-col h-full justify-between gap-4">
+                <div>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-black text-lg text-foreground leading-tight">{product.name}</h3>
+                      {!product.is_active && (
+                        <span className="text-[10px] uppercase font-black bg-muted text-foreground/50 px-2 py-0.5 rounded-md">Draft</span>
+                      )}
+                    </div>
+                    <button onClick={() => handleEditProduct(product)} className="p-2 hover:bg-muted rounded-xl transition-colors text-sm opacity-0 group-hover:opacity-100 absolute top-3 right-3 bg-white shadow-sm border border-muted">✏️</button>
                   </div>
-                  <p className="text-sm text-foreground/60 mb-3">{product.description || <span className="italic text-foreground/30">No description</span>}</p>
+                  <p className="text-xs text-foreground/50 mb-4 line-clamp-2">{product.description || 'No description provided.'}</p>
                   
-                  <div className="flex items-center gap-6">
-                    <div>
-                      <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-wider">Selling Price</p>
-                      <p className="font-extrabold text-primary text-xl">RM {product.price.toFixed(2)}</p>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-primary/5 rounded-2xl p-3 border border-primary/10">
+                      <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-0.5">Price</p>
+                      <p className="font-black text-primary text-lg">RM {product.price.toFixed(2)}</p>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-wider">Time DNA</p>
-                      <p className="text-xs font-bold text-foreground/70">🥣{product.prep_time}m 🔥{product.bake_time}m ❄️{product.cool_time}m</p>
+                    <div className="bg-muted/30 rounded-2xl p-3 border border-muted/50">
+                      <p className="text-[9px] font-black text-foreground/30 uppercase tracking-widest mb-0.5">Time DNA</p>
+                      <p className="font-bold text-foreground/70 text-xs">🥣{product.prep_time}m 🔥{product.bake_time}m</p>
                     </div>
-                    {product.cogs !== undefined && product.cogs > 0 && (
-                      <>
-                        <div>
-                          <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-wider">COGS</p>
-                          <p className="font-bold text-foreground/70">RM {product.cogs.toFixed(2)}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-wider">Margin</p>
-                          <p className={`font-bold ${((product.price - product.cogs) / product.price) > 0.3 ? 'text-green-600' : 'text-orange-500'}`}>
-                            {(((product.price - product.cogs) / product.price) * 100).toFixed(0)}%
-                          </p>
-                        </div>
-                      </>
-                    )}
                   </div>
                 </div>
                 
-                <div className="flex flex-col items-end gap-2">
-                  <div className="flex gap-2">
-                    <button onClick={() => handleEditProduct(product)} className="p-2 hover:bg-muted rounded-xl transition-colors text-sm">✏️</button>
-                    <button 
-                      onClick={() => toggleActive(product)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold w-24 transition-colors ${product.is_active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-muted text-foreground/60 hover:bg-muted/80'}`}
-                    >
-                      {product.is_active ? '✅ Active' : '❌ Hidden'}
-                    </button>
-                  </div>
+                <div className="flex gap-2">
                   <button 
                     onClick={() => setEditingRecipe(product)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 w-full"
+                    className="flex-1 h-10 rounded-xl text-xs font-bold bg-primary text-white hover:bg-primary/90 transition-all"
                   >
                     📝 Recipe
                   </button>
                   <button 
-                    onClick={() => deleteProduct(product.id)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 w-full"
+                    onClick={() => toggleActive(product)}
+                    className={`flex-1 h-10 rounded-xl text-xs font-bold transition-all ${product.is_active ? 'bg-green-50 text-green-600 hover:bg-green-100' : 'bg-muted text-foreground/40'}`}
                   >
-                    Delete
+                    {product.is_active ? '✅ Active' : '❌ Hidden'}
+                  </button>
+                  <button 
+                    onClick={() => deleteProduct(product.id)}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-red-400 hover:bg-red-50 transition-all"
+                  >
+                    🗑️
                   </button>
                 </div>
               </div>
