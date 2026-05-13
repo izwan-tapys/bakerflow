@@ -6,8 +6,7 @@ import { Order, OrderStatus, Product, PaymentStatus } from '@/lib/types';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { updateOrderStatus } from '@/lib/services/baker.service';
 
-const STATUS_FILTERS: { label: string; value: OrderStatus | 'all' }[] = [
-  { label: 'All', value: 'all' },
+const STATUS_FILTERS: { label: string; value: OrderStatus }[] = [
   { label: '⏳ Pending', value: 'pending' },
   { label: '✅ Approved', value: 'approved' },
   { label: '🔥 Baking', value: 'production' },
@@ -19,7 +18,7 @@ const STATUS_FILTERS: { label: string; value: OrderStatus | 'all' }[] = [
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
+  const [filter, setFilter] = useState<OrderStatus>('pending');
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   
@@ -165,7 +164,7 @@ export default function OrdersPage() {
       o.product_name.toLowerCase().includes(search.toLowerCase()) ||
       o.order_number?.toLowerCase().includes(search.toLowerCase());
     
-    const matchesStatus = filter === 'all' || o.status === filter;
+    const matchesStatus = o.status === filter;
     
     return matchesSearch && matchesStatus;
   });
