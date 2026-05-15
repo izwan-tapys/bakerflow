@@ -18,7 +18,7 @@ export async function POST(req: Request) {
       Return ONLY a JSON array of objects with these exact keys:
       - id (the ID from the shopping list that matches, or null if no match)
       - item (the name from the receipt)
-      - qty (the numerical quantity bought)
+      - qty (the numerical quantity bought. If the shopping list item has a pack_size, return the number of packs/units bought, NOT the total weight)
       - price (the total price paid for that item/line)
 
       Example output: [{"id": "123", "item": "Sauh Flour", "qty": 2, "price": 15.50}]

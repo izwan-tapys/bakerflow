@@ -241,7 +241,12 @@ export default function InventoryPage() {
   };
 
   const handleQuickRestock = async (item: ShoppingItem, customQty?: number, customPrice?: number) => {
-    const qty = customQty ?? (item.suggestedTotalQty || item.shortfall);
+    // If it's a pack-based purchase, convert qty back to base unit
+    let qty = customQty ?? (item.suggestedPacks || item.suggestedTotalQty || item.shortfall);
+    if (item.ingredient.pack_size > 0) {
+      qty = qty * item.ingredient.pack_size;
+    }
+    
     const totalCost = customPrice ?? (qty * item.ingredient.avg_cost_per_unit);
     
     if (qty <= 0) return;
@@ -784,8 +789,9 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
     const initial: Record<string, { qty: number; price: number }> = {};
     combinedList.forEach((item: any) => {
       if (!receiptData[item.ingredient.id]) {
+        // If pack size exists, use suggested packs, otherwise use shortfall
         initial[item.ingredient.id] = { 
-          qty: item.suggestedTotalQty || item.shortfall || 0, 
+          qty: item.ingredient.pack_size > 0 ? (item.suggestedPacks || 0) : (item.suggestedTotalQty || item.shortfall || 0), 
           price: 0 
         };
       }
@@ -1019,7 +1025,9 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                           onChange={e => updateReceipt(item.ingredient.id, 'qty', Number(e.target.value))}
                           className="w-full h-10 px-2 rounded-lg border-2 border-muted focus:border-primary outline-none font-bold text-sm text-center"
                         />
-                        <span className="absolute -right-1 -top-2 bg-muted/80 px-1 rounded text-[8px] font-black text-foreground/40 uppercase">{item.ingredient.unit}</span>
+                        <span className="absolute -right-1 -top-2 bg-primary/10 px-1.5 py-0.5 rounded text-[8px] font-black text-primary uppercase">
+                          {item.ingredient.pack_size > 0 ? (item.ingredient.pack_unit || 'PK') : item.ingredient.unit}
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-5 w-32">
