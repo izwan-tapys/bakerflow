@@ -287,6 +287,7 @@ export default function InventoryPage() {
       setLoading(false);
     }
   };
+  const handleDeleteIngredient = async (id: string) => {
     if (!confirm('Are you sure you want to delete this?')) return;
     const { error } = await supabase.from('ingredients').delete().eq('id', id);
     if (error) alert(error.message);
