@@ -243,8 +243,9 @@ export default function InventoryPage() {
   const handleQuickRestock = async (item: ShoppingItem, customQty?: number, customPrice?: number) => {
     // If it's a pack-based purchase, convert qty back to base unit
     let qty = customQty ?? (item.suggestedPacks || item.suggestedTotalQty || item.shortfall);
-    if (item.ingredient.pack_size > 0) {
-      qty = qty * item.ingredient.pack_size;
+    const packSize = Number(item.ingredient.pack_size);
+    if (packSize > 0) {
+      qty = qty * packSize;
     }
     
     const totalCost = customPrice ?? (qty * item.ingredient.avg_cost_per_unit);
@@ -789,9 +790,10 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
     const initial: Record<string, { qty: number; price: number }> = {};
     combinedList.forEach((item: any) => {
       if (!receiptData[item.ingredient.id]) {
+        const packSize = Number(item.ingredient.pack_size);
         // If pack size exists, use suggested packs, otherwise use shortfall
         initial[item.ingredient.id] = { 
-          qty: item.ingredient.pack_size > 0 ? (item.suggestedPacks || 0) : (item.suggestedTotalQty || item.shortfall || 0), 
+          qty: packSize > 0 ? (item.suggestedPacks || 0) : (item.suggestedTotalQty || item.shortfall || 0), 
           price: 0 
         };
       }
@@ -1026,7 +1028,7 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                           className="w-full h-10 px-2 rounded-lg border-2 border-muted focus:border-primary outline-none font-bold text-sm text-center"
                         />
                         <span className="absolute -right-1 -top-2 bg-primary/10 px-1.5 py-0.5 rounded text-[8px] font-black text-primary uppercase">
-                          {item.ingredient.pack_size > 0 ? (item.ingredient.pack_unit || 'PK') : item.ingredient.unit}
+                          {Number(item.ingredient.pack_size) > 0 ? (item.ingredient.pack_unit || 'PK') : item.ingredient.unit}
                         </span>
                       </div>
                     </td>
