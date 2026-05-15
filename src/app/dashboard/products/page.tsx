@@ -645,7 +645,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
       .from('recipes')
       .select(`
         *,
-        ingredient:ingredients (
+        ingredients (
           name,
           unit
         )
@@ -699,11 +699,10 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
         let finalQty = form.quantity_needed;
         const baseUnit = existing ? existing.unit : form.unit;
         
-        // Bidirectional Conversion
-        if (form.unit === 'kg' && baseUnit === 'g') finalQty = form.quantity_needed * 1000;
-        else if (form.unit === 'g' && baseUnit === 'kg') finalQty = form.quantity_needed / 1000;
-        else if (form.unit === 'L' && baseUnit === 'ml') finalQty = form.quantity_needed * 1000;
-        else if (form.unit === 'ml' && baseUnit === 'L') finalQty = form.quantity_needed / 1000;
+        if (form.unit === 'kg' && baseUnit === 'g') finalQty *= 1000;
+        else if (form.unit === 'g' && baseUnit === 'kg') finalQty /= 1000;
+        else if (form.unit === 'L' && baseUnit === 'ml') finalQty *= 1000;
+        else if (form.unit === 'ml' && baseUnit === 'L') finalQty /= 1000;
 
         const { error: recipeError } = await supabase.from('recipes').insert({
           baker_id: user.id,
@@ -717,7 +716,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
       
       setForm({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 });
       setIngSearch('');
-      loadRecipes();
+      await loadRecipes();
     } catch (err: any) {
       console.error("Recipe Add Error:", err);
       alert("Gagal tambah bahan: " + (err.message || "Sila cuba lagi."));
@@ -727,8 +726,9 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
   };
 
   const handleRemove = async (id: string) => {
+    setLoading(true);
     await supabase.from('recipes').delete().eq('id', id);
-    loadRecipes();
+    await loadRecipes();
   };
 
   const handleSaveAll = async () => {
@@ -758,8 +758,8 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
                recipes.map(r => (
                  <div key={r.id} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
                    <div>
-                     <p className="font-bold text-sm text-foreground">{r.ingredient?.name || 'Unknown Ingredient'}</p>
-                     <p className="text-xs text-foreground/50">{r.quantity_needed} {r.ingredient?.unit || ''}</p>
+                     <p className="font-bold text-sm text-foreground">{r.ingredients?.name || 'Unknown Ingredient'}</p>
+                     <p className="text-xs text-foreground/50">{r.quantity_needed} {r.ingredients?.unit || ''}</p>
                    </div>
                    <button onClick={() => handleRemove(r.id)} className="text-red-400 hover:text-red-600 text-lg px-2">×</button>
                  </div>
