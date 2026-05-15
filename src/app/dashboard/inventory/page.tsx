@@ -374,57 +374,63 @@ function InventoryFilterBar({ searchQuery, onSearchChange, selectedCategory, onC
   ];
 
   return (
-    <div className="space-y-2.5">
-      {/* Row 1: Search + Category Dropdown */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/30 text-sm pointer-events-none">🔍</span>
-          <input
-            type="text"
-            placeholder="Search ingredient or brand..."
-            value={searchQuery}
-            onChange={e => onSearchChange(e.target.value)}
-            className="w-full h-11 pl-9 pr-9 rounded-xl border-2 border-muted bg-white text-sm font-medium focus:border-primary outline-none transition-colors placeholder:text-foreground/30"
-          />
-          {searchQuery && (
-            <button onClick={() => onSearchChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/30 hover:text-foreground text-xl leading-none">×</button>
-          )}
-        </div>
-        <select
-          value={selectedCategory}
-          onChange={e => onCategoryChange(e.target.value)}
-          className="h-11 px-3 rounded-xl border-2 border-muted bg-white text-xs font-black focus:border-primary outline-none transition-colors text-foreground/60 min-w-[120px]"
-        >
-          {categories.map((c: string) => <option key={c} value={c}>{c === 'Semua' ? 'All Categories' : c}</option>)}
-        </select>
-      </div>
-
-      {/* Row 2: Status Filter Buttons + Clear */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-        {STATUS_FILTERS.map(f => (
-          <button
-            key={f.id}
-            onClick={() => onStatusChange(statusFilter === f.id ? '' : f.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap border-2 transition-all flex-shrink-0 ${
-              statusFilter === f.id
-                ? 'bg-primary border-primary text-white shadow-md shadow-primary/20'
-                : 'bg-white border-muted text-foreground/40 hover:border-primary/40 hover:text-foreground/60'
-            }`}
-          >
-            <span className="text-xs">{f.icon}</span>
-            <span>{f.label}</span>
-          </button>
-        ))}
-        {hasActiveFilter && (
-          <button
-            onClick={onClearFilters}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap border-2 border-red-200 bg-red-50 text-red-400 hover:bg-red-100 transition-all flex-shrink-0 ml-1"
-          >
-            <span>✕</span>
-            <span>Clear Filters</span>
-          </button>
+    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+      {/* Search */}
+      <div className="relative flex-shrink-0 w-48">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/30 text-sm pointer-events-none">🔍</span>
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchQuery}
+          onChange={e => onSearchChange(e.target.value)}
+          className="w-full h-10 pl-8 pr-7 rounded-xl border-2 border-muted bg-white text-sm font-medium focus:border-primary outline-none transition-colors placeholder:text-foreground/30"
+        />
+        {searchQuery && (
+          <button onClick={() => onSearchChange('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/30 hover:text-foreground text-lg leading-none">×</button>
         )}
       </div>
+
+      {/* Divider */}
+      <div className="h-6 w-px bg-muted flex-shrink-0" />
+
+      {/* Category Dropdown */}
+      <select
+        value={selectedCategory}
+        onChange={e => onCategoryChange(e.target.value)}
+        className="h-10 px-3 rounded-xl border-2 border-muted bg-white text-[10px] font-black focus:border-primary outline-none transition-colors text-foreground/60 flex-shrink-0"
+      >
+        {categories.map((c: string) => <option key={c} value={c}>{c === 'Semua' ? 'All Categories' : c}</option>)}
+      </select>
+
+      {/* Divider */}
+      <div className="h-6 w-px bg-muted flex-shrink-0" />
+
+      {/* Status Buttons */}
+      {STATUS_FILTERS.map(f => (
+        <button
+          key={f.id}
+          onClick={() => onStatusChange(statusFilter === f.id ? '' : f.id)}
+          className={`flex items-center gap-1 px-3 h-10 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap border-2 transition-all flex-shrink-0 ${
+            statusFilter === f.id
+              ? 'bg-primary border-primary text-white shadow-md shadow-primary/20'
+              : 'bg-white border-muted text-foreground/40 hover:border-primary/40 hover:text-foreground/60'
+          }`}
+        >
+          <span>{f.icon}</span>
+          <span>{f.label}</span>
+        </button>
+      ))}
+
+      {/* Clear */}
+      {hasActiveFilter && (
+        <button
+          onClick={onClearFilters}
+          className="flex items-center gap-1 px-3 h-10 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap border-2 border-red-200 bg-red-50 text-red-400 hover:bg-red-100 transition-all flex-shrink-0"
+        >
+          <span>✕</span>
+          <span>Clear</span>
+        </button>
+      )}
     </div>
   );
 }
