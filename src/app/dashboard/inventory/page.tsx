@@ -1110,8 +1110,8 @@ function IngredientForm({ data, setData, categories, getAutoCategory }: any) {
 function AddIngredientModal({ onClose, onAdd, initialForm, categories, getAutoCategory }: any) {
   const [formData, setFormData] = useState(initialForm);
   return (
-    <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
-      <div className="bg-white w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+    <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-end sm:items-center justify-center">
+      <div className="bg-white w-full sm:max-w-lg sm:mx-4 rounded-t-[24px] sm:rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20" style={{height: 'min(90vh, 700px)'}}>
         <div className="flex justify-between items-center mb-8 flex-none">
           <h2 className="text-2xl font-black text-primary tracking-tight">New Item</h2>
           <button onClick={onClose} className="w-12 h-12 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold hover:bg-muted/80 transition-colors">&times;</button>
@@ -1177,8 +1177,8 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
-      <div className="bg-white w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+    <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-end sm:items-center justify-center">
+      <div className="bg-white w-full sm:max-w-lg sm:mx-4 rounded-t-[24px] sm:rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20" style={{height: 'min(90vh, 700px)'}}>
         <div className="flex justify-between items-start mb-6 flex-none">
           <div>
             <h2 className="text-2xl font-black text-foreground tracking-tight">{ingredient.name}</h2>
