@@ -462,9 +462,8 @@ export default function InventoryPage() {
                       <button
                         onClick={() => {
                           const selectedAlerts = alerts.filter((a: any) => notifSelectedIds.includes(a.id));
-                          const ids = selectedAlerts.map((a: any) => a.ingredient?.id).filter(Boolean);
-                          const newIds = ids.filter((id: string) => !manualShoppingIds.includes(id));
-                          setManualShoppingIds(prev => [...prev, ...newIds]);
+                          const ids = selectedAlerts.map((a: any) => a.ingredient?.id).filter(Boolean) as string[];
+                          handleToggleShoppingList(ids, true);
                           setNotifSelectMode(false);
                           setNotifSelectedIds([]);
                           setShowNotifications(false);
@@ -551,6 +550,7 @@ export default function InventoryPage() {
                 allIngredients={ingredients}
                 onRestock={(ing: any) => { setSelectedIngredient(ing); setShowNotifications(false); }}
                 onRemoveManual={(id: string) => handleToggleShoppingList([id], false)}
+                onRefresh={loadData}
               />
             ) : (
               <>
@@ -693,7 +693,7 @@ function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
   );
 }
 
-function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock, onRemoveManual }: any) {
+function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock, onRemoveManual, onRefresh }: any) {
   // Combine orders-based shopping list with manual IDs
   const manualItems = manualIds.map((id: string) => {
     const ing = allIngredients.find((i: any) => i.id === id);
@@ -701,7 +701,11 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
     return { ingredient: ing, needed: 0, shortfall: 0, isManual: true };
   }).filter(Boolean);
 
-  const combinedList = [...ordersShopping, ...manualItems];
+  // Deduplicate: If an item is in ordersShopping, don't show it again from manualItems
+  const ordersIngIds = new Set(ordersShopping.map((i: any) => i.ingredient.id));
+  const uniqueManualItems = manualItems.filter((i: any) => !ordersIngIds.has(i.ingredient.id));
+
+  const combinedList = [...ordersShopping, ...uniqueManualItems];
 
   const handleShare = (platform: 'wa' | 'tg') => {
     const listText = combinedList.map((item: any) => {
@@ -733,6 +737,7 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
         <div className="flex items-center gap-2">
           <button 
             onClick={(e) => {
+              if (onRefresh) onRefresh();
               const btn = e.currentTarget;
               const original = btn.innerHTML;
               btn.innerHTML = 'Saved! ✅';
