@@ -308,7 +308,7 @@ export default function ProductsPage() {
             <div>
               <label className="text-xs font-semibold text-foreground/70 block mb-1">Product Name</label>
               <input placeholder="e.g. Chocolate Moist Cake" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none" />
+                className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
@@ -319,23 +319,23 @@ export default function ProductsPage() {
               <div className="col-span-2">
                 <label className="text-xs font-semibold text-foreground/70 block mb-1">Price (RM)</label>
                 <input type="number" placeholder="0.00" value={form.price || ''} onChange={e => setForm({ ...form, price: +e.target.value })}
-                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none" />
+                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" />
               </div>
               <div className="col-span-2 grid grid-cols-3 gap-2 mt-1">
                 <div>
                   <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Prep (Min)</label>
                   <input type="number" value={form.prep_time} onChange={e => setForm({...form, prep_time: +e.target.value})}
-                    className="w-full h-9 px-2 rounded-lg border border-muted focus:border-primary focus:outline-none font-bold text-xs" />
+                    className="w-full h-9 px-2 rounded-lg border border-muted focus:border-primary focus:outline-none font-bold text-xs bg-white" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Bake (Min)</label>
                   <input type="number" value={form.bake_time} onChange={e => setForm({...form, bake_time: +e.target.value})}
-                    className="w-full h-9 px-2 rounded-lg border border-muted focus:border-primary focus:outline-none font-bold text-xs" />
+                    className="w-full h-9 px-2 rounded-lg border border-muted focus:border-primary focus:outline-none font-bold text-xs bg-white" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Cool (Min)</label>
                   <input type="number" value={form.cool_time} onChange={e => setForm({...form, cool_time: +e.target.value})}
-                    className="w-full h-9 px-2 rounded-lg border border-muted focus:border-primary focus:outline-none font-bold text-xs" />
+                    className="w-full h-9 px-2 rounded-lg border border-muted focus:border-primary focus:outline-none font-bold text-xs bg-white" />
                 </div>
               </div>
             </div>
@@ -372,7 +372,7 @@ export default function ProductsPage() {
               {isNewIngredient ? (
                 <div className="flex gap-2">
                   <input placeholder="New Ingredient Name" value={ingForm.new_name} onChange={e => setIngForm({ ...ingForm, new_name: e.target.value })}
-                    className="flex-[2] h-9 px-2 rounded-lg border border-muted text-sm focus:border-primary focus:outline-none" />
+                    className="flex-[2] h-9 px-2 rounded-lg border border-muted text-sm focus:border-primary focus:outline-none bg-white" />
                   <select value={ingForm.unit} onChange={e => setIngForm({ ...ingForm, unit: e.target.value })}
                     className="flex-1 h-9 px-1 rounded-lg border border-muted text-xs focus:border-primary focus:outline-none bg-white">
                     {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u}>{u}</option>)}
@@ -388,7 +388,7 @@ export default function ProductsPage() {
 
                 <div className="flex gap-2">
                   <input type="number" placeholder="Qty needed" value={ingForm.quantity_needed || ''} onChange={e => setIngForm({ ...ingForm, quantity_needed: +e.target.value })}
-                    className="flex-1 h-9 px-2 rounded-lg border border-muted text-sm focus:border-primary focus:outline-none" />
+                    className="flex-1 h-9 px-2 rounded-lg border border-muted text-sm focus:border-primary focus:outline-none bg-white" />
                   <select value={ingForm.unit} onChange={e => setIngForm({ ...ingForm, unit: e.target.value })}
                     className="w-20 h-9 px-1 rounded-lg border border-muted text-[10px] font-bold focus:border-primary focus:outline-none bg-white">
                     {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
