@@ -44,7 +44,7 @@ export default function InventoryPage() {
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
   const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeMainTab, setActiveMainTab] = useState<IngredientType | 'purchases'>('raw');
+  const [activeMainTab, setActiveMainTab] = useState<IngredientType | 'purchases' | 'shopping'>('raw');
   
   // Modal States
   const [showAdd, setShowAdd] = useState(false);
