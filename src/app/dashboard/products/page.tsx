@@ -630,103 +630,135 @@ export default function ProductsPage() {
 }
 
 function RecipeModal({ product, ingredients, onClose }: { product: Product, ingredients: Ingredient[], onClose: () => void }) {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Saved recipes loaded from DB (existing)
+  const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
+  // Pending new recipes to be added (not yet in DB)
+  const [pendingRecipes, setPendingRecipes] = useState<PendingRecipe[]>([]);
+  // IDs to delete on save
+  const [toDelete, setToDelete] = useState<string[]>([]);
   
-  // Modal Inline Add State
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
   const [ingSearch, setIngSearch] = useState('');
   const [showIngSuggestions, setShowIngSuggestions] = useState(false);
   const [form, setForm] = useState({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 });
 
-  const loadRecipes = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('recipes')
-      .select('id, ingredient_id, quantity_needed')
-      .eq('product_id', product.id);
-    
-    if (error) {
-      console.error("Load Recipes Error:", error);
-    } else {
-      setRecipes(data || []);
-    }
-    setLoading(false);
+  // Load existing recipes from DB on open
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from('recipes')
+        .select('id, ingredient_id, quantity_needed')
+        .eq('product_id', product.id);
+      setSavedRecipes(data || []);
+      setLoading(false);
+    };
+    load();
   }, [product.id]);
 
-  useEffect(() => { loadRecipes(); }, [loadRecipes]);
+  // Combined list: saved (minus deleted) + pending
+  const allRecipes = [
+    ...savedRecipes.filter(r => !toDelete.includes(r.id)),
+    ...pendingRecipes.map((p, i) => ({
+      id: `pending-${i}`,
+      ingredient_id: p.ingredient_id || '',
+      quantity_needed: p.quantity_needed,
+      _pending: true,
+      _pendingIdx: i,
+      _display_name: p.display_name,
+      _new_name: p.new_name,
+      _unit: p.unit,
+    }))
+  ];
 
-  const handleAdd = async () => {
-    if (form.quantity_needed <= 0) {
-      alert("Sila masukkan kuantiti yang sah.");
-      return;
+  // Group by ingredient_id (for saved) or by display_name (for pending)
+  const grouped = allRecipes.reduce((acc: any[], r: any) => {
+    const key = r._pending ? r._display_name : r.ingredient_id;
+    const existing = acc.find(item => item.key === key);
+    if (existing) {
+      existing.quantity_needed += r.quantity_needed;
+      if (!r._pending) existing.savedIds.push(r.id);
+      if (r._pending) existing.pendingIdxs.push(r._pendingIdx);
+    } else {
+      const ing = !r._pending ? ingredients.find(i => i.id === r.ingredient_id) : null;
+      acc.push({
+        key,
+        ingredient_id: r.ingredient_id,
+        display_name: r._pending ? r._display_name : (ing?.name || r.ingredient_id),
+        unit: r._pending ? r._unit : (ing?.unit || ''),
+        quantity_needed: r.quantity_needed,
+        savedIds: r._pending ? [] : [r.id],
+        pendingIdxs: r._pending ? [r._pendingIdx] : [],
+      });
     }
-    
-    setLoading(true);
+    return acc;
+  }, []);
+
+  const handleAdd = () => {
+    if (!ingSearch || form.quantity_needed <= 0) return;
+    const existing = ingredients.find(i => i.id === form.ingredient_id || i.name.toLowerCase() === ingSearch.toLowerCase());
+    const newPending: PendingRecipe = existing
+      ? { ingredient_id: existing.id, unit: form.unit, quantity_needed: form.quantity_needed, display_name: existing.name }
+      : { new_name: ingSearch, brand: form.brand || null, unit: form.unit, quantity_needed: form.quantity_needed, display_name: ingSearch };
+    setPendingRecipes(prev => [...prev, newPending]);
+    setForm({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 });
+    setIngSearch('');
+    setShowIngSuggestions(false);
+  };
+
+  const handleRemove = (group: any) => {
+    if (group.savedIds.length > 0) setToDelete(prev => [...prev, ...group.savedIds]);
+    if (group.pendingIdxs.length > 0) {
+      setPendingRecipes(prev => prev.filter((_, i) => !group.pendingIdxs.includes(i)));
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error(userError?.message || "Sila log masuk semula.");
-      
-      let finalIngredientId = form.ingredient_id;
-      
-      const existing = ingredients.find(i => i.id === form.ingredient_id || i.name.toLowerCase() === ingSearch.toLowerCase());
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sila log masuk semula.");
 
-      if (existing) {
-        finalIngredientId = existing.id;
-      } else if (ingSearch) {
-        const { data: newIng, error: ingError } = await supabase.from('ingredients').insert({
-          baker_id: user.id,
-          name: ingSearch,
-          brand: form.brand || null,
-          unit: form.unit,
-          current_stock: 0,
-          avg_cost_per_unit: 0,
-          low_stock_threshold: 0
-        }).select();
-        
-        if (ingError) throw ingError;
-        if (newIng && newIng.length > 0) finalIngredientId = newIng[0].id;
+      // Delete removed items
+      if (toDelete.length > 0) {
+        await supabase.from('recipes').delete().in('id', toDelete);
       }
 
-      if (finalIngredientId) {
-        let finalQty = form.quantity_needed;
-        const baseUnit = existing ? existing.unit : form.unit;
-        
-        if (form.unit === 'kg' && baseUnit === 'g') finalQty *= 1000;
-        else if (form.unit === 'g' && baseUnit === 'kg') finalQty /= 1000;
-        else if (form.unit === 'L' && baseUnit === 'ml') finalQty *= 1000;
-        else if (form.unit === 'ml' && baseUnit === 'L') finalQty /= 1000;
+      // Insert pending items
+      for (const recipe of pendingRecipes) {
+        let finalIngredientId = recipe.ingredient_id;
 
-        const { error: recipeError } = await supabase.from('recipes').insert({
-          baker_id: user.id,
-          product_id: product.id,
-          ingredient_id: finalIngredientId,
-          quantity_needed: finalQty
-        });
+        if (recipe.new_name) {
+          const { data: newIng } = await supabase.from('ingredients').insert({
+            baker_id: user.id,
+            name: recipe.new_name,
+            brand: recipe.brand || null,
+            unit: recipe.unit,
+            current_stock: 0,
+            avg_cost_per_unit: 0,
+            low_stock_threshold: 0
+          }).select();
+          if (newIng && newIng.length > 0) finalIngredientId = newIng[0].id;
+        }
 
-        if (recipeError) throw recipeError;
+        if (finalIngredientId) {
+          await supabase.from('recipes').insert({
+            baker_id: user.id,
+            product_id: product.id,
+            ingredient_id: finalIngredientId,
+            quantity_needed: recipe.quantity_needed
+          });
+        }
       }
-      
-      setForm({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 });
-      setIngSearch('');
-      await loadRecipes();
+
+      onClose();
     } catch (err: any) {
-      console.error("Recipe Add Error:", err);
-      alert("Gagal tambah bahan: " + (err.message || "Sila cuba lagi."));
+      alert("Gagal simpan resepi: " + err.message);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
-
-  const handleRemove = async (id: string) => {
-    setLoading(true);
-    await supabase.from('recipes').delete().eq('id', id);
-    await loadRecipes();
-  };
-
-  const handleSaveAll = async () => {
-    onClose();
-  };
-
-  const selectedIng = ingredients.find(i => i.id === form.ingredient_id);
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
@@ -740,81 +772,44 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-5 pr-1 custom-scrollbar">
+          {/* Ingredient List */}
           <div className="space-y-3">
             <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">🥣 Ingredients List</p>
-            {/* Existing Recipe Items - SCROLLABLE (max 3 items visible) */}
             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
-              {(() => {
-                if (loading) return <p className="text-sm text-foreground/40 text-center py-4">Loading...</p>;
-                if (recipes.length === 0) return <p className="text-sm text-foreground/40 italic text-center py-4">No ingredients added yet.</p>;
-
-                // Group recipes by ingredient_id
-                const grouped = recipes.reduce((acc: any[], r) => {
-                  const existing = acc.find(item => item.ingredient_id === r.ingredient_id);
-                  if (existing) {
-                    existing.quantity_needed += r.quantity_needed;
-                    existing.ids.push(r.id);
-                  } else {
-                    acc.push({ ...r, ids: [r.id] });
-                  }
-                  return acc;
-                }, []);
-
-                return grouped.map(r => {
-                  const ing = ingredients.find(i => i.id === r.ingredient_id);
-                  return (
-                    <div key={r.ingredient_id} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
-                      <div>
-                        <p className="font-bold text-sm text-foreground">{ing?.name || r.ingredient_id}</p>
-                        <p className="text-xs text-foreground/50">{r.quantity_needed} {ing?.unit || ''}</p>
-                      </div>
-                      <button 
-                        onClick={async () => {
-                          setLoading(true);
-                          await Promise.all(r.ids.map((id: string) => supabase.from('recipes').delete().eq('id', id)));
-                          await loadRecipes();
-                        }} 
-                        className="text-red-400 hover:text-red-600 text-lg px-2"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  );
-                });
-              })()}
+              {loading ? (
+                <p className="text-sm text-foreground/40 text-center py-4">Loading...</p>
+              ) : grouped.length === 0 ? (
+                <p className="text-sm text-foreground/40 italic text-center py-4">No ingredients added yet.</p>
+              ) : grouped.map(r => (
+                <div key={r.key} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
+                  <div>
+                    <p className="font-bold text-sm text-foreground">{r.display_name}</p>
+                    <p className="text-xs text-foreground/50">{r.quantity_needed} {r.unit}</p>
+                  </div>
+                  <button onClick={() => handleRemove(r)} className="text-red-400 hover:text-red-600 text-lg px-2">×</button>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Add New Item */}
-          <div className="bg-muted/30 p-3 rounded-xl border border-muted/50 space-y-3">
+          <div className="bg-muted/10 p-4 rounded-2xl border-2 border-muted/30 space-y-4">
+            <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">+ Add Ingredient</p>
             <div className="flex gap-2">
               <div className="flex-[2] relative">
                 <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Search or Add Ingredient</label>
-                <input 
-                  placeholder="Type ingredient name..." 
-                  value={ingSearch} 
-                  onChange={e => {
-                    setIngSearch(e.target.value);
-                    setForm({ ...form, ingredient_id: '' });
-                    setShowIngSuggestions(true);
-                  }}
+                <input
+                  placeholder="Type ingredient name..."
+                  value={ingSearch}
+                  onChange={e => { setIngSearch(e.target.value); setForm({ ...form, ingredient_id: '' }); setShowIngSuggestions(true); }}
                   onFocus={() => setShowIngSuggestions(true)}
-                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" 
+                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white"
                 />
-                
-                {/* Suggestions Dropdown */}
                 {showIngSuggestions && ingSearch && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-muted rounded-xl shadow-xl max-h-48 overflow-y-auto">
                     {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
-                      <div 
-                        key={i.id} 
-                        onClick={() => {
-                          setIngSearch(i.name);
-                          setForm({ ...form, ingredient_id: i.id, brand: i.brand || '', unit: i.unit });
-                          setShowIngSuggestions(false);
-                        }}
-                        className="px-4 py-2 hover:bg-primary/5 cursor-pointer text-sm font-medium border-b border-muted/30 last:border-0"
-                      >
+                      <div key={i.id} onClick={() => { setIngSearch(i.name); setForm({ ...form, ingredient_id: i.id, brand: i.brand || '', unit: i.unit }); setShowIngSuggestions(false); }}
+                        className="px-4 py-2 hover:bg-primary/5 cursor-pointer text-sm font-medium border-b border-muted/30 last:border-0">
                         <div className="flex items-center gap-2">
                           <p className="text-foreground">{i.name}</p>
                           {i.brand && <span className="text-[10px] text-primary/50 font-bold bg-primary/5 px-1.5 py-0.5 rounded">@{i.brand}</span>}
@@ -822,17 +817,13 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
                         <p className="text-[10px] text-foreground/40">{i.unit}</p>
                       </div>
                     ))}
-
                     {!ingredients.some(i => i.name.toLowerCase() === ingSearch.toLowerCase()) && (
-                      <div 
-                        onClick={() => setShowIngSuggestions(false)}
-                        className="px-4 py-3 hover:bg-green-50 cursor-pointer transition-colors"
-                      >
+                      <div onClick={() => setShowIngSuggestions(false)} className="px-4 py-3 hover:bg-green-50 cursor-pointer transition-colors">
                         <div className="flex items-center gap-3 text-green-600">
                           <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center font-bold text-xs">+</div>
                           <div>
-                            <p className="text-sm font-bold">Add "{ingSearch}" as new ingredient</p>
-                            <p className="text-[10px] opacity-70 font-medium">Create a new ingredient with this name</p>
+                            <p className="text-sm font-bold">Add &quot;{ingSearch}&quot; as new ingredient</p>
+                            <p className="text-[10px] opacity-70 font-medium">Will be created on save</p>
                           </div>
                         </div>
                       </div>
@@ -842,12 +833,8 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
               </div>
               <div className="flex-1">
                 <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Brand (Opt)</label>
-                <input 
-                  placeholder="Anchor" 
-                  value={form.brand} 
-                  onChange={e => setForm({ ...form, brand: e.target.value })}
-                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" 
-                />
+                <input placeholder="Anchor" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })}
+                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" />
               </div>
             </div>
 
@@ -872,12 +859,17 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
           </div>
         </div>
 
-        <div className="flex-none pt-2">
-          <button onClick={handleSaveAll} className="w-full h-12 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-            Close & Update
+        <div className="flex-none pt-4 flex gap-3">
+          <button onClick={onClose} className="flex-1 h-12 bg-muted text-foreground/60 font-bold rounded-xl hover:bg-muted/80 transition-all">
+            Cancel
+          </button>
+          <button onClick={handleSave} disabled={saving} className="flex-[2] h-12 bg-primary text-white font-black rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-70">
+            {saving ? 'Saving...' : `Save Recipe${pendingRecipes.length > 0 ? ` (+${pendingRecipes.length})` : ''}`}
           </button>
         </div>
       </div>
     </div>
   );
 }
+
+
