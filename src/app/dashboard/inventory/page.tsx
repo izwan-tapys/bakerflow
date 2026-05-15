@@ -846,19 +846,42 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
     <div className="relative">
       {/* Select mode header bar — shown in select mode */}
       {selectMode && (
-        <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-primary text-white rounded-t-[16px] shadow-md">
-          <div className="flex items-center gap-3">
+        <div className="sticky top-0 z-20 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-t-[16px] shadow-md overflow-x-auto no-scrollbar">
+          {/* Select all checkbox + count */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={() => allSelected ? setSelectedIds([]) : setSelectedIds(ingredients.map((i: Ingredient) => i.id))}
-              className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
+              className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all flex-shrink-0 ${
                 allSelected ? 'bg-white border-white text-primary' : 'border-white/60'
               }`}
             >
               {allSelected && <span className="text-[10px] font-black text-primary">✓</span>}
             </button>
-            <span className="font-black text-sm">{selectedIds.length} selected</span>
+            <span className="font-black text-sm whitespace-nowrap">{selectedIds.length} selected</span>
           </div>
-          <button onClick={exitSelectMode} className="text-white/70 font-black text-xs uppercase tracking-widest">Cancel</button>
+
+          {/* Actions — only shown when something is selected */}
+          {selectedIds.length > 0 && (
+            <>
+              <div className="h-4 w-px bg-white/20 flex-shrink-0 mx-1" />
+              <button
+                onClick={() => { onAddToShopping(selectedIds); exitSelectMode(); }}
+                className="flex items-center gap-1 px-3 h-8 bg-white/15 hover:bg-white/25 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap transition-all flex-shrink-0"
+              >
+                🛒 Shopping
+              </button>
+              <button
+                onClick={() => { onBulkDelete(selectedIds); exitSelectMode(); }}
+                className="flex items-center gap-1 px-3 h-8 bg-red-400/60 hover:bg-red-400/80 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap transition-all flex-shrink-0"
+              >
+                🗑 Delete
+              </button>
+            </>
+          )}
+
+          {/* Spacer + Cancel */}
+          <div className="flex-1" />
+          <button onClick={exitSelectMode} className="text-white/70 font-black text-xs uppercase tracking-widest whitespace-nowrap flex-shrink-0">Cancel</button>
         </div>
       )}
 
@@ -981,29 +1004,6 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
         </div>
       </div>
 
-      {/* Group Action Bar */}
-      {selectMode && selectedIds.length > 0 && (
-        <div className="sticky bottom-4 left-0 right-0 mt-3 mx-2">
-          <div className="bg-foreground text-white rounded-2xl px-4 py-3 flex items-center gap-3 shadow-2xl">
-            <span className="text-xs font-black text-white/60 flex-shrink-0">{selectedIds.length} item{selectedIds.length > 1 ? 's' : ''}</span>
-            <div className="flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar">
-              <button
-                onClick={() => { onAddToShopping(selectedIds); exitSelectMode(); }}
-                className="flex items-center gap-1.5 px-4 h-9 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap transition-all flex-shrink-0"
-              >
-                🛒 Add to Shopping
-              </button>
-              <button
-                onClick={() => { onBulkDelete(selectedIds); exitSelectMode(); }}
-                className="flex items-center gap-1.5 px-4 h-9 bg-red-500/80 hover:bg-red-500 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap transition-all flex-shrink-0"
-              >
-                🗑 Delete All
-              </button>
-            </div>
-            <button onClick={exitSelectMode} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/10 text-white font-black text-sm flex-shrink-0">✕</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
