@@ -57,6 +57,7 @@ export default function InventoryPage() {
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   const [pendingAlertAction, setPendingAlertAction] = useState<any>(null);
   const [manualShoppingIds, setManualShoppingIds] = useState<string[]>([]);
+  const [lsReady, setLsReady] = useState(false);
   
   // Form State for Add Ingredient
   const [form, setForm] = useState({ 
@@ -95,9 +96,9 @@ export default function InventoryPage() {
       ...ing,
       type: ing.type || 'raw'
     })) as Ingredient[];
-    
+
     setIngredients(loadedIngredients);
-    setManualShoppingIds(loadedIngredients.filter(i => i.is_on_shopping_list).map(i => i.id));
+    // Note: manualShoppingIds is managed by localStorage, not DB
     
     const activeOrders = ordersRes.data || [];
     const allRecipes = recipesRes.data || [];
@@ -140,6 +141,31 @@ export default function InventoryPage() {
     setLoading(false);
   }, []);
 
+  // Load shopping list from localStorage after user is known
+  useEffect(() => {
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const key = `bf_shopping_${user.id}`;
+      const saved = localStorage.getItem(key);
+      if (saved) setManualShoppingIds(JSON.parse(saved));
+      setLsReady(true);
+    };
+    init();
+  }, []);
+
+  // Persist shopping list to localStorage whenever it changes
+  useEffect(() => {
+    if (!lsReady) return;
+    const persist = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const key = `bf_shopping_${user.id}`;
+      localStorage.setItem(key, JSON.stringify(manualShoppingIds));
+    };
+    persist();
+  }, [manualShoppingIds, lsReady]);
+
   useEffect(() => { loadData(); }, [loadData]);
 
   const getAutoCategory = (name: string): string => {
@@ -153,15 +179,7 @@ export default function InventoryPage() {
     return 'Lain-lain';
   };
 
-  const handleToggleShoppingList = async (ids: string[], status: boolean) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    await supabase
-      .from('ingredients')
-      .update({ is_on_shopping_list: status })
-      .in('id', ids);
-    
+  const handleToggleShoppingList = (ids: string[], status: boolean) => {
     if (status) {
       setManualShoppingIds(prev => [...new Set([...prev, ...ids])]);
     } else {
