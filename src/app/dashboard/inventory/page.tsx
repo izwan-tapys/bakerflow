@@ -714,6 +714,8 @@ function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
 }
 
 function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock, onRemoveManual, onRefresh }: any) {
+  const [boughtIds, setBoughtIds] = useState<string[]>([]);
+
   // Combine orders-based shopping list with manual IDs
   const manualItems = manualIds.map((id: string) => {
     const ing = allIngredients.find((i: any) => i.id === id);
@@ -793,9 +795,11 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-muted/30">
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item To Buy</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Needed</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-12"></th>
+                <th className="pl-4 py-4 w-10 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">No</th>
+                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item To Buy</th>
+                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Needed</th>
+                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-16">Bought</th>
+                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-24">Confirm</th>
               </tr>
             </thead>
           </table>
@@ -804,23 +808,28 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
           <table className="w-full text-left border-collapse">
             <tbody className="divide-y divide-muted/50">
               {combinedList.length === 0 ? (
-                <tr><td colSpan={3} className="px-6 py-20 text-center text-foreground/30 font-bold italic text-sm">Your shopping list is empty.</td></tr>
+                <tr><td colSpan={5} className="px-6 py-20 text-center text-foreground/30 font-bold italic text-sm">Your shopping list is empty.</td></tr>
               ) : (
-                combinedList.map((item: any, idx: number) => (
-                  <tr key={item.ingredient.id + idx} className="group">
-                    <td className="px-6 py-5">
+                combinedList.map((item: any, idx: number) => {
+                  const isBought = boughtIds.includes(item.ingredient.id);
+                  return (
+                  <tr key={item.ingredient.id + idx} className={`group transition-colors ${isBought ? 'bg-muted/10' : ''}`}>
+                    <td className="pl-4 py-5 w-10 text-center font-black text-[10px] text-foreground/30">{idx + 1}</td>
+                    <td className="px-4 py-5">
                       <div className="flex items-center gap-2">
-                        <p className="font-bold text-foreground text-sm">{item.ingredient.name}</p>
+                        <p className={`font-bold text-sm transition-all ${isBought ? 'text-foreground/30 line-through' : 'text-foreground'}`}>
+                          {item.ingredient.name}
+                        </p>
                         {item.isManual && <span className="text-[8px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded font-black uppercase">Manual</span>}
                       </div>
                       <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-tight">{item.ingredient.brand || 'No Brand'}</p>
                     </td>
-                    <td className="px-6 py-5 text-right">
+                    <td className="px-4 py-5 text-right">
                       {item.needed > 0 || item.suggestedPacks > 0 ? (
                         <div className="flex flex-col items-end">
-                          <p className="text-sm font-black text-red-500">
+                          <p className={`text-sm font-black transition-all ${isBought ? 'text-foreground/20' : 'text-red-500'}`}>
                             {item.suggestedPacks > 0 
-                              ? `Buy ${item.suggestedPacks} ${item.ingredient.pack_unit || 'pack'}${item.suggestedPacks > 1 ? 's' : ''}`
+                              ? `${item.suggestedPacks} ${item.ingredient.pack_unit || 'pack'}${item.suggestedPacks > 1 ? 's' : ''}`
                               : `${item.shortfall}${item.ingredient.unit}`
                             }
                           </p>
@@ -832,20 +841,34 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                         <p className="text-[10px] font-black text-foreground/30 italic">Check Stock</p>
                       )}
                     </td>
-                    <td className="px-6 py-5 text-center">
+                    <td className="px-4 py-5 text-center">
+                      <button 
+                        onClick={() => {
+                          setBoughtIds(prev => 
+                            prev.includes(item.ingredient.id) 
+                              ? prev.filter(id => id !== item.ingredient.id) 
+                              : [...prev, item.ingredient.id]
+                          );
+                        }}
+                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all mx-auto ${
+                          isBought ? 'bg-green-500 border-green-500' : 'border-muted'
+                        }`}
+                      >
+                        {isBought && <span className="text-white text-[10px]">✓</span>}
+                      </button>
+                    </td>
+                    <td className="px-4 py-5 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button 
                           onClick={() => onRestock(item.ingredient)}
-                          className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all"
+                          className="px-3 py-1.5 rounded-lg bg-primary text-white text-[10px] font-black uppercase tracking-wider hover:bg-primary/90 transition-all shadow-sm"
                         >
-                          ➕
+                          Confirm
                         </button>
                         {item.isManual && (
                           <button 
-                            onClick={() => {
-                              onRemoveManual(item.ingredient.id);
-                            }}
-                            className="w-8 h-8 rounded-lg bg-red-50 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+                            onClick={() => onRemoveManual(item.ingredient.id)}
+                            className="w-8 h-8 rounded-lg text-foreground/20 hover:text-red-400 transition-all text-xl"
                           >
                             ×
                           </button>
@@ -853,7 +876,8 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
