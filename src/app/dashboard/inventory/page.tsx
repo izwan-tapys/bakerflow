@@ -1616,6 +1616,7 @@ function AddIngredientModal({ onClose, onAdd, initialForm, categories, getAutoCa
                   <div className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
                 </div>
               )}
+              {showSuggestions && (
                 <div ref={suggestionRef} className="absolute z-50 left-0 right-0 top-[calc(100%+8px)] bg-white rounded-2xl shadow-2xl border border-muted/50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="px-4 py-2 bg-muted/10 border-b border-muted/30">
                     <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest">Suggested from Catalog</p>
