@@ -939,23 +939,19 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
         </div>
       </div>
 
-      <div className="bg-white rounded-[16px] border border-muted overflow-hidden shadow-sm">
-        <div className="overflow-x-auto border-b border-muted/50">
-          <table className="w-full text-left border-collapse">
-            <thead>
+      <div className="bg-white rounded-[16px] border border-muted shadow-sm overflow-hidden flex flex-col max-h-[70vh]">
+        <div className="overflow-auto flex-1">
+          <table className="w-full text-left border-collapse relative">
+            <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
               <tr className="bg-muted/30">
-                <th className="pl-4 py-4 w-10 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">No</th>
+                <th className="pl-4 py-4 w-12 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">No</th>
                 <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item To Buy</th>
-                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Suggested</th>
-                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest w-24">Qty Bought</th>
-                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest w-28">Total Price</th>
-                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-20">Action</th>
+                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right w-24">Suggested</th>
+                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest w-24 text-center">Qty Bought</th>
+                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest w-32 text-center">Total Price</th>
+                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-24">Action</th>
               </tr>
             </thead>
-          </table>
-        </div>
-        <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
-          <table className="w-full text-left border-collapse">
             <tbody className="divide-y divide-muted/50">
               {combinedList.length === 0 ? (
                 <tr><td colSpan={6} className="px-6 py-20 text-center text-foreground/30 font-bold italic text-sm">Your shopping list is empty.</td></tr>
@@ -966,8 +962,8 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                   
                   return (
                   <tr key={item.ingredient.id + idx} className={`group transition-colors ${isReady ? 'bg-green-50/50' : ''}`}>
-                    <td className="pl-4 py-5 w-10 text-center font-black text-[10px] text-foreground/30">{idx + 1}</td>
-                    <td className="px-4 py-5">
+                    <td className="pl-4 py-5 w-12 text-center font-black text-[10px] text-foreground/30">{idx + 1}</td>
+                    <td className="px-4 py-5 min-w-[140px]">
                       <p className="font-bold text-sm text-foreground">{item.ingredient.name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-tight">{item.ingredient.brand || 'No Brand'}</p>
@@ -975,29 +971,29 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                         <p className="text-[9px] font-black text-amber-600/60 uppercase">Stock: {item.ingredient.current_stock}{item.ingredient.unit}</p>
                       </div>
                     </td>
-                    <td className="px-4 py-5 text-right">
-                      <p className="text-xs font-black text-foreground/60">
+                    <td className="px-4 py-5 text-right w-24">
+                      <p className="text-xs font-black text-foreground/60 leading-tight">
                         {item.suggestedPacks > 0 
-                          ? `${item.suggestedPacks} ${item.ingredient.pack_unit || 'pack'}`
+                          ? `${item.suggestedPacks} ${item.ingredient.pack_unit || 'pk'}`
                           : `${item.shortfall}${item.ingredient.unit}`
                         }
                       </p>
-                      <p className="text-[9px] font-bold text-foreground/30 uppercase">
+                      <p className="text-[9px] font-bold text-foreground/30 uppercase mt-0.5">
                         ~{item.suggestedTotalQty || item.shortfall}{item.ingredient.unit}
                       </p>
                     </td>
-                    <td className="px-4 py-5">
+                    <td className="px-4 py-5 w-24">
                       <div className="relative">
                         <input 
                           type="number"
                           value={data.qty}
                           onChange={e => updateReceipt(item.ingredient.id, 'qty', Number(e.target.value))}
-                          className="w-full h-10 px-2 rounded-lg border-2 border-muted focus:border-primary outline-none font-bold text-sm"
+                          className="w-full h-10 px-2 rounded-lg border-2 border-muted focus:border-primary outline-none font-bold text-sm text-center"
                         />
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black text-foreground/20 uppercase">{item.ingredient.unit}</span>
+                        <span className="absolute -right-1 -top-2 bg-muted/80 px-1 rounded text-[8px] font-black text-foreground/40 uppercase">{item.ingredient.unit}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-5">
+                    <td className="px-4 py-5 w-32">
                       <div className="relative">
                         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-foreground/30">RM</span>
                         <input 
@@ -1009,7 +1005,7 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                         />
                       </div>
                     </td>
-                    <td className="px-4 py-5 text-center">
+                    <td className="px-4 py-5 text-center w-24">
                       <div className="flex items-center justify-center gap-2">
                         <button 
                           disabled={!isReady}
