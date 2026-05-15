@@ -640,12 +640,24 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
   const [form, setForm] = useState({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 });
 
   const loadRecipes = useCallback(async () => {
-    const { data } = await supabase
+    console.log("Loading recipes for product:", product.id);
+    const { data, error } = await supabase
       .from('recipes')
-      .select('*, ingredient:ingredients(name, unit)')
+      .select(`
+        *,
+        ingredient:ingredients (
+          name,
+          unit
+        )
+      `)
       .eq('product_id', product.id);
     
-    setRecipes(data || []);
+    if (error) {
+      console.error("Load Recipes Error:", error);
+    } else {
+      console.log("Recipes loaded:", data);
+      setRecipes(data || []);
+    }
     setLoading(false);
   }, [product.id]);
 
@@ -746,8 +758,8 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
                recipes.map(r => (
                  <div key={r.id} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
                    <div>
-                     <p className="font-bold text-sm text-foreground">{r.ingredient?.name}</p>
-                     <p className="text-xs text-foreground/50">{r.quantity_needed}{r.ingredient?.unit}</p>
+                     <p className="font-bold text-sm text-foreground">{r.ingredient?.name || 'Unknown Ingredient'}</p>
+                     <p className="text-xs text-foreground/50">{r.quantity_needed} {r.ingredient?.unit || ''}</p>
                    </div>
                    <button onClick={() => handleRemove(r.id)} className="text-red-400 hover:text-red-600 text-lg px-2">×</button>
                  </div>
