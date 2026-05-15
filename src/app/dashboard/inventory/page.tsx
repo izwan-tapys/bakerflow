@@ -1538,40 +1538,11 @@ function IngredientForm({ data, setData, categories, getAutoCategory }: any) {
   );
 }
 
-const MASTER_CATALOG = [
-  { name: 'Tepung Sauh (Wheat Flour)', brand: 'Sauh', category: 'Tepung', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
-  { name: 'Tepung Gandum (All Purpose)', brand: 'Various', category: 'Tepung', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
-  { name: 'Tepung High Protein (Bread Flour)', brand: 'Various', category: 'Tepung', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
-  { name: 'Tepung Superfine', brand: 'Blue Key', category: 'Tepung', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
-  { name: 'Anchor Unsalted Butter', brand: 'Anchor', category: 'Dairy', unit: 'g', pack_size: 250, pack_unit: 'block' },
-  { name: 'Anchor Salted Butter', brand: 'Anchor', category: 'Dairy', unit: 'g', pack_size: 250, pack_unit: 'block' },
-  { name: 'SCS Unsalted Butter', brand: 'SCS', category: 'Dairy', unit: 'g', pack_size: 250, pack_unit: 'block' },
-  { name: 'Golden Churn Butter', brand: 'Golden Churn', category: 'Dairy', unit: 'g', pack_size: 340, pack_unit: 'can' },
-  { name: 'Fine Sugar (Gula Halus)', brand: 'CSR/Prai', category: 'Pemanis', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
-  { name: 'Castor Sugar', brand: 'Various', category: 'Pemanis', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
-  { name: 'Brown Sugar', brand: 'Various', category: 'Pemanis', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
-  { name: 'Icing Sugar', brand: 'Various', category: 'Pemanis', unit: 'g', pack_size: 500, pack_unit: 'bag' },
-  { name: 'Telur Gred A', brand: 'Various', category: 'Lain-lain', unit: 'pcs', pack_size: 30, pack_unit: 'tray' },
-  { name: 'Telur Gred B', brand: 'Various', category: 'Lain-lain', unit: 'pcs', pack_size: 30, pack_unit: 'tray' },
-  { name: 'Telur Gred C', brand: 'Various', category: 'Lain-lain', unit: 'pcs', pack_size: 30, pack_unit: 'tray' },
-  { name: 'Callebaut Dark Choc 811', brand: 'Callebaut', category: 'Coklat', unit: 'g', pack_size: 2500, pack_unit: 'bag' },
-  { name: 'Callebaut Milk Choc 823', brand: 'Callebaut', category: 'Coklat', unit: 'g', pack_size: 2500, pack_unit: 'bag' },
-  { name: 'Beryl\'s Dark Choc Coins', brand: 'Beryl\'s', category: 'Coklat', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
-  { name: 'Beryl\'s Milk Choc Coins', brand: 'Beryl\'s', category: 'Coklat', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
-  { name: 'Baking Powder', brand: 'Various', category: 'Lain-lain', unit: 'g', pack_size: 100, pack_unit: 'can' },
-  { name: 'Baking Soda', brand: 'Various', category: 'Lain-lain', unit: 'g', pack_size: 100, pack_unit: 'can' },
-  { name: 'Yeast (Yis)', brand: 'Mauripan/Saf-Instant', category: 'Lain-lain', unit: 'g', pack_size: 11, pack_unit: 'sachet' },
-  { name: 'Whipping Cream (Dairy)', brand: 'Emborg/Anchor', category: 'Dairy', unit: 'ml', pack_size: 1000, pack_unit: 'box' },
-  { name: 'Whipping Cream (Non-Dairy)', brand: 'Value Pride/Richs', category: 'Dairy', unit: 'ml', pack_size: 1000, pack_unit: 'box' },
-  { name: 'Cream Cheese', brand: 'Tatura/Philadelphia', category: 'Dairy', unit: 'g', pack_size: 250, pack_unit: 'block' },
-  { name: 'Full Cream Milk', brand: 'Various', category: 'Dairy', unit: 'ml', pack_size: 1000, pack_unit: 'box' },
-  { name: 'Condensed Milk (Susu Pekat)', brand: 'Various', category: 'Dairy', unit: 'ml', pack_size: 500, pack_unit: 'can' },
-];
-
 function AddIngredientModal({ onClose, onAdd, initialForm, categories, getAutoCategory }: any) {
   const [form, setForm] = useState(initialForm);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searching, setSearching] = useState(false);
   const suggestionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1584,14 +1555,24 @@ function AddIngredientModal({ onClose, onAdd, initialForm, categories, getAutoCa
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleNameChange = (val: string) => {
+  const handleNameChange = async (val: string) => {
     setForm({ ...form, name: val });
     if (val.length > 1) {
-      const filtered = MASTER_CATALOG.filter(item => 
-        item.name.toLowerCase().includes(val.toLowerCase())
-      ).slice(0, 5);
-      setSuggestions(filtered);
-      setShowSuggestions(filtered.length > 0);
+      setSearching(true);
+      const { data } = await supabase
+        .from('master_catalog')
+        .select('*')
+        .ilike('name', `%${val}%`)
+        .limit(5);
+      
+      if (data && data.length > 0) {
+        setSuggestions(data);
+        setShowSuggestions(true);
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+      setSearching(false);
     } else {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -1630,7 +1611,11 @@ function AddIngredientModal({ onClose, onAdd, initialForm, categories, getAutoCa
                 placeholder="e.g. Tepung Sauh"
                 className="w-full h-14 bg-muted/30 rounded-2xl px-5 border-2 border-transparent focus:border-primary/20 focus:bg-white outline-none transition-all font-bold text-base"
               />
-              {showSuggestions && (
+              {searching && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <div className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                </div>
+              )}
                 <div ref={suggestionRef} className="absolute z-50 left-0 right-0 top-[calc(100%+8px)] bg-white rounded-2xl shadow-2xl border border-muted/50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="px-4 py-2 bg-muted/10 border-b border-muted/30">
                     <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest">Suggested from Catalog</p>
