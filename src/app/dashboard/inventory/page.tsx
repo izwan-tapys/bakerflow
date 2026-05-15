@@ -817,19 +817,33 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
 
   return (
     <div className="relative">
-      {/* Select mode header bar */}
+      {/* Select mode header bar — shown in select mode */}
       {selectMode && (
         <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-primary text-white rounded-t-[16px] shadow-md">
           <div className="flex items-center gap-3">
             <button
               onClick={() => allSelected ? setSelectedIds([]) : setSelectedIds(ingredients.map((i: Ingredient) => i.id))}
-              className="w-6 h-6 rounded border-2 border-white flex items-center justify-center"
+              className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
+                allSelected ? 'bg-white border-white text-primary' : 'border-white/60'
+              }`}
             >
-              {allSelected ? '✓' : ''}
+              {allSelected && <span className="text-[10px] font-black text-primary">✓</span>}
             </button>
             <span className="font-black text-sm">{selectedIds.length} selected</span>
           </div>
           <button onClick={exitSelectMode} className="text-white/70 font-black text-xs uppercase tracking-widest">Cancel</button>
+        </div>
+      )}
+
+      {/* "Select" button shown when NOT in select mode — for desktop users */}
+      {!selectMode && ingredients.length > 0 && (
+        <div className="flex justify-end mb-1">
+          <button
+            onClick={() => setSelectMode(true)}
+            className="text-[10px] font-black text-foreground/30 hover:text-primary uppercase tracking-widest px-2 py-1 rounded-lg hover:bg-primary/5 transition-all"
+          >
+            Select
+          </button>
         </div>
       )}
 
@@ -839,11 +853,23 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-muted/30">
-                {selectMode && <th className="px-4 py-4 w-10" />}
+                {/* Checkbox column — always reserve space, header shows select-all in select mode */}
+                <th className="pl-4 pr-1 py-4 w-10">
+                  {selectMode && (
+                    <button
+                      onClick={() => allSelected ? setSelectedIds([]) : setSelectedIds(ingredients.map((i: Ingredient) => i.id))}
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                        allSelected ? 'bg-primary border-primary' : 'border-muted'
+                      }`}
+                    >
+                      {allSelected && <span className="text-[9px] font-black text-white">✓</span>}
+                    </button>
+                  )}
+                </th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Inventory</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Avg Cost</th>
-                {!selectMode && <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-10" />}
+                <th className="px-6 py-4 w-10" />
               </tr>
             </thead>
           </table>
@@ -877,21 +903,34 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
                       }}
                       onPointerLeave={cancelLongPress}
                       onContextMenu={e => e.preventDefault()}
-                      className={`cursor-pointer transition-colors select-none ${
+                      className={`group cursor-pointer transition-colors select-none ${
                         isSelected
                           ? 'bg-primary/10'
                           : 'hover:bg-primary/[0.02] active:bg-primary/[0.05]'
                       }`}
                     >
-                      {selectMode && (
-                        <td className="px-4 py-5">
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                            isSelected ? 'bg-primary border-primary text-white' : 'border-muted'
-                          }`}>
-                            {isSelected && <span className="text-[10px] font-black">✓</span>}
-                          </div>
-                        </td>
-                      )}
+                      {/* Checkbox column — always rendered, visible on hover or in select mode */}
+                      <td className="pl-4 pr-1 py-5 w-10">
+                        <button
+                          onPointerDown={e => e.stopPropagation()}
+                          onPointerUp={e => {
+                            e.stopPropagation();
+                            if (!selectMode) {
+                              setSelectMode(true);
+                              setSelectedIds([ing.id]);
+                            } else {
+                              toggleSelect(ing.id);
+                            }
+                          }}
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                            isSelected
+                              ? 'bg-primary border-primary opacity-100'
+                              : 'border-muted opacity-0 group-hover:opacity-100'
+                          }`}
+                        >
+                          {isSelected && <span className="text-[9px] font-black text-white">✓</span>}
+                        </button>
+                      </td>
                       <td className="px-6 py-5">
                         <p className="font-bold text-foreground text-sm">{ing.name}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
@@ -905,7 +944,7 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
                       <td className="px-6 py-5 text-right font-black text-primary/80 text-sm">
                         RM {ing.avg_cost_per_unit.toFixed(2)}
                       </td>
-                      {!selectMode && <td className="px-6 py-5 text-center text-foreground/20">›</td>}
+                      <td className="px-6 py-5 text-center text-foreground/20">{!selectMode && '›'}</td>
                     </tr>
                   );
                 })
