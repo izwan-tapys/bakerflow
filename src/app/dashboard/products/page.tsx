@@ -33,6 +33,7 @@ interface Recipe {
 interface PendingRecipe {
   ingredient_id?: string;
   new_name?: string;
+  brand?: string | null;
   unit?: string;
   quantity_needed: number;
   display_name: string;
