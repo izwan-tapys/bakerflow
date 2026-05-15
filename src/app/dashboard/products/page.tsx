@@ -387,27 +387,36 @@ export default function ProductsPage() {
                   {/* Suggestions Dropdown */}
                   {showIngSuggestions && ingSearch && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-muted rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                      {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).length > 0 ? (
-                        ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
-                          <div 
-                            key={i.id} 
-                            onClick={() => {
-                              setIngSearch(i.name);
-                              setIngForm({ ...ingForm, ingredient_id: i.id, brand: i.brand || '', unit: i.unit });
-                              setShowIngSuggestions(false);
-                            }}
-                            className="px-4 py-2 hover:bg-primary/5 cursor-pointer text-sm font-medium border-b border-muted/30 last:border-0"
-                          >
-                            <div className="flex items-center gap-2">
-                              <p className="text-foreground">{i.name}</p>
-                              {i.brand && <span className="text-[10px] text-primary/50 font-bold bg-primary/5 px-1.5 py-0.5 rounded">@{i.brand}</span>}
-                            </div>
-                            <p className="text-[10px] text-foreground/40">{i.unit}</p>
+                      {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
+                        <div 
+                          key={i.id} 
+                          onClick={() => {
+                            setIngSearch(i.name);
+                            setIngForm({ ...ingForm, ingredient_id: i.id, brand: i.brand || '', unit: i.unit });
+                            setShowIngSuggestions(false);
+                          }}
+                          className="px-4 py-2 hover:bg-primary/5 cursor-pointer text-sm font-medium border-b border-muted/30 last:border-0"
+                        >
+                          <div className="flex items-center gap-2">
+                            <p className="text-foreground">{i.name}</p>
+                            {i.brand && <span className="text-[10px] text-primary/50 font-bold bg-primary/5 px-1.5 py-0.5 rounded">@{i.brand}</span>}
                           </div>
-                        ))
-                      ) : (
-                        <div className="px-4 py-3 text-xs text-foreground/40 italic">
-                          No match found. Press "Add" to create "{ingSearch}"
+                          <p className="text-[10px] text-foreground/40">{i.unit}</p>
+                        </div>
+                      ))}
+                      
+                      {!ingredients.some(i => i.name.toLowerCase() === ingSearch.toLowerCase()) && (
+                        <div 
+                          onClick={() => setShowIngSuggestions(false)}
+                          className="px-4 py-3 hover:bg-green-50 cursor-pointer transition-colors"
+                        >
+                          <div className="flex items-center gap-3 text-green-600">
+                            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center font-bold text-xs">+</div>
+                            <div>
+                              <p className="text-sm font-bold">Add "{ingSearch}" as new ingredient</p>
+                              <p className="text-[10px] opacity-70 font-medium">Create a new ingredient with this name</p>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -822,27 +831,36 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
                 {/* Suggestions Dropdown */}
                 {showIngSuggestions && ingSearch && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-muted rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                    {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).length > 0 ? (
-                      ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
-                        <div 
-                          key={i.id} 
-                          onClick={() => {
-                            setIngSearch(i.name);
-                            setForm({ ...form, ingredient_id: i.id, brand: i.brand || '', unit: i.unit });
-                            setShowIngSuggestions(false);
-                          }}
-                          className="px-4 py-2 hover:bg-primary/5 cursor-pointer text-sm font-medium border-b border-muted/30 last:border-0"
-                        >
-                          <div className="flex items-center gap-2">
-                            <p className="text-foreground">{i.name}</p>
-                            {i.brand && <span className="text-[10px] text-primary/50 font-bold bg-primary/5 px-1.5 py-0.5 rounded">@{i.brand}</span>}
-                          </div>
-                          <p className="text-[10px] text-foreground/40">{i.unit}</p>
+                    {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
+                      <div 
+                        key={i.id} 
+                        onClick={() => {
+                          setIngSearch(i.name);
+                          setForm({ ...form, ingredient_id: i.id, brand: i.brand || '', unit: i.unit });
+                          setShowIngSuggestions(false);
+                        }}
+                        className="px-4 py-2 hover:bg-primary/5 cursor-pointer text-sm font-medium border-b border-muted/30 last:border-0"
+                      >
+                        <div className="flex items-center gap-2">
+                          <p className="text-foreground">{i.name}</p>
+                          {i.brand && <span className="text-[10px] text-primary/50 font-bold bg-primary/5 px-1.5 py-0.5 rounded">@{i.brand}</span>}
                         </div>
-                      ))
-                    ) : (
-                      <div className="px-4 py-3 text-xs text-foreground/40 italic">
-                        No match found. Press "Add" to create "{ingSearch}"
+                        <p className="text-[10px] text-foreground/40">{i.unit}</p>
+                      </div>
+                    ))}
+
+                    {!ingredients.some(i => i.name.toLowerCase() === ingSearch.toLowerCase()) && (
+                      <div 
+                        onClick={() => setShowIngSuggestions(false)}
+                        className="px-4 py-3 hover:bg-green-50 cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-center gap-3 text-green-600">
+                          <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center font-bold text-xs">+</div>
+                          <div>
+                            <p className="text-sm font-bold">Add "{ingSearch}" as new ingredient</p>
+                            <p className="text-[10px] opacity-70 font-medium">Create a new ingredient with this name</p>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
