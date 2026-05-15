@@ -85,7 +85,7 @@ export default function InventoryPage() {
     
     setLoading(true);
     const [ingRes, ordersRes, recipesRes, purchasesRes] = await Promise.all([
-      supabase.from('ingredients').select('*').eq('baker_id', user.id).order('name'),
+      supabase.from('ingredients').select('*, is_on_shopping_list').eq('baker_id', user.id).order('name'),
       supabase.from('orders').select('product_id, quantity').eq('baker_id', user.id).in('status', ['pending', 'approved', 'production']),
       supabase.from('recipes').select('*').eq('baker_id', user.id),
       supabase.from('ingredient_purchases').select('*, ingredients(name)').eq('baker_id', user.id).order('purchased_at', { ascending: false }).limit(50)
