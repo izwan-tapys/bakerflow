@@ -232,8 +232,9 @@ export default function InventoryPage() {
         </button>
       </div>
 
-      {/* Main Navigation Tabs */}
-      <div className="flex bg-muted/30 p-1.5 rounded-[12px] border border-muted/50 overflow-x-auto no-scrollbar">
+      {/* Main Navigation Tabs - STICKY */}
+      <div className="sticky top-0 z-20 -mx-4 px-4 py-2 bg-white/80 backdrop-blur-md border-b border-muted/20">
+        <div className="flex bg-muted/30 p-1.5 rounded-[12px] border border-muted/50 overflow-x-auto no-scrollbar">
         {[
           { id: 'raw', label: 'Raw Ingredients', icon: '🥣' },
           { id: 'component', label: 'Components', icon: '🍰' },
@@ -256,6 +257,7 @@ export default function InventoryPage() {
             <span className="text-[10px] font-black uppercase tracking-wider">{tab.label}</span>
           </button>
         ))}
+        </div>
       </div>
 
       {/* List Views */}
@@ -310,7 +312,7 @@ function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
     <div className="bg-white rounded-[16px] border border-muted overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-white shadow-sm">
             <tr className="bg-muted/30">
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Date</th>
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
@@ -364,7 +366,7 @@ function IngredientsList({ ingredients, onSelect, loading }: any) {
     <div className="bg-white rounded-[16px] border border-muted overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-white shadow-sm">
             <tr className="bg-muted/30">
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Inventory</th>
