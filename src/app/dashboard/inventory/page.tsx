@@ -365,6 +365,7 @@ function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
 }
 
 function InventoryFilterBar({ searchQuery, onSearchChange, selectedCategory, onCategoryChange, categories, statusFilter, onStatusChange, hasActiveFilter, onClearFilters }: any) {
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const STATUS_FILTERS = [
     { id: 'in_stock',      label: 'In Stock',      icon: '✅' },
     { id: 'low_stock',     label: 'Low Stock',     icon: '⚠️' },
@@ -374,19 +375,35 @@ function InventoryFilterBar({ searchQuery, onSearchChange, selectedCategory, onC
   ];
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
       {/* Search */}
-      <div className="relative flex-shrink-0 w-48">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/30 text-sm pointer-events-none">🔍</span>
-        <input
-          type="text"
-          placeholder="Search..."
-          value={searchQuery}
-          onChange={e => onSearchChange(e.target.value)}
-          className="w-full h-10 pl-8 pr-7 rounded-xl border-2 border-muted bg-white text-sm font-medium focus:border-primary outline-none transition-colors placeholder:text-foreground/30"
-        />
-        {searchQuery && (
-          <button onClick={() => onSearchChange('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/30 hover:text-foreground text-lg leading-none">×</button>
+      <div className={`relative flex-shrink-0 transition-all duration-300 ${isSearchExpanded || searchQuery ? 'w-48' : 'w-10'}`}>
+        {isSearchExpanded || searchQuery ? (
+          <>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/30 text-sm pointer-events-none">🔍</span>
+            <input
+              autoFocus
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={e => onSearchChange(e.target.value)}
+              onBlur={() => { if (!searchQuery) setIsSearchExpanded(false); }}
+              className="w-full h-10 pl-8 pr-7 rounded-xl border-2 border-muted bg-white text-sm font-medium focus:border-primary outline-none transition-colors placeholder:text-foreground/30"
+            />
+            <button 
+              onClick={() => { onSearchChange(''); setIsSearchExpanded(false); }} 
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/30 hover:text-foreground text-lg leading-none"
+            >
+              ×
+            </button>
+          </>
+        ) : (
+          <button 
+            onClick={() => setIsSearchExpanded(true)}
+            className="w-10 h-10 flex items-center justify-center rounded-xl border-2 border-muted bg-white text-foreground/50 hover:border-primary/40 hover:text-primary transition-all"
+          >
+            🔍
+          </button>
         )}
       </div>
 
