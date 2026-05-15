@@ -124,6 +124,7 @@ export default function ProductsPage() {
   };
 
   const handleSaveProduct = async () => {
+    console.log("Saving product with recipes...", pendingRecipes);
     // 0. Auto-add current input if forgot to click ADD
     if (ingSearch && ingForm.quantity_needed > 0) {
       const existing = ingredients.find(i => i.id === ingForm.ingredient_id || i.name.toLowerCase() === ingSearch.toLowerCase());
@@ -131,12 +132,10 @@ export default function ProductsPage() {
         ? { ingredient_id: existing.id, unit: ingForm.unit, quantity_needed: ingForm.quantity_needed, display_name: existing.name }
         : { new_name: ingSearch, brand: ingForm.brand || null, unit: ingForm.unit, quantity_needed: ingForm.quantity_needed, display_name: ingSearch };
       
-      // We need the latest pendingRecipes, but since state update is async, 
-      // we'll manually combine them for the save process.
       const finalPending = [...pendingRecipes, newPending];
-      processSave(finalPending);
+      await processSave(finalPending);
     } else {
-      processSave(pendingRecipes);
+      await processSave(pendingRecipes);
     }
   };
 
@@ -152,7 +151,7 @@ export default function ProductsPage() {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) throw new Error("Sila log masuk semula.");
 
-      // 1. Insert Product
+      console.log("1. Creating Product...");
       const { data: prodData, error: prodError } = await supabase.from('products').insert({
         baker_id: user.id,
         name: form.name,
@@ -166,12 +165,15 @@ export default function ProductsPage() {
 
       if (prodError) throw prodError;
       const newProduct = prodData[0];
+      console.log("Product created:", newProduct.id);
 
       // 2. Insert Recipes & New Ingredients
+      console.log(`2. Processing ${recipesToSave.length} recipes...`);
       for (const recipe of recipesToSave) {
         let finalIngredientId = recipe.ingredient_id;
         
         if (recipe.new_name) {
+          console.log(`Creating new ingredient: ${recipe.new_name}`);
           const { data: newIng, error: ingError } = await supabase.from('ingredients').insert({
             baker_id: user.id,
             name: recipe.new_name,
@@ -182,10 +184,15 @@ export default function ProductsPage() {
             low_stock_threshold: 0
           }).select();
           
+          if (ingError) {
+            console.error("Ingredient Insert Error:", ingError);
+            throw ingError;
+          }
           if (newIng && newIng.length > 0) finalIngredientId = newIng[0].id;
         }
 
         if (finalIngredientId) {
+          console.log(`Linking recipe for ingredient ID: ${finalIngredientId}`);
           let finalQty = recipe.quantity_needed;
           const ing = ingredients.find(i => i.id === finalIngredientId);
           const baseUnit = ing?.unit || recipe.unit;
@@ -195,12 +202,18 @@ export default function ProductsPage() {
           else if (recipe.unit === 'L' && baseUnit === 'ml') finalQty *= 1000;
           else if (recipe.unit === 'ml' && baseUnit === 'L') finalQty /= 1000;
 
-          await supabase.from('recipes').insert({
+          const { error: recipeError } = await supabase.from('recipes').insert({
             baker_id: user.id,
             product_id: newProduct.id,
             ingredient_id: finalIngredientId,
             quantity_needed: finalQty
           });
+          if (recipeError) {
+            console.error("Recipe Link Error:", recipeError);
+            throw recipeError;
+          }
+        } else {
+          console.warn("Skipping recipe: finalIngredientId is missing", recipe);
         }
       }
 
@@ -208,9 +221,10 @@ export default function ProductsPage() {
       setPendingRecipes([]);
       setIngSearch('');
       setShowAdd(false);
-      loadData();
+      await loadData();
       alert("Produk & Resepi berjaya disimpan! ✨");
     } catch (err: any) {
+      console.error("Critical Save Error:", err);
       alert("Gagal simpan: " + (err.message || "Ralat tidak diketahui"));
     } finally {
       setSavingProduct(false);
