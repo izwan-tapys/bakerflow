@@ -1506,7 +1506,7 @@ function IngredientForm({ data, setData, categories, getAutoCategory }: any) {
           <div>
             <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Base Unit</label>
             <select value={data.unit} onChange={e => setData({ ...data, unit: e.target.value })} className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none bg-white font-bold">
-              {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u}>{u}</option>)}
+              {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
             </select>
           </div>
           <div>
@@ -1538,8 +1538,79 @@ function IngredientForm({ data, setData, categories, getAutoCategory }: any) {
   );
 }
 
+const MASTER_CATALOG = [
+  { name: 'Tepung Sauh (Wheat Flour)', brand: 'Sauh', category: 'Tepung', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
+  { name: 'Tepung Gandum (All Purpose)', brand: 'Various', category: 'Tepung', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
+  { name: 'Tepung High Protein (Bread Flour)', brand: 'Various', category: 'Tepung', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
+  { name: 'Tepung Superfine', brand: 'Blue Key', category: 'Tepung', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
+  { name: 'Anchor Unsalted Butter', brand: 'Anchor', category: 'Dairy', unit: 'g', pack_size: 250, pack_unit: 'block' },
+  { name: 'Anchor Salted Butter', brand: 'Anchor', category: 'Dairy', unit: 'g', pack_size: 250, pack_unit: 'block' },
+  { name: 'SCS Unsalted Butter', brand: 'SCS', category: 'Dairy', unit: 'g', pack_size: 250, pack_unit: 'block' },
+  { name: 'Golden Churn Butter', brand: 'Golden Churn', category: 'Dairy', unit: 'g', pack_size: 340, pack_unit: 'can' },
+  { name: 'Fine Sugar (Gula Halus)', brand: 'CSR/Prai', category: 'Pemanis', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
+  { name: 'Castor Sugar', brand: 'Various', category: 'Pemanis', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
+  { name: 'Brown Sugar', brand: 'Various', category: 'Pemanis', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
+  { name: 'Icing Sugar', brand: 'Various', category: 'Pemanis', unit: 'g', pack_size: 500, pack_unit: 'bag' },
+  { name: 'Telur Gred A', brand: 'Various', category: 'Lain-lain', unit: 'pcs', pack_size: 30, pack_unit: 'tray' },
+  { name: 'Telur Gred B', brand: 'Various', category: 'Lain-lain', unit: 'pcs', pack_size: 30, pack_unit: 'tray' },
+  { name: 'Telur Gred C', brand: 'Various', category: 'Lain-lain', unit: 'pcs', pack_size: 30, pack_unit: 'tray' },
+  { name: 'Callebaut Dark Choc 811', brand: 'Callebaut', category: 'Coklat', unit: 'g', pack_size: 2500, pack_unit: 'bag' },
+  { name: 'Callebaut Milk Choc 823', brand: 'Callebaut', category: 'Coklat', unit: 'g', pack_size: 2500, pack_unit: 'bag' },
+  { name: 'Beryl\'s Dark Choc Coins', brand: 'Beryl\'s', category: 'Coklat', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
+  { name: 'Beryl\'s Milk Choc Coins', brand: 'Beryl\'s', category: 'Coklat', unit: 'g', pack_size: 1000, pack_unit: 'bag' },
+  { name: 'Baking Powder', brand: 'Various', category: 'Lain-lain', unit: 'g', pack_size: 100, pack_unit: 'can' },
+  { name: 'Baking Soda', brand: 'Various', category: 'Lain-lain', unit: 'g', pack_size: 100, pack_unit: 'can' },
+  { name: 'Yeast (Yis)', brand: 'Mauripan/Saf-Instant', category: 'Lain-lain', unit: 'g', pack_size: 11, pack_unit: 'sachet' },
+  { name: 'Whipping Cream (Dairy)', brand: 'Emborg/Anchor', category: 'Dairy', unit: 'ml', pack_size: 1000, pack_unit: 'box' },
+  { name: 'Whipping Cream (Non-Dairy)', brand: 'Value Pride/Richs', category: 'Dairy', unit: 'ml', pack_size: 1000, pack_unit: 'box' },
+  { name: 'Cream Cheese', brand: 'Tatura/Philadelphia', category: 'Dairy', unit: 'g', pack_size: 250, pack_unit: 'block' },
+  { name: 'Full Cream Milk', brand: 'Various', category: 'Dairy', unit: 'ml', pack_size: 1000, pack_unit: 'box' },
+  { name: 'Condensed Milk (Susu Pekat)', brand: 'Various', category: 'Dairy', unit: 'ml', pack_size: 500, pack_unit: 'can' },
+];
+
 function AddIngredientModal({ onClose, onAdd, initialForm, categories, getAutoCategory }: any) {
-  const [formData, setFormData] = useState(initialForm);
+  const [form, setForm] = useState(initialForm);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (suggestionRef.current && !suggestionRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleNameChange = (val: string) => {
+    setForm({ ...form, name: val });
+    if (val.length > 1) {
+      const filtered = MASTER_CATALOG.filter(item => 
+        item.name.toLowerCase().includes(val.toLowerCase())
+      ).slice(0, 5);
+      setSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const selectSuggestion = (item: any) => {
+    setForm({
+      ...form,
+      name: item.name,
+      brand: item.brand,
+      category: item.category,
+      unit: item.unit,
+      pack_size: item.pack_size,
+      pack_unit: item.pack_unit,
+      pack_size_unit: item.unit
+    });
+    setShowSuggestions(false);
+  };
   return (
     <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-end sm:items-center justify-center">
       <div className="bg-white w-full sm:max-w-lg sm:mx-4 rounded-t-[24px] sm:rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20" style={{height: 'min(90vh, 700px)'}}>
@@ -1548,10 +1619,44 @@ function AddIngredientModal({ onClose, onAdd, initialForm, categories, getAutoCa
           <button onClick={onClose} className="w-12 h-12 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold hover:bg-muted/80 transition-colors">&times;</button>
         </div>
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-          <IngredientForm data={formData} setData={setFormData} categories={categories} getAutoCategory={getAutoCategory} />
+          <div className="space-y-6 pb-6">
+            {/* NAME INPUT WITH AUTOCOMPLETE */}
+            <div className="relative">
+              <label className="text-[10px] font-black uppercase text-foreground/30 mb-1.5 block px-1 tracking-widest">Item Name</label>
+              <input 
+                autoFocus
+                value={form.name}
+                onChange={e => handleNameChange(e.target.value)}
+                placeholder="e.g. Tepung Sauh"
+                className="w-full h-14 bg-muted/30 rounded-2xl px-5 border-2 border-transparent focus:border-primary/20 focus:bg-white outline-none transition-all font-bold text-base"
+              />
+              {showSuggestions && (
+                <div ref={suggestionRef} className="absolute z-50 left-0 right-0 top-[calc(100%+8px)] bg-white rounded-2xl shadow-2xl border border-muted/50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="px-4 py-2 bg-muted/10 border-b border-muted/30">
+                    <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest">Suggested from Catalog</p>
+                  </div>
+                  {suggestions.map((item, i) => (
+                    <button
+                      key={i}
+                      onClick={() => selectSuggestion(item)}
+                      className="w-full px-5 py-4 text-left hover:bg-primary/5 transition-colors border-b border-muted/10 last:border-0 flex items-center justify-between group"
+                    >
+                      <div>
+                        <p className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{item.name}</p>
+                        <p className="text-[10px] text-foreground/40 font-medium uppercase tracking-tight">{item.brand} • {item.category}</p>
+                      </div>
+                      <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">✨</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <IngredientForm data={form} setData={setForm} categories={categories} getAutoCategory={getAutoCategory} hideName />
+          </div>
         </div>
         <div className="pt-6 flex-none">
-          <button onClick={() => onAdd(formData)} className="w-full h-16 bg-primary text-white rounded-xl font-black text-lg shadow-xl shadow-primary/20 active:scale-95 transition-all">
+          <button onClick={() => onAdd(form)} className="w-full h-16 bg-primary text-white rounded-xl font-black text-lg shadow-xl shadow-primary/20 active:scale-95 transition-all">
             Create Ingredient
           </button>
         </div>
