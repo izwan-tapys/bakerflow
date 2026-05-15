@@ -233,7 +233,7 @@ export default function InventoryPage() {
       </div>
 
       {/* Main Navigation Tabs */}
-      <div className="flex bg-muted/30 p-1.5 rounded-[24px] border border-muted/50 overflow-x-auto no-scrollbar">
+      <div className="flex bg-muted/30 p-1.5 rounded-[12px] border border-muted/50 overflow-x-auto no-scrollbar">
         {[
           { id: 'raw', label: 'Raw Ingredients', icon: '🥣' },
           { id: 'component', label: 'Components', icon: '🍰' },
@@ -246,7 +246,7 @@ export default function InventoryPage() {
               setActiveMainTab(tab.id as any);
               setSelectedCategory('Semua');
             }}
-            className={`flex-1 min-w-[80px] flex flex-col items-center justify-center py-3 rounded-2xl transition-all ${
+            className={`flex-1 min-w-[80px] flex flex-col items-center justify-center py-3 rounded-xl transition-all ${
               activeMainTab === tab.id 
                 ? 'bg-white text-primary shadow-sm border border-muted/50' 
                 : 'text-foreground/40 hover:text-foreground/60'
@@ -307,7 +307,7 @@ export default function InventoryPage() {
 
 function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
   return (
-    <div className="bg-white rounded-[32px] border border-muted overflow-hidden shadow-sm">
+    <div className="bg-white rounded-[16px] border border-muted overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -361,7 +361,7 @@ function CategoryFilter({ categories, selected, onSelect, visible }: any) {
 
 function IngredientsList({ ingredients, onSelect, loading }: any) {
   return (
-    <div className="bg-white rounded-[32px] border border-muted overflow-hidden shadow-sm">
+    <div className="bg-white rounded-[16px] border border-muted overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -517,7 +517,7 @@ function AddIngredientModal({ onClose, onAdd, initialForm, categories, getAutoCa
   const [formData, setFormData] = useState(initialForm);
   return (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-      <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-8 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+      <div className="bg-white w-full max-w-md md:rounded-[20px] rounded-t-[20px] p-8 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
         <div className="flex justify-between items-center mb-8 flex-none">
           <h2 className="text-2xl font-black text-primary tracking-tight">New Item</h2>
           <button onClick={onClose} className="w-12 h-12 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold hover:bg-muted/80 transition-colors">&times;</button>
@@ -526,7 +526,7 @@ function AddIngredientModal({ onClose, onAdd, initialForm, categories, getAutoCa
           <IngredientForm data={formData} setData={setFormData} categories={categories} getAutoCategory={getAutoCategory} />
         </div>
         <div className="pt-6 flex-none">
-          <button onClick={() => onAdd(formData)} className="w-full h-16 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20 active:scale-95 transition-all">
+          <button onClick={() => onAdd(formData)} className="w-full h-16 bg-primary text-white rounded-xl font-black text-lg shadow-xl shadow-primary/20 active:scale-95 transition-all">
             Create Ingredient
           </button>
         </div>
@@ -584,7 +584,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-      <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-8 shadow-2xl flex flex-col h-[95vh] md:h-auto md:max-h-[85vh] overflow-hidden">
+      <div className="bg-white w-full max-w-md md:rounded-[20px] rounded-t-[20px] p-8 shadow-2xl flex flex-col h-[95vh] md:h-auto md:max-h-[85vh] overflow-hidden">
         <div className="flex justify-between items-start mb-6 flex-none">
           <div>
             <h2 className="text-2xl font-black text-foreground tracking-tight">{ingredient.name}</h2>
@@ -593,12 +593,12 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
           <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold">&times;</button>
         </div>
 
-        <div className="flex bg-muted/40 p-1.5 rounded-2xl mb-6 flex-none border border-muted/50">
+        <div className="flex bg-muted/40 p-1.5 rounded-xl mb-6 flex-none border border-muted/50">
           {ingredient.type === 'component' && (
-            <button onClick={() => setTab('recipe')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'recipe' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>Recipe</button>
+            <button onClick={() => setTab('recipe')} className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'recipe' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>Recipe</button>
           )}
-          <button onClick={() => setTab('restock')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'restock' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>Restock</button>
-          <button onClick={() => setTab('edit')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'edit' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>Edit Info</button>
+          <button onClick={() => setTab('restock')} className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'restock' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>Restock</button>
+          <button onClick={() => setTab('edit')} className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'edit' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>Edit Info</button>
         </div>
 
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -614,18 +614,18 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
                   </div>
                 ))}
               </div>
-              <div className="p-4 bg-primary/5 rounded-2xl space-y-3 border border-primary/10">
-                <select value={recipeForm.ingredient_id} onChange={e => setRecipeForm({...recipeForm, ingredient_id: e.target.value})} className="w-full h-11 px-3 rounded-xl border border-muted text-sm bg-white">
+              <div className="p-4 bg-primary/5 rounded-xl space-y-3 border border-primary/10">
+                <select value={recipeForm.ingredient_id} onChange={e => setRecipeForm({...recipeForm, ingredient_id: e.target.value})} className="w-full h-11 px-3 rounded-lg border border-muted text-sm bg-white">
                   <option value="">Add ingredient...</option>
                   {allIngredients.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
                 </select>
                 <div className="flex gap-2">
-                  <input type="number" placeholder="Qty" value={recipeForm.quantity_needed || ''} onChange={e => setRecipeForm({...recipeForm, quantity_needed: +e.target.value})} className="flex-1 h-11 px-3 rounded-xl border border-muted text-sm" />
+                  <input type="number" placeholder="Qty" value={recipeForm.quantity_needed || ''} onChange={e => setRecipeForm({...recipeForm, quantity_needed: +e.target.value})} className="flex-1 h-11 px-3 rounded-lg border border-muted text-sm" />
                   <button onClick={async () => {
                     const { data: { user } } = await supabase.auth.getUser();
                     await supabase.from('recipes').insert({ baker_id: user?.id, parent_ingredient_id: ingredient.id, ingredient_id: recipeForm.ingredient_id, quantity_needed: recipeForm.quantity_needed });
                     setRecipeForm({ ingredient_id: '', quantity_needed: 0 }); loadRecipeData();
-                  }} className="h-11 px-6 bg-primary text-white rounded-xl font-black text-xs uppercase shadow-md shadow-primary/20">ADD</button>
+                  }} className="h-11 px-6 bg-primary text-white rounded-lg font-black text-xs uppercase shadow-md shadow-primary/20">ADD</button>
                 </div>
               </div>
             </div>
@@ -638,23 +638,23 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
                 </button>
               </div>
               {isBulk ? (
-                <div className="grid grid-cols-3 gap-3 bg-muted/20 p-5 rounded-3xl border border-muted/50">
-                  <input type="number" value={numPacks} onChange={e => setNumPacks(+e.target.value)} placeholder="Packs" className="h-12 px-3 rounded-xl border border-muted text-sm font-black outline-none" />
-                  <input type="number" value={packSize} onChange={e => setPackSize(+e.target.value)} placeholder="Size" className="h-12 px-3 rounded-xl border border-muted text-sm font-black outline-none" />
-                  <select value={packSizeUnit} onChange={e => setPackSizeUnit(e.target.value)} className="h-12 px-2 rounded-xl border border-muted text-xs font-black bg-white">
+                <div className="grid grid-cols-3 gap-3 bg-muted/20 p-5 rounded-2xl border border-muted/50">
+                  <input type="number" value={numPacks} onChange={e => setNumPacks(+e.target.value)} placeholder="Packs" className="h-12 px-3 rounded-lg border border-muted text-sm font-black outline-none" />
+                  <input type="number" value={packSize} onChange={e => setPackSize(+e.target.value)} placeholder="Size" className="h-12 px-3 rounded-lg border border-muted text-sm font-black outline-none" />
+                  <select value={packSizeUnit} onChange={e => setPackSizeUnit(e.target.value)} className="h-12 px-2 rounded-lg border border-muted text-xs font-black bg-white">
                     {['g', 'kg', 'ml', 'L', 'pcs'].map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
                   <div className="col-span-3 relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground/30">RM</span>
-                    <input type="number" value={pricePerPack} onChange={e => setPricePerPack(+e.target.value)} placeholder="Price Each" className="w-full h-12 pl-12 pr-4 rounded-xl border border-muted text-sm font-black outline-none" />
+                    <input type="number" value={pricePerPack} onChange={e => setPricePerPack(+e.target.value)} placeholder="Price Each" className="w-full h-12 pl-12 pr-4 rounded-lg border border-muted text-sm font-black outline-none" />
                   </div>
                 </div>
               ) : (
                 <div className="flex gap-3">
-                  <input type="number" value={qtyInput} onChange={e => setQtyInput(+e.target.value)} placeholder="Qty" className="w-24 h-14 rounded-2xl border-muted border-2 text-lg font-black text-center outline-none" />
+                  <input type="number" value={qtyInput} onChange={e => setQtyInput(+e.target.value)} placeholder="Qty" className="w-24 h-14 rounded-xl border-muted border-2 text-lg font-black text-center outline-none" />
                   <div className="flex-1 relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground/30">RM</span>
-                    <input type="number" value={totalPrice} onChange={e => setTotalPrice(+e.target.value)} placeholder="Total Price" className="w-full h-14 pl-12 pr-4 rounded-2xl border-muted border-2 text-lg font-black outline-none" />
+                    <input type="number" value={totalPrice} onChange={e => setTotalPrice(+e.target.value)} placeholder="Total Price" className="w-full h-14 pl-12 pr-4 rounded-xl border-muted border-2 text-lg font-black outline-none" />
                   </div>
                 </div>
               )}
@@ -665,11 +665,11 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
         <div className="pt-6 flex-none space-y-3">
           {tab === 'edit' ? (
             <>
-              <button onClick={() => onUpdate(ingredient, editData).then(onClose)} className="w-full h-16 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20">SAVE CHANGES</button>
-              <button onClick={() => onDelete(ingredient.id).then(onClose)} className="w-full h-10 text-red-500 font-bold text-xs hover:bg-red-50 rounded-xl transition-colors">DELETE ITEM</button>
+              <button onClick={() => onUpdate(ingredient, editData).then(onClose)} className="w-full h-16 bg-primary text-white rounded-xl font-black text-lg shadow-xl shadow-primary/20">SAVE CHANGES</button>
+              <button onClick={() => onDelete(ingredient.id).then(onClose)} className="w-full h-10 text-red-500 font-bold text-xs hover:bg-red-50 rounded-lg transition-colors">DELETE ITEM</button>
             </>
           ) : tab === 'restock' ? (
-            <button onClick={handleRestockSubmit} disabled={loading} className="w-full h-16 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20">
+            <button onClick={handleRestockSubmit} disabled={loading} className="w-full h-16 bg-primary text-white rounded-xl font-black text-lg shadow-xl shadow-primary/20">
               {loading ? 'RECORDING...' : 'SAVE RESTOCK'}
             </button>
           ) : null}

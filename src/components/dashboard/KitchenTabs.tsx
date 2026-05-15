@@ -12,14 +12,14 @@ export function KitchenTabs() {
   ];
 
   return (
-    <div className="flex bg-muted/30 p-1.5 rounded-2xl mb-6">
+    <div className="flex bg-muted/30 p-1.5 rounded-xl mb-6">
       {tabs.map(tab => {
         const active = pathname === tab.href;
         return (
           <Link
             key={tab.href}
             href={tab.href}
-            className={`flex-1 text-center py-2.5 rounded-xl text-sm font-bold transition-all ${
+            className={`flex-1 text-center py-2.5 rounded-lg text-sm font-bold transition-all ${
               active ? 'bg-white text-foreground shadow-sm' : 'text-foreground/50 hover:text-foreground'
             }`}
           >

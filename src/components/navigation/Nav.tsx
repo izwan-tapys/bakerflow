@@ -30,7 +30,7 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-2xl transition-all ${
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
                 isActive ? 'text-primary' : 'text-foreground/40'
               }`}
             >
@@ -63,7 +63,7 @@ export function SideNav() {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-white border-r border-muted p-6 space-y-8 min-h-screen">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-black text-[10px] text-center leading-tight">BA<br/>BE</div>
+        <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white font-black text-[10px] text-center leading-tight">BA<br/>BE</div>
         <span className="text-xl font-black text-foreground">BakersBestie</span>
       </div>
       <nav className="flex-1 space-y-1">
@@ -73,7 +73,7 @@ export function SideNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-semibold text-sm transition-all ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
                 isActive
                   ? 'bg-primary text-white shadow-lg shadow-primary/20'
                   : 'text-foreground/60 hover:bg-muted hover:text-foreground'
@@ -87,7 +87,7 @@ export function SideNav() {
       </nav>
       <button
         onClick={handleLogout}
-        className="flex items-center gap-3 px-4 py-3 rounded-2xl text-foreground/40 hover:text-red-500 hover:bg-red-50 transition-all text-sm font-medium"
+        className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/40 hover:text-red-500 hover:bg-red-50 transition-all text-sm font-medium"
       >
         🚪 Log Out
       </button>
