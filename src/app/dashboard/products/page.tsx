@@ -52,6 +52,8 @@ export default function ProductsPage() {
   // Inline Add Ingredient State
   const [ingSearch, setIngSearch] = useState('');
   const [showIngSuggestions, setShowIngSuggestions] = useState(false);
+  const [catalogSuggestions, setCatalogSuggestions] = useState<any[]>([]);
+  const [searchingCatalog, setSearchingCatalog] = useState(false);
   const [ingForm, setIngForm] = useState({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 });
 
   // Recipe Modal State
@@ -373,20 +375,62 @@ export default function ProductsPage() {
                   <div className="bg-muted/10 p-5 rounded-2xl border-2 border-muted/30 space-y-4">
                     <div className="relative">
                       <label className="text-[10px] font-black text-foreground/30 uppercase mb-1.5 block">Search Ingredient</label>
-                      <input placeholder="Type name..." value={ingSearch} onChange={e => { setIngSearch(e.target.value); setShowIngSuggestions(true); }} onFocus={() => setShowIngSuggestions(true)} className="w-full h-11 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
-                      {showIngSuggestions && ingSearch && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border-2 border-muted rounded-xl shadow-2xl max-h-48 overflow-y-auto">
+                      <input 
+                        placeholder="Type name..." 
+                        value={ingSearch} 
+                        onChange={async (e) => { 
+                          const val = e.target.value;
+                          setIngSearch(val); 
+                          setShowIngSuggestions(true);
+                          
+                          if (val.length > 1) {
+                            setSearchingCatalog(true);
+                            const { data } = await supabase.from('master_catalog').select('*').ilike('name', `%${val}%`).limit(5);
+                            setCatalogSuggestions(data || []);
+                            setSearchingCatalog(false);
+                          } else {
+                            setCatalogSuggestions([]);
+                          }
+                        }} 
+                        onFocus={() => setShowIngSuggestions(true)} 
+                        className="w-full h-11 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" 
+                      />
+                      {showIngSuggestions && (ingSearch || catalogSuggestions.length > 0) && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border-2 border-muted rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                          {/* LOCAL INVENTORY SUGGESTIONS */}
                           {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
-                            <div key={i.id} onClick={() => { setIngSearch(i.name); setIngForm({ ...ingForm, ingredient_id: i.id, brand: i.brand || '', unit: i.unit }); setShowIngSuggestions(false); }} className="px-4 py-2.5 hover:bg-primary/5 cursor-pointer border-b border-muted/30 last:border-0 font-bold text-sm">
+                            <div key={i.id} onClick={() => { 
+                              setIngSearch(i.name); 
+                              setIngForm({ ...ingForm, ingredient_id: i.id, brand: i.brand || '', unit: i.unit }); 
+                              setShowIngSuggestions(false); 
+                            }} className="px-4 py-2.5 hover:bg-primary/5 cursor-pointer border-b border-muted/30 last:border-0 font-bold text-sm">
+                              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded mr-2 uppercase">Your Stock</span>
                               {i.name} <span className="text-[10px] opacity-30">({i.unit})</span>
                             </div>
                           ))}
-                          {!ingredients.some(i => i.name.toLowerCase() === ingSearch.toLowerCase()) && (
+
+                          {/* CATALOG SUGGESTIONS */}
+                          {catalogSuggestions.map((c, i) => (
+                            <div key={`cat-${i}`} onClick={() => {
+                              setIngSearch(c.name);
+                              setIngForm({ ...ingForm, ingredient_id: '', brand: c.brand || '', unit: c.unit });
+                              setShowIngSuggestions(false);
+                            }} className="px-4 py-2.5 hover:bg-blue-50/50 cursor-pointer border-b border-muted/30 last:border-0 font-bold text-sm">
+                              <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded mr-2 uppercase">Catalog</span>
+                              {c.name} <span className="text-[10px] opacity-30">({c.unit})</span>
+                            </div>
+                          ))}
+
+                          {searchingCatalog && (
+                            <div className="px-4 py-2 text-[10px] text-foreground/30 animate-pulse italic">Searching catalog...</div>
+                          )}
+
+                          {!ingredients.some(i => i.name.toLowerCase() === ingSearch.toLowerCase()) && !catalogSuggestions.some(c => c.name.toLowerCase() === ingSearch.toLowerCase()) && ingSearch && (
                             <div onClick={() => setShowIngSuggestions(false)} className="px-4 py-3 hover:bg-green-50 cursor-pointer transition-colors border-t border-muted/30">
                               <div className="flex items-center gap-3 text-green-600">
                                 <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center font-bold text-xs">+</div>
                                 <div>
-                                  <p className="text-sm font-bold">Add &quot;{ingSearch}&quot; as new ingredient</p>
+                                  <p className="text-sm font-bold">Add &quot;{ingSearch}&quot; as new custom</p>
                                   <p className="text-[10px] opacity-70 font-medium">Will be created on save</p>
                                 </div>
                               </div>
@@ -653,6 +697,8 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
 
   const [ingSearch, setIngSearch] = useState('');
   const [showIngSuggestions, setShowIngSuggestions] = useState(false);
+  const [catalogSuggestions, setCatalogSuggestions] = useState<any[]>([]);
+  const [searchingCatalog, setSearchingCatalog] = useState(false);
   const [form, setForm] = useState({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 });
 
   // Load existing recipes from DB on open
@@ -812,28 +858,66 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
                 <input
                   placeholder="Type ingredient name..."
                   value={ingSearch}
-                  onChange={e => { setIngSearch(e.target.value); setForm({ ...form, ingredient_id: '' }); setShowIngSuggestions(true); }}
+                  onChange={async (e) => { 
+                    const val = e.target.value;
+                    setIngSearch(val); 
+                    setForm({ ...form, ingredient_id: '' }); 
+                    setShowIngSuggestions(true); 
+
+                    if (val.length > 1) {
+                      setSearchingCatalog(true);
+                      const { data } = await supabase.from('master_catalog').select('*').ilike('name', `%${val}%`).limit(5);
+                      setCatalogSuggestions(data || []);
+                      setSearchingCatalog(false);
+                    } else {
+                      setCatalogSuggestions([]);
+                    }
+                  }}
                   onFocus={() => setShowIngSuggestions(true)}
                   className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white"
                 />
-                {showIngSuggestions && ingSearch && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-muted rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                {showIngSuggestions && (ingSearch || catalogSuggestions.length > 0) && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-muted rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                    {/* LOCAL */}
                     {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
-                      <div key={i.id} onClick={() => { setIngSearch(i.name); setForm({ ...form, ingredient_id: i.id, brand: i.brand || '', unit: i.unit }); setShowIngSuggestions(false); }}
+                      <div key={i.id} onClick={() => { 
+                        setIngSearch(i.name); 
+                        setForm({ ...form, ingredient_id: i.id, brand: i.brand || '', unit: i.unit }); 
+                        setShowIngSuggestions(false); 
+                      }}
                         className="px-4 py-2 hover:bg-primary/5 cursor-pointer text-sm font-medium border-b border-muted/30 last:border-0">
                         <div className="flex items-center gap-2">
+                          <span className="text-[8px] bg-muted px-1 py-0.5 rounded uppercase">Your Stock</span>
                           <p className="text-foreground">{i.name}</p>
                           {i.brand && <span className="text-[10px] text-primary/50 font-bold bg-primary/5 px-1.5 py-0.5 rounded">@{i.brand}</span>}
                         </div>
-                        <p className="text-[10px] text-foreground/40">{i.unit}</p>
                       </div>
                     ))}
-                    {!ingredients.some(i => i.name.toLowerCase() === ingSearch.toLowerCase()) && (
+                    {/* CATALOG */}
+                    {catalogSuggestions.map((c, i) => (
+                      <div key={`cat-mod-${i}`} onClick={() => {
+                        setIngSearch(c.name);
+                        setForm({ ...form, ingredient_id: '', brand: c.brand || '', unit: c.unit });
+                        setShowIngSuggestions(false);
+                      }} className="px-4 py-2 hover:bg-blue-50/50 cursor-pointer text-sm font-medium border-b border-muted/30 last:border-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[8px] bg-blue-100 text-blue-600 px-1 py-0.5 rounded uppercase">Catalog</span>
+                          <p className="text-foreground">{c.name}</p>
+                          {c.brand && <span className="text-[10px] text-blue-400 font-bold bg-blue-50 px-1.5 py-0.5 rounded">@{c.brand}</span>}
+                        </div>
+                      </div>
+                    ))}
+
+                    {searchingCatalog && (
+                      <div className="px-4 py-2 text-[9px] text-foreground/30 animate-pulse italic">Searching catalog...</div>
+                    )}
+
+                    {!ingredients.some(i => i.name.toLowerCase() === ingSearch.toLowerCase()) && !catalogSuggestions.some(c => c.name.toLowerCase() === ingSearch.toLowerCase()) && ingSearch && (
                       <div onClick={() => setShowIngSuggestions(false)} className="px-4 py-3 hover:bg-green-50 cursor-pointer transition-colors">
                         <div className="flex items-center gap-3 text-green-600">
                           <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center font-bold text-xs">+</div>
                           <div>
-                            <p className="text-sm font-bold">Add &quot;{ingSearch}&quot; as new ingredient</p>
+                            <p className="text-sm font-bold">Add &quot;{ingSearch}&quot; as custom</p>
                             <p className="text-[10px] opacity-70 font-medium">Will be created on save</p>
                           </div>
                         </div>
