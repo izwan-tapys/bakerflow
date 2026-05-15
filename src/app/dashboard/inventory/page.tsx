@@ -99,8 +99,10 @@ export default function InventoryPage() {
     setIngredients(loadedIngredients);
     // Sync shopping list from DB (source of truth)
     const dbShoppingIds = loadedIngredients
-      .filter(i => i.is_on_shopping_list)
+      .filter(i => !!i.is_on_shopping_list)
       .map(i => i.id);
+    
+    console.log('DB Shopping IDs Loaded:', dbShoppingIds);
     setManualShoppingIds(dbShoppingIds);
     localStorage.setItem(`bf_shopping_${user.id}`, JSON.stringify(dbShoppingIds));
     
@@ -174,21 +176,27 @@ export default function InventoryPage() {
     if (!user) return;
 
     // Update local state immediately (optimistic)
-    let newIds: string[];
-    if (status) {
-      newIds = [...new Set([...manualShoppingIds, ...ids])];
-    } else {
-      newIds = manualShoppingIds.filter(id => !ids.includes(id));
-    }
-    
-    setManualShoppingIds(newIds);
-    localStorage.setItem(`bf_shopping_${user.id}`, JSON.stringify(newIds));
+    setManualShoppingIds(prev => {
+      const next = status 
+        ? [...new Set([...prev, ...ids])]
+        : prev.filter(id => !ids.includes(id));
+      localStorage.setItem(`bf_shopping_${user.id}`, JSON.stringify(next));
+      return next;
+    });
 
     // Persist to Supabase DB
-    await supabase
+    console.log(`Syncing to DB: ${status ? 'ADD' : 'REMOVE'}`, ids);
+    const { error } = await supabase
       .from('ingredients')
       .update({ is_on_shopping_list: status })
       .in('id', ids);
+    
+    if (error) {
+      console.error('Supabase Shopping List Sync Error:', error);
+      alert('Failed to save to database: ' + error.message);
+    } else {
+      console.log('Supabase Sync Success');
+    }
   };
 
   const handleAddIngredient = async (formData: any) => {
