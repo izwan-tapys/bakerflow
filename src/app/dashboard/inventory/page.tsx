@@ -939,7 +939,26 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
         </div>
       </div>
 
-      <div className="bg-white rounded-[16px] border border-muted shadow-sm overflow-hidden flex flex-col max-h-[70vh]">
+      <div className="bg-white rounded-[16px] border border-muted shadow-sm overflow-hidden flex flex-col max-h-[70vh] relative">
+        {/* Scanning Overlay */}
+        {scanning && (
+          <div className="absolute inset-0 z-[100] bg-white/60 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
+            <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mb-4 relative">
+              <div className="absolute inset-0 bg-primary/20 rounded-3xl animate-ping" />
+              <svg viewBox="0 0 24 24" className="w-10 h-10 text-primary animate-bounce">
+                <path fill="currentColor" d="M3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2zm16 14H5V5h14v14zM7 10h10v2H7zm0-3h10v2H7zm0 6h7v2H7z"/>
+              </svg>
+            </div>
+            <h3 className="text-lg font-black text-foreground tracking-tight">AI is reading your receipt</h3>
+            <p className="text-sm text-foreground/40 font-medium">Please wait a moment...</p>
+            <div className="mt-6 flex gap-1">
+              <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+            </div>
+          </div>
+        )}
+
         <div className="overflow-auto flex-1">
           <table className="w-full text-left border-collapse relative">
             <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
