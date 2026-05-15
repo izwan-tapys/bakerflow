@@ -763,6 +763,7 @@ function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
 function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock, onQuickConfirm, onRemoveManual, onRefresh }: any) {
   const [receiptData, setReceiptData] = useState<Record<string, { qty: number; price: number }>>({});
   const [scanning, setScanning] = useState(false);
+  const [scannedIds, setScannedIds] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Combine orders-based shopping list with manual IDs
@@ -833,6 +834,11 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
         });
         
         setReceiptData(prev => ({ ...prev, ...updates }));
+        setScannedIds(Object.keys(updates));
+        
+        // Clear highlights after 5 seconds
+        setTimeout(() => setScannedIds([]), 5000);
+        
         alert(`AI successfully scanned ${data.length} items from receipt!`);
       };
     } catch (err: any) {
@@ -978,9 +984,13 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                 combinedList.map((item: any, idx: number) => {
                   const data = receiptData[item.ingredient.id] || { qty: 0, price: 0 };
                   const isReady = data.price > 0 && data.qty > 0;
+                  const isScanned = scannedIds.includes(item.ingredient.id);
                   
                   return (
-                  <tr key={item.ingredient.id + idx} className={`group transition-colors ${isReady ? 'bg-green-50/50' : ''}`}>
+                  <tr key={item.ingredient.id + idx} className={`group transition-all duration-700 ${
+                    isScanned ? 'bg-green-100 ring-2 ring-green-500 ring-inset scale-[1.01] z-20' : 
+                    isReady ? 'bg-green-50/30' : ''
+                  }`}>
                     <td className="pl-4 py-5 w-12 text-center font-black text-[10px] text-foreground/30">{idx + 1}</td>
                     <td className="px-4 py-5 min-w-[140px]">
                       <p className="font-bold text-sm text-foreground">{item.ingredient.name}</p>
