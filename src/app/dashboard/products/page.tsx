@@ -373,7 +373,7 @@ export default function ProductsPage() {
                   <div className="bg-muted/10 p-5 rounded-2xl border-2 border-muted/30 space-y-4">
                     <div className="relative">
                       <label className="text-[10px] font-black text-foreground/30 uppercase mb-1.5 block">Search Ingredient</label>
-                      <input placeholder="Type name..." value={ingSearch} onChange={e => { setIngSearch(e.target.value); setShowIngSuggestions(true); }} className="w-full h-11 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
+                      <input placeholder="Type name..." value={ingSearch} onChange={e => { setIngSearch(e.target.value); setShowIngSuggestions(true); }} onFocus={() => setShowIngSuggestions(true)} className="w-full h-11 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
                       {showIngSuggestions && ingSearch && (
                         <div className="absolute z-10 w-full mt-1 bg-white border-2 border-muted rounded-xl shadow-2xl max-h-48 overflow-y-auto">
                           {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
@@ -381,6 +381,17 @@ export default function ProductsPage() {
                               {i.name} <span className="text-[10px] opacity-30">({i.unit})</span>
                             </div>
                           ))}
+                          {!ingredients.some(i => i.name.toLowerCase() === ingSearch.toLowerCase()) && (
+                            <div onClick={() => setShowIngSuggestions(false)} className="px-4 py-3 hover:bg-green-50 cursor-pointer transition-colors border-t border-muted/30">
+                              <div className="flex items-center gap-3 text-green-600">
+                                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center font-bold text-xs">+</div>
+                                <div>
+                                  <p className="text-sm font-bold">Add &quot;{ingSearch}&quot; as new ingredient</p>
+                                  <p className="text-[10px] opacity-70 font-medium">Will be created on save</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
