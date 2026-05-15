@@ -67,6 +67,8 @@ export default function InventoryPage() {
   });
 
   const [selectedCategory, setSelectedCategory] = useState('Semua');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const CATEGORIES = ['Semua', 'Tepung', 'Tenusu', 'Gula', 'Lemak', 'Hiasan', 'Packaging', 'Lain-lain'];
 
   const loadData = useCallback(async () => {
@@ -202,9 +204,18 @@ export default function InventoryPage() {
 
   const filteredIngredients = ingredients.filter(i => {
     if (activeMainTab !== 'purchases' && i.type !== activeMainTab) return false;
-    if (selectedCategory === 'Semua') return true;
-    return i.category === selectedCategory;
+    if (searchQuery && !i.name.toLowerCase().includes(searchQuery.toLowerCase()) && !(i.brand || '').toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (selectedCategory !== 'Semua' && i.category !== selectedCategory) return false;
+    if (statusFilter === 'in_stock') return i.current_stock > i.low_stock_threshold;
+    if (statusFilter === 'low_stock') return i.current_stock > 0 && i.current_stock <= i.low_stock_threshold;
+    if (statusFilter === 'out_of_stock') return i.current_stock <= 0;
+    if (statusFilter === 'expiring_soon') return !!i.shelf_life && i.current_stock > 0 && i.shelf_life >= 0 && i.shelf_life <= 7;
+    if (statusFilter === 'expired') return !!i.shelf_life && i.current_stock > 0 && i.shelf_life < 0;
+    return true;
   });
+
+  const hasActiveFilter = !!(searchQuery || selectedCategory !== 'Semua' || statusFilter);
+  const clearFilters = () => { setSearchQuery(''); setSelectedCategory('Semua'); setStatusFilter(''); };
 
   return (
     <div className="pb-4">
@@ -266,15 +277,20 @@ export default function InventoryPage() {
           <PurchasesList purchases={purchases} />
         ) : (
           <>
-            <CategoryFilter 
-              categories={CATEGORIES} 
-              selected={selectedCategory} 
-              onSelect={setSelectedCategory} 
-              visible={activeMainTab === 'raw' || activeMainTab === 'supply'} 
+            <InventoryFilterBar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+              categories={CATEGORIES}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              hasActiveFilter={hasActiveFilter}
+              onClearFilters={clearFilters}
             />
-            <IngredientsList 
-              ingredients={filteredIngredients} 
-              onSelect={setSelectedIngredient} 
+            <IngredientsList
+              ingredients={filteredIngredients}
+              onSelect={setSelectedIngredient}
               loading={loading}
             />
           </>
@@ -348,23 +364,67 @@ function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
   );
 }
 
-function CategoryFilter({ categories, selected, onSelect, visible }: any) {
-  if (!visible) return null;
+function InventoryFilterBar({ searchQuery, onSearchChange, selectedCategory, onCategoryChange, categories, statusFilter, onStatusChange, hasActiveFilter, onClearFilters }: any) {
+  const STATUS_FILTERS = [
+    { id: 'in_stock',      label: 'In Stock',      icon: '✅' },
+    { id: 'low_stock',     label: 'Low Stock',     icon: '⚠️' },
+    { id: 'out_of_stock',  label: 'Out of Stock',  icon: '❌' },
+    { id: 'expiring_soon', label: 'Expiring Soon', icon: '⏳' },
+    { id: 'expired',       label: 'Expired',       icon: '🚫' },
+  ];
+
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-      {categories.map((c: string) => (
-        <button
-          key={c}
-          onClick={() => onSelect(c)}
-          className={`px-5 py-2.5 rounded-full text-[11px] font-black transition-all whitespace-nowrap border-2 ${
-            selected === c 
-              ? 'bg-primary border-primary text-white shadow-lg' 
-              : 'bg-white border-muted text-foreground/40 hover:border-primary/30'
-          }`}
+    <div className="space-y-2.5">
+      {/* Row 1: Search + Category Dropdown */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/30 text-sm pointer-events-none">🔍</span>
+          <input
+            type="text"
+            placeholder="Search ingredient or brand..."
+            value={searchQuery}
+            onChange={e => onSearchChange(e.target.value)}
+            className="w-full h-11 pl-9 pr-9 rounded-xl border-2 border-muted bg-white text-sm font-medium focus:border-primary outline-none transition-colors placeholder:text-foreground/30"
+          />
+          {searchQuery && (
+            <button onClick={() => onSearchChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/30 hover:text-foreground text-xl leading-none">×</button>
+          )}
+        </div>
+        <select
+          value={selectedCategory}
+          onChange={e => onCategoryChange(e.target.value)}
+          className="h-11 px-3 rounded-xl border-2 border-muted bg-white text-xs font-black focus:border-primary outline-none transition-colors text-foreground/60 min-w-[120px]"
         >
-          {c}
-        </button>
-      ))}
+          {categories.map((c: string) => <option key={c} value={c}>{c === 'Semua' ? 'All Categories' : c}</option>)}
+        </select>
+      </div>
+
+      {/* Row 2: Status Filter Buttons + Clear */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+        {STATUS_FILTERS.map(f => (
+          <button
+            key={f.id}
+            onClick={() => onStatusChange(statusFilter === f.id ? '' : f.id)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap border-2 transition-all flex-shrink-0 ${
+              statusFilter === f.id
+                ? 'bg-primary border-primary text-white shadow-md shadow-primary/20'
+                : 'bg-white border-muted text-foreground/40 hover:border-primary/40 hover:text-foreground/60'
+            }`}
+          >
+            <span className="text-xs">{f.icon}</span>
+            <span>{f.label}</span>
+          </button>
+        ))}
+        {hasActiveFilter && (
+          <button
+            onClick={onClearFilters}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap border-2 border-red-200 bg-red-50 text-red-400 hover:bg-red-100 transition-all flex-shrink-0 ml-1"
+          >
+            <span>✕</span>
+            <span>Clear Filters</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 }
