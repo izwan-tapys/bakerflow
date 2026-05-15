@@ -27,7 +27,6 @@ interface Recipe {
   id: string;
   ingredient_id: string;
   quantity_needed: number;
-  ingredients?: { name: string; unit: string };
 }
 
 interface PendingRecipe {
@@ -640,22 +639,14 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
   const [form, setForm] = useState({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 });
 
   const loadRecipes = useCallback(async () => {
-    console.log("Loading recipes for product:", product.id);
     const { data, error } = await supabase
       .from('recipes')
-      .select(`
-        *,
-        ingredients (
-          name,
-          unit
-        )
-      `)
+      .select('id, ingredient_id, quantity_needed')
       .eq('product_id', product.id);
     
     if (error) {
       console.error("Load Recipes Error:", error);
     } else {
-      console.log("Recipes loaded:", data);
       setRecipes(data || []);
     }
     setLoading(false);
@@ -755,15 +746,18 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
               {loading ? <p className="text-sm text-foreground/40 text-center py-4">Loading...</p> : 
                recipes.length === 0 ? <p className="text-sm text-foreground/40 italic text-center py-4">No ingredients added yet.</p> :
-               recipes.map(r => (
-                 <div key={r.id} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
-                   <div>
-                     <p className="font-bold text-sm text-foreground">{r.ingredients?.name || 'Unknown Ingredient'}</p>
-                     <p className="text-xs text-foreground/50">{r.quantity_needed} {r.ingredients?.unit || ''}</p>
+               recipes.map(r => {
+                 const ing = ingredients.find(i => i.id === r.ingredient_id);
+                 return (
+                   <div key={r.id} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
+                     <div>
+                       <p className="font-bold text-sm text-foreground">{ing?.name || r.ingredient_id}</p>
+                       <p className="text-xs text-foreground/50">{r.quantity_needed} {ing?.unit || ''}</p>
+                     </div>
+                     <button onClick={() => handleRemove(r.id)} className="text-red-400 hover:text-red-600 text-lg px-2">×</button>
                    </div>
-                   <button onClick={() => handleRemove(r.id)} className="text-red-400 hover:text-red-600 text-lg px-2">×</button>
-                 </div>
-               ))
+                 );
+               })
               }
             </div>
           </div>
