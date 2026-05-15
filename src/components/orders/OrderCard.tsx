@@ -77,7 +77,7 @@ export function OrderCard({ order, onStatusChange, onEdit, onRefresh }: OrderCar
   const isTomorrow = order.delivery_date === new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
   const handleCopyLabel = () => {
-    const label = `🏷️ *ORDER LABEL*\n------------------\n👤 *Customer:* ${order.customer_name}\n🧁 *Product:* ${order.product_name} x${order.quantity}\n📅 *Date:* ${order.delivery_date}\n📝 *Note:* ${order.special_notes || '-'}\n------------------\n#BakerFlow`;
+    const label = `🏷️ *ORDER LABEL*\n------------------\n👤 *Customer:* ${order.customer_name}\n🧁 *Product:* ${order.product_name} x${order.quantity}\n📅 *Date:* ${order.delivery_date}\n📝 *Note:* ${order.special_notes || '-'}\n------------------\n#BakersBestie #BaBe`;
     navigator.clipboard.writeText(label);
     alert('Label copied to clipboard! Paste it into your printer or notes.');
   };

@@ -152,7 +152,7 @@ export default function InventoryPage() {
 
   const handleShareWhatsApp = () => {
     if (shoppingList.length === 0) return;
-    let message = `🛒 *SHOPPING LIST BAKERFLOW*\n\n`;
+    let message = `🛒 *SHOPPING LIST - BAKERSBESTIE*\n\n`;
     shoppingList.forEach((item, idx) => {
       let packInfo = '';
       if (item.ingredient.pack_size) {

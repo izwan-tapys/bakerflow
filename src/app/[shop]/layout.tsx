@@ -11,7 +11,7 @@ export default function OrderLayout({
       <div className="w-full max-w-lg bg-white min-h-screen md:min-h-[90vh] md:rounded-[3rem] md:shadow-2xl md:my-auto overflow-hidden flex flex-col">
         {/* Simple Header */}
         <header className="p-6 flex items-center justify-between border-b border-muted">
-          <span className="text-xl font-bold text-primary">BakerFlow</span>
+          <span className="text-xl font-bold text-primary">BakersBestie</span>
           <div className="text-xs text-foreground/40 font-medium">Ordering Portal</div>
         </header>
 

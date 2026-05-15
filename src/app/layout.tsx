@@ -13,16 +13,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BakerFlow — Your Kitchen Command Centre",
-  description: "The all-in-one bakery management app for home bakers. Manage orders, production, inventory and grow your business.",
+  title: "BakersBestie — Your Baking Best Friend 🧁",
+  description: "The all-in-one baking management app (BaBe). Manage orders, production, inventory and grow your business.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "BakerFlow",
+    title: "BakersBestie",
   },
   openGraph: {
-    title: "BakerFlow",
+    title: "BakersBestie",
     description: "The all-in-one bakery management app for home bakers.",
     type: "website",
   },

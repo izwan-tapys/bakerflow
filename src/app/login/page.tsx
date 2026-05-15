@@ -155,7 +155,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-foreground/30 text-xs">
-          BakerFlow • Built for home bakers with ❤️
+          BakersBestie • Built for home bakers with ❤️
         </p>
       </div>
     </div>

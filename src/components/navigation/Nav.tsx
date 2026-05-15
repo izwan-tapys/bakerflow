@@ -63,8 +63,8 @@ export function SideNav() {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-white border-r border-muted p-6 space-y-8 min-h-screen">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-black text-sm">BF</div>
-        <span className="text-xl font-black text-foreground">BakerFlow</span>
+        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-black text-[10px] text-center leading-tight">BA<br/>BE</div>
+        <span className="text-xl font-black text-foreground">BakersBestie</span>
       </div>
       <nav className="flex-1 space-y-1">
         {navItems.map(item => {

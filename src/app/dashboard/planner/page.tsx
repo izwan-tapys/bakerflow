@@ -212,7 +212,7 @@ export default function PlannerPage() {
       {schedule.length > 0 && (
         <button 
           onClick={() => {
-            const text = `📅 *Task List BakerFlow (${formatDate(selectedDate)})*\n\n` + 
+            const text = `📅 *BakersBestie Task List (${formatDate(selectedDate)})*\n\n` + 
               schedule.map((item, i) => 
                 `${i+1}. *${item.customer}* (${item.product})\n` +
                 `   🥣 Prep: ${item.prepStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n` +

@@ -1,7 +1,7 @@
 {
-  "name": "BakerFlow",
-  "short_name": "BakerFlow",
-  "description": "The all-in-one bakery management app for home bakers.",
+  "name": "BakersBestie",
+  "short_name": "BaBe",
+  "description": "BakersBestie (BaBe) — Your Baking Best Friend 🧁",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#FDF8F3",
