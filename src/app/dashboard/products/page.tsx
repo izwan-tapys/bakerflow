@@ -304,164 +304,100 @@ export default function ProductsPage() {
 
       {/* Add Form with Inline Recipe */}
       {showAdd && (
-        <div className="bg-white rounded-2xl border border-muted p-5 space-y-5 shadow-sm">
-          <div>
-            <p className="font-bold text-sm text-foreground">Add New Product</p>
-            <p className="text-xs text-foreground/50">Fill in product details and add its recipe.</p>
-          </div>
-          
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs font-semibold text-foreground/70 block mb-1">Product Name</label>
-              <input placeholder="e.g. Chocolate Moist Cake" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" />
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
+          <div className="bg-white w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+            <div className="flex justify-between items-center mb-6 flex-none">
+              <p className="text-xl font-black text-primary">Add New Product</p>
+              <button onClick={() => setShowAdd(false)} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="text-xs font-semibold text-foreground/70 block mb-1">Description</label>
-                <textarea placeholder="e.g. Rich chocolate cake with premium ganache..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2}
-                  className="w-full py-2 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none resize-none" />
-              </div>
-              <div className="col-span-2">
-                <label className="text-xs font-semibold text-foreground/70 block mb-1">Price (RM)</label>
-                <input type="number" placeholder="0.00" value={form.price || ''} onChange={e => setForm({ ...form, price: +e.target.value })}
-                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" />
-              </div>
-              <div className="col-span-2 grid grid-cols-3 gap-2 mt-1">
-                <div>
-                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Prep (Min)</label>
-                  <input type="number" value={form.prep_time} onChange={e => setForm({...form, prep_time: +e.target.value})}
-                    className="w-full h-9 px-2 rounded-lg border border-muted focus:border-primary focus:outline-none font-bold text-xs bg-white" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Bake (Min)</label>
-                  <input type="number" value={form.bake_time} onChange={e => setForm({...form, bake_time: +e.target.value})}
-                    className="w-full h-9 px-2 rounded-lg border border-muted focus:border-primary focus:outline-none font-bold text-xs bg-white" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Cool (Min)</label>
-                  <input type="number" value={form.cool_time} onChange={e => setForm({...form, cool_time: +e.target.value})}
-                    className="w-full h-9 px-2 rounded-lg border border-muted focus:border-primary focus:outline-none font-bold text-xs bg-white" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-muted pt-4 space-y-3">
-            <p className="text-xs font-bold uppercase text-foreground/50 tracking-wide">Recipe Ingredients (Optional)</p>
             
-            {/* Pending Recipes List */}
-            {pendingRecipes.length > 0 && (
-              <div className="space-y-2">
-                {pendingRecipes.map((r, idx) => (
-                  <div key={idx} className="flex justify-between items-center bg-muted/30 px-3 py-2 rounded-lg border border-muted/50">
-                    <div>
-                      <p className="font-bold text-sm text-foreground flex items-center gap-2">
-                        {r.display_name} 
-                        {r.new_name && <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase">New</span>}
-                      </p>
-                      <p className="text-xs text-foreground/50">{r.quantity_needed}{r.unit}</p>
-                    </div>
-                    <button onClick={() => removePendingRecipe(idx)} className="text-red-400 hover:text-red-600 text-lg">×</button>
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Product Name</label>
+                  <input placeholder="e.g. Chocolate Moist Cake" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+                    className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
+                </div>
+                <div>
+                  <label className="text-xs font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Description</label>
+                  <textarea placeholder="e.g. Rich chocolate cake..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2}
+                    className="w-full py-3 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-medium resize-none" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <label className="text-xs font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Price (RM)</label>
+                    <input type="number" value={form.price || ''} onChange={e => setForm({ ...form, price: +e.target.value })}
+                      className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-black text-lg text-primary" />
                   </div>
-                ))}
-              </div>
-            )}
+                  <div className="col-span-2 grid grid-cols-3 gap-2 mt-2">
+                    <div>
+                      <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Prep (Min)</label>
+                      <input type="number" value={form.prep_time} onChange={e => setForm({...form, prep_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Bake (Min)</label>
+                      <input type="number" value={form.bake_time} onChange={e => setForm({...form, bake_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Cool (Min)</label>
+                      <input type="number" value={form.cool_time} onChange={e => setForm({...form, cool_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold" />
+                    </div>
+                  </div>
+                </div>
 
-            <div className="bg-muted/30 p-3 rounded-xl border border-muted/50 space-y-3">
-              <div className="flex gap-2">
-                <div className="flex-[2] relative">
-                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Search or Add Ingredient</label>
-                  <input 
-                    placeholder="Type ingredient name..." 
-                    value={ingSearch} 
-                    onChange={e => {
-                      setIngSearch(e.target.value);
-                      setIngForm({ ...ingForm, ingredient_id: '' });
-                      setShowIngSuggestions(true);
-                    }}
-                    onFocus={() => setShowIngSuggestions(true)}
-                    className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" 
-                  />
-                  
-                  {/* Suggestions Dropdown */}
-                  {showIngSuggestions && ingSearch && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-muted rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                      {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
-                        <div 
-                          key={i.id} 
-                          onClick={() => {
-                            setIngSearch(i.name);
-                            setIngForm({ ...ingForm, ingredient_id: i.id, brand: i.brand || '', unit: i.unit });
-                            setShowIngSuggestions(false);
-                          }}
-                          className="px-4 py-2 hover:bg-primary/5 cursor-pointer text-sm font-medium border-b border-muted/30 last:border-0"
-                        >
-                          <div className="flex items-center gap-2">
-                            <p className="text-foreground">{i.name}</p>
-                            {i.brand && <span className="text-[10px] text-primary/50 font-bold bg-primary/5 px-1.5 py-0.5 rounded">@{i.brand}</span>}
+                <div className="border-t-2 border-muted pt-6 space-y-4">
+                  <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">Recipe Ingredients</p>
+                  {pendingRecipes.length > 0 && (
+                    <div className="space-y-2">
+                      {pendingRecipes.map((r, idx) => (
+                        <div key={idx} className="flex justify-between items-center bg-muted/20 px-4 py-3 rounded-xl border border-muted/50">
+                          <div>
+                            <p className="font-bold text-sm">{r.display_name}</p>
+                            <p className="text-[10px] font-black text-foreground/30 uppercase">{r.quantity_needed}{r.unit}</p>
                           </div>
-                          <p className="text-[10px] text-foreground/40">{i.unit}</p>
+                          <button onClick={() => removePendingRecipe(idx)} className="text-red-400 text-2xl font-bold">×</button>
                         </div>
                       ))}
-                      
-                      {!ingredients.some(i => i.name.toLowerCase() === ingSearch.toLowerCase()) && (
-                        <div 
-                          onClick={() => setShowIngSuggestions(false)}
-                          className="px-4 py-3 hover:bg-green-50 cursor-pointer transition-colors"
-                        >
-                          <div className="flex items-center gap-3 text-green-600">
-                            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center font-bold text-xs">+</div>
-                            <div>
-                              <p className="text-sm font-bold">Add "{ingSearch}" as new ingredient</p>
-                              <p className="text-[10px] opacity-70 font-medium">Create a new ingredient with this name</p>
+                    </div>
+                  )}
+
+                  <div className="bg-muted/10 p-5 rounded-2xl border-2 border-muted/30 space-y-4">
+                    <div className="relative">
+                      <label className="text-[10px] font-black text-foreground/30 uppercase mb-1.5 block">Search Ingredient</label>
+                      <input placeholder="Type name..." value={ingSearch} onChange={e => { setIngSearch(e.target.value); setShowIngSuggestions(true); }} className="w-full h-11 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
+                      {showIngSuggestions && ingSearch && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border-2 border-muted rounded-xl shadow-2xl max-h-48 overflow-y-auto">
+                          {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
+                            <div key={i.id} onClick={() => { setIngSearch(i.name); setIngForm({ ...ingForm, ingredient_id: i.id, brand: i.brand || '', unit: i.unit }); setShowIngSuggestions(false); }} className="px-4 py-2.5 hover:bg-primary/5 cursor-pointer border-b border-muted/30 last:border-0 font-bold text-sm">
+                              {i.name} <span className="text-[10px] opacity-30">({i.unit})</span>
                             </div>
-                          </div>
+                          ))}
                         </div>
                       )}
                     </div>
-                  )}
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Qty</label>
+                        <input type="number" value={ingForm.quantity_needed || ''} onChange={e => setIngForm({ ...ingForm, quantity_needed: +e.target.value })} className="w-full h-10 px-3 rounded-lg border-2 border-muted font-bold" />
+                      </div>
+                      <div className="w-20">
+                        <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Unit</label>
+                        <select value={ingForm.unit} onChange={e => setIngForm({ ...ingForm, unit: e.target.value })} className="w-full h-10 px-1 rounded-lg border-2 border-muted font-bold text-xs bg-white">
+                          {['g', 'kg', 'ml', 'L', 'pcs'].map(u => <option key={u}>{u}</option>)}
+                        </select>
+                      </div>
+                      <button onClick={handleAddPendingRecipe} disabled={!ingSearch || ingForm.quantity_needed <= 0} className="h-10 mt-5 px-4 bg-foreground text-white font-black text-[10px] rounded-lg">ADD</button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Brand (Opt)</label>
-                  <input 
-                    placeholder="Anchor" 
-                    value={ingForm.brand} 
-                    onChange={e => setIngForm({ ...ingForm, brand: e.target.value })}
-                    className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" 
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Qty needed</label>
-                  <input type="number" placeholder="0" value={ingForm.quantity_needed || ''} onChange={e => setIngForm({ ...ingForm, quantity_needed: +e.target.value })}
-                    className="w-full h-10 px-2 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" />
-                </div>
-                <div className="w-20">
-                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Unit</label>
-                  <select value={ingForm.unit} onChange={e => setIngForm({ ...ingForm, unit: e.target.value })}
-                    className="w-full h-10 px-1 rounded-xl border border-muted text-[10px] font-bold focus:border-primary focus:outline-none bg-white">
-                    {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
-                  </select>
-                </div>
-                <button 
-                  onClick={handleAddPendingRecipe} 
-                  disabled={!ingSearch || ingForm.quantity_needed <= 0} 
-                  className="h-10 mt-5 px-4 bg-foreground text-white font-bold text-xs rounded-xl disabled:opacity-50"
-                >
-                  + Add
-                </button>
               </div>
             </div>
-          </div>
 
-          <div className="flex gap-2 pt-4">
-            <button onClick={() => { setShowAdd(false); setPendingRecipes([]); setIngForm({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 }); }} className="flex-1 h-12 rounded-xl border border-muted text-sm font-medium hover:bg-muted/50">Cancel</button>
-            <button onClick={handleSaveProduct} disabled={!form.name || form.price <= 0 || savingProduct} className="flex-[2] h-12 rounded-xl bg-primary text-white text-sm font-bold disabled:opacity-50 shadow-lg shadow-primary/20">
-              {savingProduct ? 'Saving...' : 'Save Product & Recipe'}
-            </button>
+            <div className="pt-6 flex-none">
+              <button onClick={handleSaveProduct} disabled={!form.name || form.price <= 0 || savingProduct} className="w-full h-16 bg-primary text-white rounded-xl font-black text-lg shadow-xl shadow-primary/20">
+                {savingProduct ? 'SAVING...' : 'SAVE PRODUCT & RECIPE'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -635,47 +571,46 @@ export default function ProductsPage() {
 
       {/* Edit Product Modal */}
       {editingProduct && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-5">
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Edit Product</h2>
-              <p className="text-sm text-foreground/50">Update details for {editingProduct.name}</p>
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
+          <div className="bg-white w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+            <div className="flex justify-between items-center mb-6 flex-none">
+              <h2 className="text-xl font-black text-primary">Edit Product</h2>
+              <button onClick={() => { setEditingProduct(null); setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 }); }} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
             </div>
             
-            <div className="space-y-4">
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-5">
               <div>
-                <label className="text-xs font-semibold text-foreground/70 block mb-1">Product Name</label>
+                <label className="text-xs font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Product Name</label>
                 <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary outline-none" />
+                  className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
               </div>
               <div>
-                <label className="text-xs font-semibold text-foreground/70 block mb-1">Price (RM)</label>
+                <label className="text-xs font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Price (RM)</label>
                 <input type="number" value={form.price} onChange={e => setForm({ ...form, price: +e.target.value })}
-                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary outline-none" />
+                  className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-black text-lg text-primary" />
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Prep (Min)</label>
+                  <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Prep (Min)</label>
                   <input type="number" value={form.prep_time} onChange={e => setForm({...form, prep_time: +e.target.value})}
-                    className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm" />
+                    className="w-full h-11 px-2 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold text-sm text-center" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Bake (Min)</label>
+                  <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Bake (Min)</label>
                   <input type="number" value={form.bake_time} onChange={e => setForm({...form, bake_time: +e.target.value})}
-                    className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm" />
+                    className="w-full h-11 px-2 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold text-sm text-center" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Cool (Min)</label>
+                  <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Cool (Min)</label>
                   <input type="number" value={form.cool_time} onChange={e => setForm({...form, cool_time: +e.target.value})}
-                    className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none font-bold text-sm" />
+                    className="w-full h-11 px-2 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold text-sm text-center" />
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
-              <button onClick={() => { setEditingProduct(null); setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 }); }} className="flex-1 h-12 rounded-xl border border-muted font-bold">Cancel</button>
-              <button onClick={handleUpdateProduct} disabled={savingProduct} className="flex-[2] h-12 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20">
-                {savingProduct ? 'Updating...' : 'Save Changes'}
+            <div className="pt-6 flex-none">
+              <button onClick={handleUpdateProduct} disabled={savingProduct} className="w-full h-16 bg-primary text-white font-black rounded-xl shadow-xl shadow-primary/20 transition-all">
+                {savingProduct ? 'UPDATING...' : 'SAVE CHANGES'}
               </button>
             </div>
           </div>
@@ -781,14 +716,15 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
   const selectedIng = ingredients.find(i => i.id === form.ingredient_id);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center">
-      <div className="bg-white w-full max-w-md md:rounded-3xl rounded-t-[40px] p-6 shadow-2xl flex flex-col h-[calc(100vh-120px)] md:h-auto md:max-h-[85vh] mb-[72px] md:mb-0 overflow-hidden">
-        <div className="flex-none mb-4">
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
+      <div className="bg-white w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+        <div className="flex-none mb-6">
           <div className="flex items-center justify-between mb-1">
-            <h2 className="text-xl font-black text-foreground">Recipe Setup</h2>
-            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
+            <h2 className="text-xl font-black text-primary">Recipe Setup</h2>
+            <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
           </div>
-          <p className="text-sm text-foreground/50">Details for {product.name}</p>
+          <p className="text-sm font-bold text-foreground/50 italic">{product.name}</p>
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-5 pr-1 custom-scrollbar">

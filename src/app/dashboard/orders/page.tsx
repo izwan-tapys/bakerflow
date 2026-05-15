@@ -198,74 +198,80 @@ export default function OrdersPage() {
 
       {/* Manual Order Modal */}
       {showManual && (
-        <div className="bg-white rounded-2xl border-2 border-primary/20 p-5 space-y-4 shadow-xl">
-          <p className="font-black text-foreground">{editingOrder ? 'Edit Order' : 'Add Manual Order'}</p>
-          
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[10px] font-black uppercase text-foreground/40">Customer Name</label>
-                <input value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})}
-                  className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
-              </div>
-              <div>
-                <label className="text-[10px] font-black uppercase text-foreground/40">Customer Phone</label>
-                <input value={manualForm.customer_phone} onChange={e => setManualForm({...manualForm, customer_phone: e.target.value})} placeholder="0123456789"
-                  className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
+          <div className="bg-white w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+            <div className="flex justify-between items-center mb-6 flex-none">
+              <p className="text-xl font-black text-primary">{editingOrder ? 'Edit Order' : 'Add Manual Order'}</p>
+              <button onClick={() => { setShowManual(false); setEditingOrder(null); }} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-foreground/40">Customer Name</label>
+                    <input value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})}
+                      className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-foreground/40">Customer Phone</label>
+                    <input value={manualForm.customer_phone} onChange={e => setManualForm({...manualForm, customer_phone: e.target.value})} placeholder="0123456789"
+                      className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase text-foreground/40">Delivery/Pickup Address</label>
+                  <input value={manualForm.customer_address} onChange={e => setManualForm({...manualForm, customer_address: e.target.value})}
+                    className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-foreground/40">Product</label>
+                    <select value={manualForm.product_id} onChange={e => setManualForm({...manualForm, product_id: e.target.value})}
+                      className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold bg-white">
+                      <option value="">Select Product</option>
+                      {products.map(p => <option key={p.id} value={p.id}>{p.name} (RM{p.price})</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-foreground/40">Quantity</label>
+                    <input type="number" value={manualForm.quantity} onChange={e => setManualForm({...manualForm, quantity: +e.target.value})}
+                      className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-foreground/40">Date</label>
+                    <input type="date" value={manualForm.delivery_date} onChange={e => setManualForm({...manualForm, delivery_date: e.target.value})}
+                      className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-foreground/40">Payment</label>
+                    <select value={manualForm.payment_status} onChange={e => setManualForm({...manualForm, payment_status: e.target.value as any})}
+                      className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold bg-white">
+                      <option value="unpaid">Unpaid</option>
+                      <option value="paid">Paid</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase text-foreground/40">Special Note (Optional)</label>
+                  <textarea value={manualForm.special_notes} onChange={e => setManualForm({...manualForm, special_notes: e.target.value})} rows={2}
+                    className="w-full px-3 py-2 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold resize-none" />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="text-[10px] font-black uppercase text-foreground/40">Delivery/Pickup Address</label>
-              <input value={manualForm.customer_address} onChange={e => setManualForm({...manualForm, customer_address: e.target.value})}
-                className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+            <div className="pt-6 flex-none">
+              <button onClick={editingOrder ? handleUpdateOrder : handleAddManualOrder} disabled={!manualForm.customer_name || !manualForm.product_id}
+                className="w-full h-14 bg-primary text-white rounded-xl font-black text-lg disabled:opacity-50 shadow-xl shadow-primary/20 transition-all">
+                {editingOrder ? 'UPDATE ORDER' : 'SAVE ORDER'}
+              </button>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[10px] font-black uppercase text-foreground/40">Product</label>
-                <select value={manualForm.product_id} onChange={e => setManualForm({...manualForm, product_id: e.target.value})}
-                  className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold bg-white">
-                  <option value="">Select Product</option>
-                  {products.map(p => <option key={p.id} value={p.id}>{p.name} (RM{p.price})</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-[10px] font-black uppercase text-foreground/40">Quantity</label>
-                <input type="number" value={manualForm.quantity} onChange={e => setManualForm({...manualForm, quantity: +e.target.value})}
-                  className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[10px] font-black uppercase text-foreground/40">Date</label>
-                <input type="date" value={manualForm.delivery_date} onChange={e => setManualForm({...manualForm, delivery_date: e.target.value})}
-                  className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
-              </div>
-              <div>
-                <label className="text-[10px] font-black uppercase text-foreground/40">Payment</label>
-                <select value={manualForm.payment_status} onChange={e => setManualForm({...manualForm, payment_status: e.target.value as any})}
-                  className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold bg-white">
-                  <option value="unpaid">Unpaid</option>
-                  <option value="paid">Paid</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-black uppercase text-foreground/40">Special Note (Optional)</label>
-              <textarea value={manualForm.special_notes} onChange={e => setManualForm({...manualForm, special_notes: e.target.value})} rows={2}
-                className="w-full px-3 py-2 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold resize-none" />
-            </div>
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <button onClick={() => { setShowManual(false); setEditingOrder(null); }} className="flex-1 h-11 rounded-xl border-2 border-muted font-bold text-sm">Cancel</button>
-            <button onClick={editingOrder ? handleUpdateOrder : handleAddManualOrder} disabled={!manualForm.customer_name || !manualForm.product_id}
-              className="flex-2 bg-primary text-white rounded-xl font-bold text-sm px-6 disabled:opacity-50 shadow-md shadow-primary/20">
-              {editingOrder ? 'Update Order' : 'Save Order'}
-            </button>
           </div>
         </div>
       )}
