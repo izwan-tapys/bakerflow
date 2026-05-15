@@ -762,6 +762,8 @@ function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
 
 function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock, onQuickConfirm, onRemoveManual, onRefresh }: any) {
   const [receiptData, setReceiptData] = useState<Record<string, { qty: number; price: number }>>({});
+  const [scanning, setScanning] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Combine orders-based shopping list with manual IDs
   const manualItems = manualIds.map((id: string) => {
@@ -799,6 +801,47 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
     }));
   };
 
+  const handleScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setScanning(true);
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        const base64 = reader.result as string;
+        
+        const res = await fetch('/api/ai/ocr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            image: base64,
+            shoppingList: combinedList.map((i: any) => ({ id: i.ingredient.id, name: i.ingredient.name }))
+          })
+        });
+        
+        const { data, error } = await res.json();
+        if (error) throw new Error(error);
+
+        // Map AI results to state
+        const updates: Record<string, { qty: number; price: number }> = {};
+        data.forEach((entry: any) => {
+          if (entry.id) {
+            updates[entry.id] = { qty: entry.qty, price: entry.price };
+          }
+        });
+        
+        setReceiptData(prev => ({ ...prev, ...updates }));
+        alert(`AI successfully scanned ${data.length} items from receipt!`);
+      };
+    } catch (err: any) {
+      alert('Scanning failed: ' + err.message);
+    } finally {
+      setScanning(false);
+    }
+  };
+
   const handleShare = (platform: 'wa' | 'tg') => {
     const listText = combinedList.map((item: any) => {
       const name = item.ingredient.name;
@@ -827,6 +870,24 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <input 
+            type="file" 
+            accept="image/*" 
+            capture="environment" 
+            className="hidden" 
+            ref={fileInputRef} 
+            onChange={handleScan}
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={scanning}
+            className={`h-12 px-5 rounded-2xl border-2 flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest transition-all shadow-sm active:scale-95 ${
+              scanning ? 'bg-muted text-foreground/20' : 'bg-white border-primary text-primary hover:bg-primary/5'
+            }`}
+          >
+            {scanning ? '⌛ Scanning...' : '📷 Scan Receipt'}
+          </button>
+
           {Object.values(receiptData).some(d => d.price > 0) && (
             <button 
               onClick={async () => {
