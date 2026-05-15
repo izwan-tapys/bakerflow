@@ -207,11 +207,11 @@ export default function InventoryPage() {
   });
 
   return (
-    <div className="space-y-6 pb-4">
+    <div className="pb-4">
       <KitchenTabs />
 
       {/* Main Header */}
-      <div className="flex items-end justify-between">
+      <div className="flex items-end justify-between mb-4">
         <div>
           <h1 className="text-3xl font-black text-foreground tracking-tight">Inventory</h1>
           <p className="text-foreground/50 text-sm font-medium">Manage your kitchen resources</p>
@@ -232,52 +232,54 @@ export default function InventoryPage() {
         </button>
       </div>
 
-      {/* Main Navigation Tabs - STICKY */}
-      <div className="sticky top-0 z-20 -mx-4 px-4 py-2 bg-white/80 backdrop-blur-md border-b border-muted/20">
+      {/* Main Navigation Tabs - STICKY within main scroll container */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md -mx-4 md:-mx-8 px-4 md:px-8 py-3 border-b border-muted/30 mb-4">
         <div className="flex bg-muted/30 p-1.5 rounded-[12px] border border-muted/50 overflow-x-auto no-scrollbar">
-        {[
-          { id: 'raw', label: 'Raw Ingredients', icon: '🥣' },
-          { id: 'component', label: 'Components', icon: '🍰' },
-          { id: 'supply', label: 'Supplies', icon: '📦' },
-          { id: 'purchases', label: 'Purchases', icon: '🧾' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => {
-              setActiveMainTab(tab.id as any);
-              setSelectedCategory('Semua');
-            }}
-            className={`flex-1 min-w-[80px] flex flex-col items-center justify-center py-3 rounded-xl transition-all ${
-              activeMainTab === tab.id 
-                ? 'bg-white text-primary shadow-sm border border-muted/50' 
-                : 'text-foreground/40 hover:text-foreground/60'
-            }`}
-          >
-            <span className="text-lg mb-1">{tab.icon}</span>
-            <span className="text-[10px] font-black uppercase tracking-wider">{tab.label}</span>
-          </button>
-        ))}
+          {[
+            { id: 'raw', label: 'Raw Ingredients', icon: '🥣' },
+            { id: 'component', label: 'Components', icon: '🍰' },
+            { id: 'supply', label: 'Supplies', icon: '📦' },
+            { id: 'purchases', label: 'Purchases', icon: '🧾' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveMainTab(tab.id as any);
+                setSelectedCategory('Semua');
+              }}
+              className={`flex-1 min-w-[80px] flex flex-col items-center justify-center py-3 rounded-xl transition-all ${
+                activeMainTab === tab.id 
+                  ? 'bg-white text-primary shadow-sm border border-muted/50' 
+                  : 'text-foreground/40 hover:text-foreground/60'
+              }`}
+            >
+              <span className="text-lg mb-1">{tab.icon}</span>
+              <span className="text-[10px] font-black uppercase tracking-wider">{tab.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
       {/* List Views */}
-      {activeMainTab === 'purchases' ? (
-        <PurchasesList purchases={purchases} />
-      ) : (
-        <>
-          <CategoryFilter 
-            categories={CATEGORIES} 
-            selected={selectedCategory} 
-            onSelect={setSelectedCategory} 
-            visible={activeMainTab === 'raw' || activeMainTab === 'supply'} 
-          />
-          <IngredientsList 
-            ingredients={filteredIngredients} 
-            onSelect={setSelectedIngredient} 
-            loading={loading}
-          />
-        </>
-      )}
+      <div className="space-y-4">
+        {activeMainTab === 'purchases' ? (
+          <PurchasesList purchases={purchases} />
+        ) : (
+          <>
+            <CategoryFilter 
+              categories={CATEGORIES} 
+              selected={selectedCategory} 
+              onSelect={setSelectedCategory} 
+              visible={activeMainTab === 'raw' || activeMainTab === 'supply'} 
+            />
+            <IngredientsList 
+              ingredients={filteredIngredients} 
+              onSelect={setSelectedIngredient} 
+              loading={loading}
+            />
+          </>
+        )}
+      </div>
 
       {/* Modals */}
       {showAdd && (
@@ -310,16 +312,22 @@ export default function InventoryPage() {
 function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
   return (
     <div className="bg-white rounded-[16px] border border-muted overflow-hidden shadow-sm">
+      {/* Frozen header */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
-          <thead className="sticky top-0 z-10 bg-white shadow-sm">
-            <tr className="bg-muted/30">
+          <thead>
+            <tr className="bg-muted/30 border-b border-muted/50">
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Date</th>
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Qty</th>
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Total</th>
             </tr>
           </thead>
+        </table>
+      </div>
+      {/* Scrollable body */}
+      <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
+        <table className="w-full text-left border-collapse">
           <tbody className="divide-y divide-muted/50">
             {purchases.length === 0 ? (
               <tr><td colSpan={4} className="px-6 py-20 text-center text-foreground/30 font-bold italic">No purchase history yet.</td></tr>
@@ -364,9 +372,10 @@ function CategoryFilter({ categories, selected, onSelect, visible }: any) {
 function IngredientsList({ ingredients, onSelect, loading }: any) {
   return (
     <div className="bg-white rounded-[16px] border border-muted overflow-hidden shadow-sm">
-      <div className="overflow-x-auto">
+      {/* Frozen header - separate from scrollable body */}
+      <div className="overflow-x-auto border-b border-muted/50">
         <table className="w-full text-left border-collapse">
-          <thead className="sticky top-0 z-10 bg-white shadow-sm">
+          <thead>
             <tr className="bg-muted/30">
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Inventory</th>
@@ -374,6 +383,11 @@ function IngredientsList({ ingredients, onSelect, loading }: any) {
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-10"></th>
             </tr>
           </thead>
+        </table>
+      </div>
+      {/* Scrollable body */}
+      <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
+        <table className="w-full text-left border-collapse">
           <tbody className="divide-y divide-muted/50">
             {loading ? (
               [1,2,3].map(i => (
