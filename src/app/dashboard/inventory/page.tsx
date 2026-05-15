@@ -240,16 +240,15 @@ export default function InventoryPage() {
     }
   };
 
-  const handleQuickRestock = async (item: ShoppingItem) => {
-    const qty = item.suggestedTotalQty || item.shortfall;
+  const handleQuickRestock = async (item: ShoppingItem, customQty?: number, customPrice?: number) => {
+    const qty = customQty ?? (item.suggestedTotalQty || item.shortfall);
+    const totalCost = customPrice ?? (qty * item.ingredient.avg_cost_per_unit);
+    
     if (qty <= 0) return;
     
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
-    // Use current avg_cost to keep it consistent
-    const totalCost = qty * item.ingredient.avg_cost_per_unit;
 
     try {
       // 1. Update ingredient stock and turn off shopping flag
@@ -762,7 +761,7 @@ function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
 }
 
 function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock, onQuickConfirm, onRemoveManual, onRefresh }: any) {
-  const [boughtIds, setBoughtIds] = useState<string[]>([]);
+  const [receiptData, setReceiptData] = useState<Record<string, { qty: number; price: number }>>({});
 
   // Combine orders-based shopping list with manual IDs
   const manualItems = manualIds.map((id: string) => {
@@ -776,6 +775,29 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
   const uniqueManualItems = manualItems.filter((i: any) => !ordersIngIds.has(i.ingredient.id));
 
   const combinedList = [...ordersShopping, ...uniqueManualItems];
+
+  // Initialize receipt data with suggested quantities
+  useEffect(() => {
+    const initial: Record<string, { qty: number; price: number }> = {};
+    combinedList.forEach((item: any) => {
+      if (!receiptData[item.ingredient.id]) {
+        initial[item.ingredient.id] = { 
+          qty: item.suggestedTotalQty || item.shortfall || 0, 
+          price: 0 
+        };
+      }
+    });
+    if (Object.keys(initial).length > 0) {
+      setReceiptData(prev => ({ ...prev, ...initial }));
+    }
+  }, [combinedList]);
+
+  const updateReceipt = (id: string, field: 'qty' | 'price', val: number) => {
+    setReceiptData(prev => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: val }
+    }));
+  };
 
   const handleShare = (platform: 'wa' | 'tg') => {
     const listText = combinedList.map((item: any) => {
@@ -805,18 +827,22 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {boughtIds.length > 0 && (
+          {Object.values(receiptData).some(d => d.price > 0) && (
             <button 
               onClick={async () => {
-                const toConfirm = combinedList.filter((i: any) => boughtIds.includes(i.ingredient.id));
+                const toConfirm = combinedList.filter((item: any) => {
+                  const data = receiptData[item.ingredient.id];
+                  return data && data.price > 0 && data.qty > 0;
+                });
+                if (!confirm(`Update inventory for ${toConfirm.length} items?`)) return;
                 for (const item of toConfirm) {
-                  await onQuickConfirm(item);
+                  const data = receiptData[item.ingredient.id];
+                  await onQuickConfirm(item, data.qty, data.price);
                 }
-                setBoughtIds([]);
               }}
               className="h-12 px-6 rounded-2xl bg-green-500 text-white font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-green-500/20 active:scale-95 animate-in zoom-in duration-200"
             >
-              Confirm Selected ({boughtIds.length})
+              Update Inventory ({combinedList.filter((item: any) => receiptData[item.ingredient.id]?.price > 0).length})
             </button>
           )}
           <button 
@@ -859,9 +885,10 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
               <tr className="bg-muted/30">
                 <th className="pl-4 py-4 w-10 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">No</th>
                 <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item To Buy</th>
-                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Needed</th>
-                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-16">Bought</th>
-                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-24">Confirm</th>
+                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Suggested</th>
+                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest w-24">Qty Bought</th>
+                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest w-28">Total Price</th>
+                <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-20">Action</th>
               </tr>
             </thead>
           </table>
@@ -870,78 +897,68 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
           <table className="w-full text-left border-collapse">
             <tbody className="divide-y divide-muted/50">
               {combinedList.length === 0 ? (
-                <tr><td colSpan={5} className="px-6 py-20 text-center text-foreground/30 font-bold italic text-sm">Your shopping list is empty.</td></tr>
+                <tr><td colSpan={6} className="px-6 py-20 text-center text-foreground/30 font-bold italic text-sm">Your shopping list is empty.</td></tr>
               ) : (
                 combinedList.map((item: any, idx: number) => {
-                  const isBought = boughtIds.includes(item.ingredient.id);
+                  const data = receiptData[item.ingredient.id] || { qty: 0, price: 0 };
+                  const isReady = data.price > 0 && data.qty > 0;
+                  
                   return (
-                  <tr key={item.ingredient.id + idx} className={`group transition-colors ${isBought ? 'bg-muted/10' : ''}`}>
+                  <tr key={item.ingredient.id + idx} className={`group transition-colors ${isReady ? 'bg-green-50/50' : ''}`}>
                     <td className="pl-4 py-5 w-10 text-center font-black text-[10px] text-foreground/30">{idx + 1}</td>
                     <td className="px-4 py-5">
-                      <div className="flex items-center gap-2">
-                        <p className={`font-bold text-sm transition-all ${isBought ? 'text-foreground/30 line-through' : 'text-foreground'}`}>
-                          {item.ingredient.name}
-                        </p>
-                        {item.isManual && <span className="text-[8px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded font-black uppercase">Manual</span>}
-                      </div>
+                      <p className="font-bold text-sm text-foreground">{item.ingredient.name}</p>
                       <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-tight">{item.ingredient.brand || 'No Brand'}</p>
                     </td>
                     <td className="px-4 py-5 text-right">
-                      {item.needed > 0 || item.suggestedPacks > 0 ? (
-                        <div className="flex flex-col items-end">
-                          <p className={`text-sm font-black transition-all ${isBought ? 'text-foreground/20' : 'text-red-500'}`}>
-                            {item.suggestedPacks > 0 
-                              ? `${item.suggestedPacks} ${item.ingredient.pack_unit || 'pack'}${item.suggestedPacks > 1 ? 's' : ''}`
-                              : `${item.shortfall}${item.ingredient.unit}`
-                            }
-                          </p>
-                          <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-tighter">
-                            Total: {item.suggestedTotalQty || item.shortfall}{item.ingredient.unit}
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="text-[10px] font-black text-foreground/30 italic">Check Stock</p>
-                      )}
+                      <p className="text-xs font-black text-foreground/60">
+                        {item.suggestedPacks > 0 
+                          ? `${item.suggestedPacks} ${item.ingredient.pack_unit || 'pack'}`
+                          : `${item.shortfall}${item.ingredient.unit}`
+                        }
+                      </p>
+                      <p className="text-[9px] font-bold text-foreground/30 uppercase">
+                        ~{item.suggestedTotalQty || item.shortfall}{item.ingredient.unit}
+                      </p>
                     </td>
-                    <td className="px-4 py-5 text-center">
-                      <button 
-                        onClick={() => {
-                          setBoughtIds(prev => 
-                            prev.includes(item.ingredient.id) 
-                              ? prev.filter(id => id !== item.ingredient.id) 
-                              : [...prev, item.ingredient.id]
-                          );
-                        }}
-                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all mx-auto ${
-                          isBought ? 'bg-green-500 border-green-500' : 'border-muted'
-                        }`}
-                      >
-                        {isBought && <span className="text-white text-[10px]">✓</span>}
-                      </button>
+                    <td className="px-4 py-5">
+                      <div className="relative">
+                        <input 
+                          type="number"
+                          value={data.qty}
+                          onChange={e => updateReceipt(item.ingredient.id, 'qty', Number(e.target.value))}
+                          className="w-full h-10 px-2 rounded-lg border-2 border-muted focus:border-primary outline-none font-bold text-sm"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black text-foreground/20 uppercase">{item.ingredient.unit}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-5">
+                      <div className="relative">
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-foreground/30">RM</span>
+                        <input 
+                          type="number"
+                          placeholder="0.00"
+                          value={data.price || ''}
+                          onChange={e => updateReceipt(item.ingredient.id, 'price', Number(e.target.value))}
+                          className="w-full h-10 pl-8 pr-2 rounded-lg border-2 border-muted focus:border-green-500 outline-none font-bold text-sm text-green-600"
+                        />
+                      </div>
                     </td>
                     <td className="px-4 py-5 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button 
-                          onClick={() => onQuickConfirm(item)}
-                          className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm ${
-                            isBought ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-primary text-white'
+                          disabled={!isReady}
+                          onClick={() => onQuickConfirm(item, data.qty, data.price)}
+                          className={`px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm ${
+                            isReady ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-muted text-foreground/20 cursor-not-allowed'
                           }`}
                         >
                           Confirm
                         </button>
-                        {!isBought && (
-                          <button 
-                            onClick={() => onRestock(item.ingredient)}
-                            className="w-8 h-8 rounded-lg bg-muted text-foreground/40 flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all text-[10px]"
-                            title="Manual Restock (Adjust Price)"
-                          >
-                            ✎
-                          </button>
-                        )}
                         {item.isManual && (
                           <button 
                             onClick={() => onRemoveManual(item.ingredient.id)}
-                            className="w-8 h-8 rounded-lg text-foreground/20 hover:text-red-400 transition-all text-xl"
+                            className="w-8 h-8 rounded-lg text-foreground/10 hover:text-red-400 transition-all text-xl"
                           >
                             ×
                           </button>
