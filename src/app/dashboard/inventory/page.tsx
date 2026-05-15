@@ -314,8 +314,18 @@ export default function InventoryPage() {
                       </>
                     ) : (
                       <>
-                        <span className="font-black text-sm text-foreground">Notifications</span>
-                        {alerts.length > 0 && <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{alerts.length} alerts</span>}
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-sm text-foreground">Notifications</span>
+                          {alerts.length > 0 && <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{alerts.length} alerts</span>}
+                        </div>
+                        {alerts.length > 0 && (
+                          <button
+                            onClick={() => setNotifSelectMode(true)}
+                            className="text-[10px] font-black text-foreground/30 hover:text-primary uppercase tracking-widest px-2 py-1 rounded-lg hover:bg-primary/5 transition-all"
+                          >
+                            Select
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
@@ -354,18 +364,35 @@ export default function InventoryPage() {
                             }}
                             onPointerLeave={() => { if (notifLongPressTimer.current) clearTimeout(notifLongPressTimer.current); }}
                             onContextMenu={e => e.preventDefault()}
-                            className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors select-none ${
+                            className={`group flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors select-none ${
                               isSelected ? 'bg-primary/10' : 'hover:bg-muted/10 active:bg-muted/20'
                             }`}
                           >
-                            {/* Checkbox in select mode */}
-                            {notifSelectMode && (
-                              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
-                                isSelected ? 'bg-primary border-primary' : 'border-muted'
-                              }`}>
+                            {/* Checkbox (always rendered, visible on hover or in select mode) */}
+                            <div className="flex-shrink-0">
+                              <button
+                                onPointerDown={e => e.stopPropagation()}
+                                onPointerUp={e => {
+                                  e.stopPropagation();
+                                  if (!notifSelectMode) {
+                                    setNotifSelectMode(true);
+                                    setNotifSelectedIds([a.id]);
+                                  } else {
+                                    setNotifSelectedIds(prev =>
+                                      prev.includes(a.id) ? prev.filter(i => i !== a.id) : [...prev, a.id]
+                                    );
+                                  }
+                                }}
+                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                                  isSelected
+                                    ? 'bg-primary border-primary opacity-100'
+                                    : 'border-muted opacity-0 group-hover:opacity-100'
+                                }`}
+                              >
                                 {isSelected && <span className="text-[9px] font-black text-white">✓</span>}
-                              </div>
-                            )}
+                              </button>
+                            </div>
+
                             <div className={`w-9 h-9 rounded-xl ${a.bg} flex items-center justify-center text-base flex-shrink-0`}>
                               {a.icon}
                             </div>
