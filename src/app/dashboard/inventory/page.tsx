@@ -367,7 +367,7 @@ function IngredientsList({ ingredients, onSelect, loading }: any) {
           <thead>
             <tr className="bg-muted/30">
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Stock</th>
+              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Inventory</th>
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Avg Cost</th>
               <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-10"></th>
             </tr>
@@ -476,7 +476,7 @@ function IngredientForm({ data, setData, categories, getAutoCategory }: any) {
 
       {/* Stock Section */}
       <section className="space-y-4">
-        <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em] border-b-2 border-primary/10 pb-2">Stock Info</p>
+        <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em] border-b-2 border-primary/10 pb-2">Inventory Info</p>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Base Unit</label>
