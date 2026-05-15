@@ -240,7 +240,53 @@ export default function InventoryPage() {
     }
   };
 
-  const handleDeleteIngredient = async (id: string) => {
+  const handleQuickRestock = async (item: ShoppingItem) => {
+    const qty = item.suggestedTotalQty || item.shortfall;
+    if (qty <= 0) return;
+    
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Use current avg_cost to keep it consistent
+    const totalCost = qty * item.ingredient.avg_cost_per_unit;
+
+    try {
+      // 1. Update ingredient stock and turn off shopping flag
+      const { error: ingError } = await supabase
+        .from('ingredients')
+        .update({ 
+          current_stock: item.ingredient.current_stock + qty,
+          is_on_shopping_list: false 
+        })
+        .eq('id', item.ingredient.id);
+
+      if (ingError) throw ingError;
+
+      // 2. Record purchase
+      const { error: purError } = await supabase
+        .from('ingredient_purchases')
+        .insert({
+          baker_id: user.id,
+          ingredient_id: item.ingredient.id,
+          quantity: qty,
+          unit: item.ingredient.unit,
+          total_cost: totalCost,
+          purchased_at: new Date().toISOString()
+        });
+
+      if (purError) throw purError;
+
+      // 3. Clear from local manual list
+      setManualShoppingIds(prev => prev.filter(id => id !== item.ingredient.id));
+      
+      await loadData();
+    } catch (err: any) {
+      alert('Error: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
     if (!confirm('Are you sure you want to delete this?')) return;
     const { error } = await supabase.from('ingredients').delete().eq('id', id);
     if (error) alert(error.message);
@@ -569,6 +615,7 @@ export default function InventoryPage() {
                 manualIds={manualShoppingIds}
                 allIngredients={ingredients}
                 onRestock={(ing: any) => { setSelectedIngredient(ing); setShowNotifications(false); }}
+                onQuickConfirm={handleQuickRestock}
                 onRemoveManual={(id: string) => handleToggleShoppingList([id], false)}
                 onRefresh={loadData}
               />
@@ -713,7 +760,7 @@ function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
   );
 }
 
-function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock, onRemoveManual, onRefresh }: any) {
+function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock, onQuickConfirm, onRemoveManual, onRefresh }: any) {
   const [boughtIds, setBoughtIds] = useState<string[]>([]);
 
   // Combine orders-based shopping list with manual IDs
@@ -757,6 +804,20 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {boughtIds.length > 0 && (
+            <button 
+              onClick={async () => {
+                const toConfirm = combinedList.filter((i: any) => boughtIds.includes(i.ingredient.id));
+                for (const item of toConfirm) {
+                  await onQuickConfirm(item);
+                }
+                setBoughtIds([]);
+              }}
+              className="h-12 px-6 rounded-2xl bg-green-500 text-white font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-green-500/20 active:scale-95 animate-in zoom-in duration-200"
+            >
+              Confirm Selected ({boughtIds.length})
+            </button>
+          )}
           <button 
             onClick={(e) => {
               if (onRefresh) onRefresh();
@@ -860,11 +921,22 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                     <td className="px-4 py-5 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button 
-                          onClick={() => onRestock(item.ingredient)}
-                          className="px-3 py-1.5 rounded-lg bg-primary text-white text-[10px] font-black uppercase tracking-wider hover:bg-primary/90 transition-all shadow-sm"
+                          onClick={() => onQuickConfirm(item)}
+                          className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm ${
+                            isBought ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-primary text-white'
+                          }`}
                         >
                           Confirm
                         </button>
+                        {!isBought && (
+                          <button 
+                            onClick={() => onRestock(item.ingredient)}
+                            className="w-8 h-8 rounded-lg bg-muted text-foreground/40 flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-all text-[10px]"
+                            title="Manual Restock (Adjust Price)"
+                          >
+                            ✎
+                          </button>
+                        )}
                         {item.isManual && (
                           <button 
                             onClick={() => onRemoveManual(item.ingredient.id)}
