@@ -969,7 +969,11 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                     <td className="pl-4 py-5 w-10 text-center font-black text-[10px] text-foreground/30">{idx + 1}</td>
                     <td className="px-4 py-5">
                       <p className="font-bold text-sm text-foreground">{item.ingredient.name}</p>
-                      <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-tight">{item.ingredient.brand || 'No Brand'}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-tight">{item.ingredient.brand || 'No Brand'}</p>
+                        <span className="w-1 h-1 bg-foreground/10 rounded-full" />
+                        <p className="text-[9px] font-black text-amber-600/60 uppercase">Stock: {item.ingredient.current_stock}{item.ingredient.unit}</p>
+                      </div>
                     </td>
                     <td className="px-4 py-5 text-right">
                       <p className="text-xs font-black text-foreground/60">
