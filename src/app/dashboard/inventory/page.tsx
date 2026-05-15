@@ -223,27 +223,31 @@ export default function InventoryPage() {
   const hasActiveFilter = !!(searchQuery || selectedCategory !== 'Semua' || statusFilter);
   const clearFilters = () => { setSearchQuery(''); setSelectedCategory('Semua'); setStatusFilter(''); };
 
-  // Notification alerts
+  // IDs that are already handled (in shopping list) — exclude from alerts
+  const autoShoppingIds = new Set(shoppingList.map(s => s.ingredient.id));
+  const allShoppingIds = new Set([...autoShoppingIds, ...manualShoppingIds]);
+
+  // Notification alerts — skip items already in shopping list
   const alerts = [
-    ...ingredients.filter(i => i.current_stock <= 0).map(i => ({
+    ...ingredients.filter(i => i.current_stock <= 0 && !allShoppingIds.has(i.id)).map(i => ({
       id: `out_${i.id}`, type: 'out' as const,
       icon: '❌', label: i.name,
       msg: `Out of stock (${i.current_stock}${i.unit})`,
       color: 'text-red-500', bg: 'bg-red-50'
     })),
-    ...ingredients.filter(i => i.current_stock > 0 && i.current_stock <= i.low_stock_threshold).map(i => ({
+    ...ingredients.filter(i => i.current_stock > 0 && i.current_stock <= i.low_stock_threshold && !allShoppingIds.has(i.id)).map(i => ({
       id: `low_${i.id}`, type: 'low' as const,
       icon: '⚠️', label: i.name,
       msg: `Low stock — ${i.current_stock}${i.unit} left (threshold: ${i.low_stock_threshold}${i.unit})`,
       color: 'text-amber-500', bg: 'bg-amber-50'
     })),
-    ...ingredients.filter(i => !!i.shelf_life && i.current_stock > 0 && (i.shelf_life as number) <= 7 && (i.shelf_life as number) >= 0).map(i => ({
+    ...ingredients.filter(i => !!i.shelf_life && i.current_stock > 0 && (i.shelf_life as number) <= 7 && (i.shelf_life as number) >= 0 && !allShoppingIds.has(i.id)).map(i => ({
       id: `exp_${i.id}`, type: 'exp' as const,
       icon: '⏳', label: i.name,
       msg: `Expiring in ${i.shelf_life} day${(i.shelf_life as number) === 1 ? '' : 's'}`,
       color: 'text-orange-500', bg: 'bg-orange-50'
     })),
-    ...ingredients.filter(i => !!i.shelf_life && i.current_stock > 0 && (i.shelf_life as number) < 0).map(i => ({
+    ...ingredients.filter(i => !!i.shelf_life && i.current_stock > 0 && (i.shelf_life as number) < 0 && !allShoppingIds.has(i.id)).map(i => ({
       id: `expd_${i.id}`, type: 'expd' as const,
       icon: '🚫', label: i.name,
       msg: `Expired`,
@@ -252,8 +256,7 @@ export default function InventoryPage() {
     })),
   ].map(a => ({
     ...a,
-    // Add the source ingredient for interaction
-    ingredient: ingredients.find(ing => ing.id === (a.id.split('_')[1])) || (a as any).ingredient
+    ingredient: ingredients.find(ing => ing.id === (a.id.split('_').slice(1).join('_'))) || (a as any).ingredient
   }));
 
   return (
