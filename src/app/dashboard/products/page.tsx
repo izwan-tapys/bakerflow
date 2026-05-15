@@ -449,7 +449,7 @@ export default function ProductsPage() {
           </div>
 
           <div className="flex gap-2 pt-4">
-            <button onClick={() => { setShowAdd(false); setPendingRecipes([]); setIngForm({ ingredient_id: '', unit: 'g', quantity_needed: 0 }); }} className="flex-1 h-12 rounded-xl border border-muted text-sm font-medium hover:bg-muted/50">Cancel</button>
+            <button onClick={() => { setShowAdd(false); setPendingRecipes([]); setIngForm({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 }); }} className="flex-1 h-12 rounded-xl border border-muted text-sm font-medium hover:bg-muted/50">Cancel</button>
             <button onClick={handleSaveProduct} disabled={!form.name || form.price <= 0 || savingProduct} className="flex-[2] h-12 rounded-xl bg-primary text-white text-sm font-bold disabled:opacity-50 shadow-lg shadow-primary/20">
               {savingProduct ? 'Saving...' : 'Save Product & Recipe'}
             </button>
@@ -749,7 +749,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
         if (recipeError) throw recipeError;
       }
       
-      setForm({ ingredient_id: '', unit: 'g', quantity_needed: 0 });
+      setForm({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 });
       setIngSearch('');
       loadRecipes();
     } catch (err: any) {
