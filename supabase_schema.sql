@@ -161,6 +161,8 @@ CREATE TABLE ingredients (
   current_stock DECIMAL(10, 3) DEFAULT 0,
   avg_cost_per_unit DECIMAL(10, 4) DEFAULT 0,  -- Moving Average Cost
   low_stock_threshold DECIMAL(10, 3) DEFAULT 100,
+  sku TEXT,
+  shelf_life INT, -- in days
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

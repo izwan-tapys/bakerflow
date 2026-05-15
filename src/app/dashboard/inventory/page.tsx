@@ -20,6 +20,8 @@ interface Ingredient {
   pack_unit?: string | null;
   pack_size_unit?: string | null;
   category?: string | null;
+  sku?: string | null;
+  shelf_life?: number | null;
 }
 
 interface ShoppingItem {
@@ -55,7 +57,13 @@ export default function InventoryPage() {
     type: 'raw' as IngredientType, 
     unit: 'g', 
     current_stock: 0, 
-    category: 'Lain-lain' 
+    category: 'Lain-lain',
+    sku: '',
+    shelf_life: '' as number | '',
+    pack_size: '' as number | '',
+    pack_unit: '',
+    pack_size_unit: 'g',
+    low_stock_threshold: 10
   });
 
   const [selectedCategory, setSelectedCategory] = useState('Semua');
@@ -131,26 +139,23 @@ export default function InventoryPage() {
     return 'Lain-lain';
   };
 
-  const handleAddIngredient = async () => {
+  const handleAddIngredient = async (formData: any) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     
-    const autoCat = getAutoCategory(form.name);
     const { error } = await supabase.from('ingredients').insert({ 
       baker_id: user.id,
-      name: form.name,
-      brand: form.brand || null,
-      type: form.type,
-      unit: form.unit,
-      current_stock: form.current_stock,
-      category: form.type === 'supply' ? 'Packaging' : (form.category === 'Lain-lain' ? autoCat : form.category),
-      low_stock_threshold: form.unit === 'kg' || form.unit === 'L' ? 1 : 100
+      ...formData,
+      sku: formData.sku || null,
+      shelf_life: formData.shelf_life || null,
+      pack_size: formData.pack_size || null,
+      pack_unit: formData.pack_unit || null,
+      pack_size_unit: formData.pack_size_unit || null
     });
 
     if (error) alert(error.message);
     else {
       setShowAdd(false);
-      setForm({ name: '', brand: '', type: 'raw', unit: 'g', current_stock: 0, category: 'Lain-lain' });
       loadData();
     }
   };
@@ -196,33 +201,10 @@ export default function InventoryPage() {
   };
 
   const filteredIngredients = ingredients.filter(i => {
-    // First filter by active tab type
     if (activeMainTab !== 'purchases' && i.type !== activeMainTab) return false;
-    
-    // Then filter by sub-category
     if (selectedCategory === 'Semua') return true;
     return i.category === selectedCategory;
   });
-
-  const handleShareWhatsApp = () => {
-    if (shoppingList.length === 0) return;
-    let message = `🛒 *SHOPPING LIST - BAKERFLOW*\n\n`;
-    shoppingList.forEach((item, idx) => {
-      let packInfo = '';
-      if (item.ingredient.pack_size) {
-        let sizeInBase = item.ingredient.pack_size;
-        if ((item.ingredient.pack_size_unit === 'kg' && item.ingredient.unit === 'g') || 
-            (item.ingredient.pack_size_unit === 'L' && item.ingredient.unit === 'ml')) {
-          sizeInBase = item.ingredient.pack_size * 1000;
-        }
-        const packs = Math.ceil(item.shortfall / sizeInBase);
-        packInfo = `${packs} ${item.ingredient.pack_unit || 'pek'} `;
-      }
-      message += `${idx + 1}. *${item.ingredient.name}*: ${packInfo}(${item.shortfall.toFixed(0)}${item.ingredient.unit})\n`;
-    });
-    message += `\nJom restock! 🧁`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-  };
 
   return (
     <div className="space-y-6 pb-4">
@@ -236,7 +218,12 @@ export default function InventoryPage() {
         </div>
         <button 
           onClick={() => {
-            setForm({ ...form, type: activeMainTab === 'purchases' ? 'raw' : activeMainTab });
+            setForm({ 
+              name: '', brand: '', type: activeMainTab === 'purchases' ? 'raw' : activeMainTab as IngredientType, 
+              unit: 'g', current_stock: 0, category: 'Lain-lain',
+              sku: '', shelf_life: '', pack_size: '', pack_unit: '', pack_size_unit: 'g',
+              low_stock_threshold: 10
+            });
             setShowAdd(true);
           }} 
           className="h-12 px-6 bg-primary text-white rounded-2xl font-black text-sm shadow-lg shadow-primary/20 hover:scale-105 transition-transform active:scale-95"
@@ -246,7 +233,7 @@ export default function InventoryPage() {
       </div>
 
       {/* Main Navigation Tabs */}
-      <div className="flex bg-muted/30 p-1.5 rounded-[24px] border border-muted/50">
+      <div className="flex bg-muted/30 p-1.5 rounded-[24px] border border-muted/50 overflow-x-auto no-scrollbar">
         {[
           { id: 'raw', label: 'Raw Ingredients', icon: '🥣' },
           { id: 'component', label: 'Components', icon: '🍰' },
@@ -259,7 +246,7 @@ export default function InventoryPage() {
               setActiveMainTab(tab.id as any);
               setSelectedCategory('Semua');
             }}
-            className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl transition-all ${
+            className={`flex-1 min-w-[80px] flex flex-col items-center justify-center py-3 rounded-2xl transition-all ${
               activeMainTab === tab.id 
                 ? 'bg-white text-primary shadow-sm border border-muted/50' 
                 : 'text-foreground/40 hover:text-foreground/60'
@@ -271,197 +258,32 @@ export default function InventoryPage() {
         ))}
       </div>
 
-      {/* Shopping List Banner */}
-      {shoppingList.length > 0 && activeMainTab !== 'purchases' && (
-        <div className="bg-orange-50 border-2 border-orange-200 rounded-[32px] p-5 space-y-4 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10 text-4xl rotate-12">🛒</div>
-          <div className="flex items-center justify-between relative z-10">
-            <div>
-              <p className="font-black text-orange-800 flex items-center gap-2">
-                Shopping List 
-                <span className="bg-orange-200 text-orange-800 px-2.5 py-0.5 rounded-full text-[10px] font-black">
-                  {shoppingList.length} ITEMS
-                </span>
-              </p>
-              <p className="text-[11px] text-orange-700/60 font-bold mt-0.5">Ingredients needed for active orders</p>
-            </div>
-            <button 
-              onClick={handleShareWhatsApp}
-              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl text-xs font-black hover:bg-green-600 transition-all shadow-md shadow-green-500/20"
-            >
-              <span>💬</span> WhatsApp List
-            </button>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar relative z-10">
-            {shoppingList.map(item => {
-              let packs = null;
-              if (item.ingredient.pack_size) {
-                let sizeInBase = item.ingredient.pack_size;
-                if ((item.ingredient.pack_size_unit === 'kg' && item.ingredient.unit === 'g') || 
-                    (item.ingredient.pack_size_unit === 'L' && item.ingredient.unit === 'ml')) {
-                  sizeInBase = item.ingredient.pack_size * 1000;
-                }
-                packs = Math.ceil(item.shortfall / sizeInBase);
-              }
-              return (
-                <div key={item.ingredient.id} onClick={() => setSelectedIngredient(item.ingredient)} className="flex-none bg-white p-3 rounded-2xl border border-orange-200 cursor-pointer hover:border-orange-400 transition-all shadow-sm active:scale-95">
-                  <p className="font-black text-xs text-orange-900">{item.ingredient.name}</p>
-                  <p className="text-[10px] font-bold text-orange-600 mt-0.5">
-                    {packs ? `${packs} ${item.ingredient.pack_unit || 'pek'} ` : ''}
-                    ({item.shortfall.toFixed(0)}{item.ingredient.unit})
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Purchases Tab Content */}
+      {/* List Views */}
       {activeMainTab === 'purchases' ? (
-        <div className="bg-white rounded-[32px] border border-muted overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-muted/30">
-                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Date</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Qty</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-muted/50">
-                {purchases.length === 0 ? (
-                  <tr><td colSpan={4} className="px-6 py-20 text-center text-foreground/30 font-bold italic">No purchase history yet.</td></tr>
-                ) : (
-                  purchases.map(p => (
-                    <tr key={p.id} className="hover:bg-muted/10 transition-colors">
-                      <td className="px-6 py-4 text-xs font-bold text-foreground/60">{formatDate(p.purchased_at)}</td>
-                      <td className="px-6 py-4 text-sm font-black text-foreground">{p.ingredient_name}</td>
-                      <td className="px-6 py-4 text-right text-sm font-bold text-foreground/70">{p.quantity}{p.unit}</td>
-                      <td className="px-6 py-4 text-right text-sm font-black text-primary">RM {p.total_cost.toFixed(2)}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <PurchasesList purchases={purchases} />
       ) : (
         <>
-          {/* Sub-Category Filter (Only for Raw & Supplies) */}
-          {(activeMainTab === 'raw' || activeMainTab === 'supply') && (
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-              {CATEGORIES.map(c => (
-                <button
-                  key={c}
-                  onClick={() => setSelectedCategory(c)}
-                  className={`px-5 py-2.5 rounded-full text-[11px] font-black transition-all whitespace-nowrap border-2 ${
-                    selectedCategory === c 
-                      ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-105' 
-                      : 'bg-white border-muted text-foreground/40 hover:border-primary/30'
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Ingredients List Table */}
-          <div className="bg-white rounded-[32px] border border-muted overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-muted/30">
-                    <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Stock</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Avg Cost</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-10"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-muted/50">
-                  {loading ? (
-                    [1,2,3,4,5].map(i => (
-                      <tr key={i} className="animate-pulse">
-                        <td className="px-6 py-5"><div className="h-4 bg-muted rounded w-32" /></td>
-                        <td className="px-6 py-5 text-right"><div className="h-4 bg-muted rounded w-16 ml-auto" /></td>
-                        <td className="px-6 py-5 text-right"><div className="h-4 bg-muted rounded w-20 ml-auto" /></td>
-                      </tr>
-                    ))
-                  ) : filteredIngredients.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-24 text-center text-foreground/30 font-bold italic">
-                        <div className="text-3xl mb-2">🔭</div>
-                        No items found in this section.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredIngredients.map(ing => {
-                      const committed = shoppingList.find(s => s.ingredient.id === ing.id)?.needed || 0;
-                      const available = ing.current_stock - committed;
-                      const isLow = available <= ing.low_stock_threshold;
-                      const isNegative = available < 0;
-                      
-                      return (
-                        <tr 
-                          key={ing.id} 
-                          onClick={() => setSelectedIngredient(ing)}
-                          className="hover:bg-primary/[0.02] cursor-pointer transition-colors active:bg-primary/[0.05]"
-                        >
-                          <td className="px-6 py-5">
-                            <div className="flex items-center gap-2">
-                              <div>
-                                <p className="font-bold text-foreground text-sm">{ing.name}</p>
-                                <div className="flex items-center gap-1.5 mt-0.5">
-                                  {ing.brand && <span className="text-[9px] font-black text-primary/60 bg-primary/5 px-1.5 py-0.5 rounded uppercase tracking-tighter">@{ing.brand}</span>}
-                                  <span className="text-[9px] font-bold text-foreground/30 uppercase tracking-tighter">{ing.category}</span>
-                                </div>
-                              </div>
-                              {isLow && !isNegative && <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" title="Low Stock" />}
-                              {isNegative && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Insufficient Stock" />}
-                            </div>
-                          </td>
-                          <td className="px-6 py-5 text-right">
-                            <div className="flex flex-col items-end">
-                              <p className={`font-black text-sm ${isNegative ? 'text-red-600' : isLow ? 'text-orange-500' : 'text-foreground/80'}`}>
-                                {available.toLocaleString()}<span className="text-[10px] font-bold ml-0.5 opacity-40">{ing.unit}</span>
-                              </p>
-                              {committed > 0 && (
-                                <p className="text-[9px] font-black text-foreground/20 uppercase tracking-tighter">
-                                  On Hand: {ing.current_stock}{ing.unit}
-                                </p>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-5 text-right">
-                            <p className="text-sm font-black text-primary/80">RM {ing.avg_cost_per_unit.toFixed(2)}</p>
-                            <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-tighter">Per {ing.unit}</p>
-                          </td>
-                          <td className="px-6 py-5 text-center">
-                            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/30 text-foreground/20 text-xs">
-                              ›
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <CategoryFilter 
+            categories={CATEGORIES} 
+            selected={selectedCategory} 
+            onSelect={setSelectedCategory} 
+            visible={activeMainTab === 'raw' || activeMainTab === 'supply'} 
+          />
+          <IngredientsList 
+            ingredients={filteredIngredients} 
+            onSelect={setSelectedIngredient} 
+            loading={loading}
+          />
         </>
       )}
 
-      {/* Modal Components */}
+      {/* Modals */}
       {showAdd && (
         <AddIngredientModal 
-          isOpen={showAdd} 
-          onClose={() => setShowAdd(false)} 
+          isOpen={showAdd}
+          onClose={() => setShowAdd(false)}
           onAdd={handleAddIngredient}
-          form={form}
-          setForm={setForm}
+          initialForm={form}
           categories={CATEGORIES}
           getAutoCategory={getAutoCategory}
         />
@@ -474,96 +296,258 @@ export default function InventoryPage() {
           onRestock={handleRestock}
           onUpdate={handleUpdateInfo}
           onDelete={handleDeleteIngredient}
+          categories={CATEGORIES}
+          getAutoCategory={getAutoCategory}
         />
       )}
     </div>
   );
 }
 
-// Sub-components for better organization
-function AddIngredientModal({ isOpen, onClose, onAdd, form, setForm, categories, getAutoCategory }: any) {
-  return (
-    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-      <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-8 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-        <div className="flex justify-between items-center mb-8 flex-none">
-          <div>
-            <h2 className="text-2xl font-black text-primary tracking-tight">New Item</h2>
-            <p className="text-xs text-foreground/40 font-bold uppercase tracking-widest mt-1">Add to {form.type} inventory</p>
-          </div>
-          <button onClick={onClose} className="w-12 h-12 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold hover:bg-muted/80 transition-colors">&times;</button>
-        </div>
+// --- Sub-Components ---
 
-        <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-6">
+function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
+  return (
+    <div className="bg-white rounded-[32px] border border-muted overflow-hidden shadow-sm">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-muted/30">
+              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Date</th>
+              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
+              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Qty</th>
+              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-muted/50">
+            {purchases.length === 0 ? (
+              <tr><td colSpan={4} className="px-6 py-20 text-center text-foreground/30 font-bold italic">No purchase history yet.</td></tr>
+            ) : (
+              purchases.map(p => (
+                <tr key={p.id} className="hover:bg-muted/10 transition-colors">
+                  <td className="px-6 py-4 text-xs font-bold text-foreground/60">{formatDate(p.purchased_at)}</td>
+                  <td className="px-6 py-4 text-sm font-black text-foreground">{p.ingredient_name}</td>
+                  <td className="px-6 py-4 text-right text-sm font-bold text-foreground/70">{p.quantity}{p.unit}</td>
+                  <td className="px-6 py-4 text-right text-sm font-black text-primary">RM {p.total_cost.toFixed(2)}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CategoryFilter({ categories, selected, onSelect, visible }: any) {
+  if (!visible) return null;
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+      {categories.map((c: string) => (
+        <button
+          key={c}
+          onClick={() => onSelect(c)}
+          className={`px-5 py-2.5 rounded-full text-[11px] font-black transition-all whitespace-nowrap border-2 ${
+            selected === c 
+              ? 'bg-primary border-primary text-white shadow-lg' 
+              : 'bg-white border-muted text-foreground/40 hover:border-primary/30'
+          }`}
+        >
+          {c}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function IngredientsList({ ingredients, onSelect, loading }: any) {
+  return (
+    <div className="bg-white rounded-[32px] border border-muted overflow-hidden shadow-sm">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-muted/30">
+              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
+              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Stock</th>
+              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Avg Cost</th>
+              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-10"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-muted/50">
+            {loading ? (
+              [1,2,3].map(i => (
+                <tr key={i} className="animate-pulse">
+                  <td className="px-6 py-5"><div className="h-4 bg-muted rounded w-32" /></td>
+                  <td className="px-6 py-5 text-right"><div className="h-4 bg-muted rounded w-16 ml-auto" /></td>
+                  <td className="px-6 py-5 text-right"><div className="h-4 bg-muted rounded w-20 ml-auto" /></td>
+                </tr>
+              ))
+            ) : ingredients.length === 0 ? (
+              <tr><td colSpan={4} className="px-6 py-20 text-center text-foreground/30 font-bold italic text-sm">No items found.</td></tr>
+            ) : (
+              ingredients.map((ing: Ingredient) => (
+                <tr 
+                  key={ing.id} 
+                  onClick={() => onSelect(ing)}
+                  className="hover:bg-primary/[0.02] cursor-pointer transition-colors active:bg-primary/[0.05]"
+                >
+                  <td className="px-6 py-5">
+                    <p className="font-bold text-foreground text-sm">{ing.name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {ing.brand && <span className="text-[9px] font-black text-primary/60 bg-primary/5 px-1.5 py-0.5 rounded uppercase tracking-tighter">@{ing.brand}</span>}
+                      <span className="text-[9px] font-bold text-foreground/30 uppercase tracking-tighter">{ing.category}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 text-right font-black text-sm text-foreground/80">
+                    {ing.current_stock}<span className="text-[10px] ml-0.5 opacity-40">{ing.unit}</span>
+                  </td>
+                  <td className="px-6 py-5 text-right font-black text-primary/80 text-sm">
+                    RM {ing.avg_cost_per_unit.toFixed(2)}
+                  </td>
+                  <td className="px-6 py-5 text-center text-foreground/20">›</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function IngredientForm({ data, setData, categories, getAutoCategory }: any) {
+  const [tab, setTab] = useState<'basic' | 'purchase' | 'stock' | 'advance'>('basic');
+  const tabs = [
+    { id: 'basic', label: 'Basic Info' },
+    { id: 'purchase', label: 'Purchasing' },
+    { id: 'stock', label: 'Stock Info' },
+    { id: 'advance', label: 'Advance' }
+  ];
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex bg-muted/30 p-1 rounded-2xl mb-6 flex-none">
+        {tabs.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id as any)}
+            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
+              tab === t.id ? 'bg-white text-primary shadow-sm' : 'text-foreground/30'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-5 pb-4">
+        {tab === 'basic' && (
           <div className="space-y-5">
             <div>
               <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Type</label>
               <div className="flex bg-muted/40 p-1 rounded-xl">
                 {['raw', 'component', 'supply'].map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setForm({ ...form, type: t })}
-                    className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${
-                      form.type === t ? 'bg-white text-primary shadow-sm' : 'text-foreground/30'
-                    }`}
-                  >
+                  <button key={t} onClick={() => setData({ ...data, type: t })} className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${data.type === t ? 'bg-white text-primary shadow-sm' : 'text-foreground/30'}`}>
                     {t}
                   </button>
                 ))}
               </div>
             </div>
-
             <div>
-              <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Item Name</label>
-              <input 
-                placeholder="e.g. Premium Flour" 
-                value={form.name} 
-                onChange={e => {
-                  const name = e.target.value;
-                  setForm({ ...form, name, category: getAutoCategory(name) });
-                }}
-                className="w-full h-14 px-5 rounded-2xl border-2 border-muted focus:border-primary outline-none font-bold text-lg transition-all" 
-              />
+              <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Name</label>
+              <input value={data.name} onChange={e => setData({ ...data, name: e.target.value, category: getAutoCategory(e.target.value) })}
+                className="w-full h-14 px-5 rounded-2xl border-2 border-muted focus:border-primary outline-none font-bold text-lg" />
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Brand (Opt)</label>
-                <input 
-                  placeholder="Anchor" 
-                  value={form.brand} 
-                  onChange={e => setForm({ ...form, brand: e.target.value })}
-                  className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold shadow-sm" 
-                />
+                <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Brand</label>
+                <input value={data.brand} onChange={e => setData({ ...data, brand: e.target.value })} className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
               </div>
               <div>
                 <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Category</label>
-                <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
-                  className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none bg-white font-bold text-sm shadow-sm">
+                <select value={data.category} onChange={e => setData({ ...data, category: e.target.value })} className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none bg-white font-bold text-sm">
                   {categories.filter((c: string) => c !== 'Semua').map((c: string) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
             </div>
+          </div>
+        )}
 
+        {tab === 'purchase' && (
+          <div className="space-y-5">
+            <div className="bg-blue-50 border border-blue-100 p-5 rounded-[32px] space-y-4">
+              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Pack Information</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-black text-foreground/40 mb-1 block uppercase">Size 1 Pack</label>
+                  <input type="number" value={data.pack_size} onChange={e => setData({ ...data, pack_size: +e.target.value })} className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-foreground/40 mb-1 block uppercase">Pack Unit</label>
+                  <select value={data.pack_size_unit} onChange={e => setData({ ...data, pack_size_unit: e.target.value })} className="w-full h-11 px-3 rounded-xl border border-muted font-bold bg-white focus:border-primary">
+                    {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[10px] font-black text-foreground/40 mb-1 block uppercase">Pack Label (e.g. tin, bottle)</label>
+                  <input value={data.pack_unit} onChange={e => setData({ ...data, pack_unit: e.target.value })} className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab === 'stock' && (
+          <div className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Base Unit</label>
-                <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
-                  className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none bg-white font-bold text-sm shadow-sm">
+                <select value={data.unit} onChange={e => setData({ ...data, unit: e.target.value })} className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none bg-white font-bold">
                   {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u}>{u}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Initial Stock</label>
-                <input type="number" placeholder="0" value={form.current_stock || ''} onChange={e => setForm({ ...form, current_stock: +e.target.value })}
-                  className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold shadow-sm" />
+                <input type="number" value={data.current_stock} onChange={e => setData({ ...data, current_stock: +e.target.value })} className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
+              </div>
+              <div className="col-span-2">
+                <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Low Stock Alert Threshold</label>
+                <input type="number" value={data.low_stock_threshold} onChange={e => setData({ ...data, low_stock_threshold: +e.target.value })} className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="pt-8 pb-10 md:pb-0 flex-none">
-          <button onClick={onAdd} className="w-full h-16 bg-primary text-white rounded-2xl font-black text-xl shadow-xl shadow-primary/20 active:scale-95 transition-all">
-            Create {form.type}
+        {tab === 'advance' && (
+          <div className="space-y-5">
+            <div>
+              <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">SKU / Code</label>
+              <input value={data.sku} onChange={e => setData({ ...data, sku: e.target.value })} className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
+            </div>
+            <div>
+              <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Shelf Life (Days)</label>
+              <input type="number" value={data.shelf_life} onChange={e => setData({ ...data, shelf_life: +e.target.value })} className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AddIngredientModal({ onClose, onAdd, initialForm, categories, getAutoCategory }: any) {
+  const [formData, setFormData] = useState(initialForm);
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+      <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-8 shadow-2xl flex flex-col h-[90vh] md:h-auto md:max-h-[85vh] overflow-hidden">
+        <div className="flex justify-between items-center mb-6 flex-none">
+          <h2 className="text-2xl font-black text-primary tracking-tight">New Item</h2>
+          <button onClick={onClose} className="w-12 h-12 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold">&times;</button>
+        </div>
+        <IngredientForm data={formData} setData={setFormData} categories={categories} getAutoCategory={getAutoCategory} />
+        <div className="pt-4 flex-none">
+          <button onClick={() => onAdd(formData)} className="w-full h-16 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20 active:scale-95 transition-all">
+            Create Ingredient
           </button>
         </div>
       </div>
@@ -571,11 +555,12 @@ function AddIngredientModal({ isOpen, onClose, onAdd, form, setForm, categories,
   );
 }
 
-function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDelete }: any) {
+function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDelete, categories, getAutoCategory }: any) {
   const [tab, setTab] = useState<'restock' | 'recipe' | 'edit'>(ingredient.type === 'component' ? 'recipe' : 'restock');
   const [loading, setLoading] = useState(false);
+  const [editData, setEditData] = useState(ingredient);
 
-  // Restock State
+  // Restock logic
   const [qtyInput, setQtyInput] = useState<number | ''>('');
   const [purchaseUnit, setPurchaseUnit] = useState(ingredient.unit);
   const [totalPrice, setTotalPrice] = useState<number | ''>('');
@@ -585,28 +570,13 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
   const [packSizeUnit, setPackSizeUnit] = useState(ingredient.pack_size_unit ?? ingredient.unit);
   const [pricePerPack, setPricePerPack] = useState<number | ''>('');
 
-  // Edit State
-  const [editForm, setEditForm] = useState({
-    name: ingredient.name,
-    unit: ingredient.unit,
-    category: ingredient.category || 'Lain-lain',
-    current_stock: ingredient.current_stock,
-    low_stock_threshold: ingredient.low_stock_threshold,
-    brand: ingredient.brand || '',
-    pack_size: ingredient.pack_size ?? '' as number | '',
-    pack_unit: ingredient.pack_unit ?? '',
-    pack_size_unit: ingredient.pack_size_unit ?? ingredient.unit,
-  });
-
-  // Recipe/Component State
+  // Component Recipe logic
   const [subRecipes, setSubRecipes] = useState<any[]>([]);
   const [allIngredients, setAllIngredients] = useState<Ingredient[]>([]);
   const [recipeForm, setRecipeForm] = useState({ ingredient_id: '', quantity_needed: 0 });
 
   useEffect(() => {
-    if (tab === 'recipe') {
-      loadRecipeData();
-    }
+    if (tab === 'recipe') loadRecipeData();
   }, [tab]);
 
   const loadRecipeData = async () => {
@@ -619,266 +589,110 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
     setAllIngredients(ingRes.data || []);
   };
 
-  const handleAddSubIngredient = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from('recipes').insert({
-      baker_id: user?.id,
-      parent_ingredient_id: ingredient.id,
-      ingredient_id: recipeForm.ingredient_id,
-      quantity_needed: recipeForm.quantity_needed
-    });
-    if (error) alert(error.message);
-    else {
-      setRecipeForm({ ingredient_id: '', quantity_needed: 0 });
-      loadRecipeData();
-    }
-  };
-
-  const handleRemoveSubIngredient = async (id: string) => {
-    await supabase.from('recipes').delete().eq('id', id);
-    loadRecipeData();
-  };
-
   const handleRestockSubmit = async () => {
     setLoading(true);
-    try {
-      let finalQty = Number(isBulk ? (numPacks || 0) * (packSize || 0) : qtyInput);
-      let finalTotal = Number(isBulk ? (numPacks || 0) * (pricePerPack || 0) : totalPrice);
-
-      // Unit conversion for qty
-      const activeUnit = isBulk ? packSizeUnit : purchaseUnit;
-      if (activeUnit === 'kg' && ingredient.unit === 'g') finalQty *= 1000;
-      else if (activeUnit === 'g' && ingredient.unit === 'kg') finalQty /= 1000;
-      else if (activeUnit === 'L' && ingredient.unit === 'ml') finalQty *= 1000;
-      else if (activeUnit === 'ml' && ingredient.unit === 'L') finalQty /= 1000;
-
-      await onRestock(ingredient, finalQty, finalTotal);
-      onClose();
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEditSubmit = async () => {
-    setLoading(true);
-    try {
-      await onUpdate(ingredient, editForm);
-      onClose();
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setLoading(false);
-    }
+    let finalQty = Number(isBulk ? (numPacks || 0) * (packSize || 0) : qtyInput);
+    let finalTotal = Number(isBulk ? (numPacks || 0) * (pricePerPack || 0) : totalPrice);
+    const activeUnit = isBulk ? packSizeUnit : purchaseUnit;
+    if (activeUnit === 'kg' && ingredient.unit === 'g') finalQty *= 1000;
+    else if (activeUnit === 'g' && ingredient.unit === 'kg') finalQty /= 1000;
+    else if (activeUnit === 'L' && ingredient.unit === 'ml') finalQty *= 1000;
+    else if (activeUnit === 'ml' && ingredient.unit === 'L') finalQty /= 1000;
+    await onRestock(ingredient, finalQty, finalTotal);
+    onClose();
   };
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-      <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-8 shadow-2xl flex flex-col max-h-[95vh] md:max-h-[85vh] overflow-hidden">
-        <div className="flex justify-between items-start flex-none mb-6">
+      <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-8 shadow-2xl flex flex-col h-[95vh] md:h-auto md:max-h-[85vh] overflow-hidden">
+        <div className="flex justify-between items-start mb-6 flex-none">
           <div>
             <h2 className="text-2xl font-black text-foreground tracking-tight">{ingredient.name}</h2>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${
-                ingredient.type === 'component' ? 'bg-purple-100 text-purple-600' : 
-                ingredient.type === 'supply' ? 'bg-blue-100 text-blue-600' : 'bg-primary/10 text-primary'
-              }`}>
-                {ingredient.type}
-              </span>
-              <p className="text-[11px] font-bold text-foreground/40 italic">
-                Stock: {ingredient.current_stock}{ingredient.unit}
-              </p>
-            </div>
+            <p className="text-[10px] font-black text-foreground/30 uppercase tracking-widest">{ingredient.type}</p>
           </div>
-          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold hover:bg-muted/80 transition-colors">&times;</button>
+          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold">&times;</button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex bg-muted/40 p-1.5 rounded-2xl flex-none mb-6 border border-muted/50">
+        <div className="flex bg-muted/40 p-1.5 rounded-2xl mb-6 flex-none border border-muted/50">
           {ingredient.type === 'component' && (
-            <button onClick={() => setTab('recipe')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'recipe' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>🍳 Recipe</button>
+            <button onClick={() => setTab('recipe')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'recipe' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>Recipe</button>
           )}
-          <button onClick={() => setTab('restock')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'restock' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>🚚 {ingredient.type === 'component' ? 'Produce' : 'Restock'}</button>
-          <button onClick={() => setTab('edit')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'edit' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>⚙️ Edit</button>
+          <button onClick={() => setTab('restock')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'restock' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>Restock</button>
+          <button onClick={() => setTab('edit')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'edit' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>Edit Info</button>
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
-          {tab === 'recipe' ? (
+        <div className="flex-1 overflow-y-auto">
+          {tab === 'edit' ? (
+            <IngredientForm data={editData} setData={setEditData} categories={categories} getAutoCategory={getAutoCategory} />
+          ) : tab === 'recipe' ? (
             <div className="space-y-6">
-              <div className="space-y-3">
-                <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest px-1">Sub-Ingredients</p>
-                {subRecipes.length === 0 ? (
-                  <div className="text-center py-8 bg-muted/20 rounded-2xl border-2 border-dashed border-muted/50">
-                    <p className="text-xs font-bold text-foreground/30">No ingredients in recipe yet</p>
+              <div className="space-y-2">
+                {subRecipes.map(r => (
+                  <div key={r.id} className="flex justify-between items-center bg-muted/20 p-3 rounded-xl">
+                    <p className="text-sm font-bold">{r.ingredients?.name} ({r.quantity_needed}{r.ingredients?.unit})</p>
+                    <button onClick={async () => { await supabase.from('recipes').delete().eq('id', r.id); loadRecipeData(); }} className="text-red-400">×</button>
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    {subRecipes.map(r => (
-                      <div key={r.id} className="flex justify-between items-center bg-white border border-muted/50 p-3 rounded-xl shadow-sm">
-                        <div>
-                          <p className="text-sm font-black text-foreground">{r.ingredients?.name}</p>
-                          <p className="text-[10px] font-bold text-foreground/40">{r.quantity_needed}{r.ingredients?.unit}</p>
-                        </div>
-                        <button onClick={() => handleRemoveSubIngredient(r.id)} className="text-red-300 hover:text-red-600 p-2">×</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                ))}
               </div>
-
-              <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-3">
-                <p className="text-[10px] font-black text-primary uppercase tracking-widest">Add To Recipe</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <select 
-                    value={recipeForm.ingredient_id} 
-                    onChange={e => setRecipeForm({...recipeForm, ingredient_id: e.target.value})}
-                    className="col-span-2 h-11 px-3 rounded-xl border border-muted text-sm font-bold bg-white"
-                  >
-                    <option value="">Select ingredient...</option>
-                    {allIngredients.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
-                  </select>
-                  <input 
-                    type="number" 
-                    placeholder="Qty" 
-                    value={recipeForm.quantity_needed || ''} 
-                    onChange={e => setRecipeForm({...recipeForm, quantity_needed: +e.target.value})}
-                    className="h-11 px-3 rounded-xl border border-muted text-sm font-bold"
-                  />
-                  <button 
-                    onClick={handleAddSubIngredient}
-                    disabled={!recipeForm.ingredient_id || !recipeForm.quantity_needed}
-                    className="h-11 bg-primary text-white rounded-xl font-black text-xs uppercase disabled:opacity-50"
-                  >
-                    Add
-                  </button>
+              <div className="p-4 bg-primary/5 rounded-2xl space-y-3">
+                <select value={recipeForm.ingredient_id} onChange={e => setRecipeForm({...recipeForm, ingredient_id: e.target.value})} className="w-full h-11 px-3 rounded-xl border border-muted text-sm bg-white">
+                  <option value="">Add ingredient...</option>
+                  {allIngredients.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+                </select>
+                <div className="flex gap-2">
+                  <input type="number" placeholder="Qty" value={recipeForm.quantity_needed || ''} onChange={e => setRecipeForm({...recipeForm, quantity_needed: +e.target.value})} className="flex-1 h-11 px-3 rounded-xl border border-muted text-sm" />
+                  <button onClick={async () => {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    await supabase.from('recipes').insert({ baker_id: user?.id, parent_ingredient_id: ingredient.id, ingredient_id: recipeForm.ingredient_id, quantity_needed: recipeForm.quantity_needed });
+                    setRecipeForm({ ingredient_id: '', quantity_needed: 0 }); loadRecipeData();
+                  }} className="h-11 px-6 bg-primary text-white rounded-xl font-black text-xs">ADD</button>
                 </div>
               </div>
             </div>
-          ) : tab === 'restock' ? (
+          ) : (
             <div className="space-y-6">
-              <div className="flex justify-between items-center px-1">
-                <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest">
-                  {ingredient.type === 'component' ? 'Manual Adjustment' : 'Restock Record'}
-                </p>
-                {ingredient.type !== 'component' && (
-                  <button onClick={() => setIsBulk(!isBulk)} className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase transition-all shadow-sm ${isBulk ? 'bg-primary text-white' : 'bg-muted text-foreground/40'}`}>
-                    {isBulk ? '📦 Bulk Mode' : '⚖️ Single Unit'}
-                  </button>
-                )}
+              <div className="flex justify-between items-center">
+                <p className="text-[10px] font-black uppercase text-foreground/30">Restock Mode</p>
+                <button onClick={() => setIsBulk(!isBulk)} className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase ${isBulk ? 'bg-primary text-white' : 'bg-muted text-foreground/40'}`}>
+                  {isBulk ? 'Bulk Mode' : 'Single Unit'}
+                </button>
               </div>
-
               {isBulk ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-3 gap-3 bg-muted/20 p-5 rounded-3xl border border-muted/50">
-                    <div>
-                      <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block">Num Packs</label>
-                      <input type="number" placeholder="10" value={numPacks} onChange={e => setNumPacks(e.target.value === '' ? '' : +e.target.value)}
-                        className="w-full h-12 px-3 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block">Size Each</label>
-                      <input type="number" placeholder="1" value={packSize} onChange={e => setPackSize(e.target.value === '' ? '' : +e.target.value)}
-                        className="w-full h-12 px-3 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block">Unit</label>
-                      <select value={packSizeUnit} onChange={e => setPackSizeUnit(e.target.value)}
-                        className="w-full h-12 px-2 rounded-xl border border-muted text-xs font-black bg-white focus:border-primary">
-                        {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
-                      </select>
-                    </div>
-                    <div className="col-span-3">
-                      <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block">Total Price (RM)</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground/30">RM</span>
-                        <input type="number" placeholder="0.00" value={pricePerPack} onChange={e => setPricePerPack(e.target.value === '' ? '' : +e.target.value)}
-                          className="w-full h-12 pl-12 pr-4 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
-                      </div>
-                    </div>
+                <div className="grid grid-cols-3 gap-3 bg-muted/20 p-5 rounded-3xl">
+                  <input type="number" value={numPacks} onChange={e => setNumPacks(+e.target.value)} placeholder="Packs" className="h-12 px-3 rounded-xl border border-muted text-sm font-black" />
+                  <input type="number" value={packSize} onChange={e => setPackSize(+e.target.value)} placeholder="Size" className="h-12 px-3 rounded-xl border border-muted text-sm font-black" />
+                  <select value={packSizeUnit} onChange={e => setPackSizeUnit(e.target.value)} className="h-12 px-2 rounded-xl border border-muted text-xs font-black bg-white">
+                    {['g', 'kg', 'ml', 'L', 'pcs'].map(u => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                  <div className="col-span-3 relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground/30">RM</span>
+                    <input type="number" value={pricePerPack} onChange={e => setPricePerPack(+e.target.value)} placeholder="Price Each" className="w-full h-12 pl-12 pr-4 rounded-xl border border-muted text-sm font-black" />
                   </div>
                 </div>
               ) : (
                 <div className="flex gap-3">
-                  <div className="w-24">
-                    <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block">Qty</label>
-                    <input type="number" placeholder="0" value={qtyInput} onChange={e => setQtyInput(e.target.value === '' ? '' : +e.target.value)}
-                      className="w-full h-14 px-3 rounded-2xl border border-muted text-lg font-black text-center focus:border-primary outline-none" />
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block">Total Price (RM)</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground/30">RM</span>
-                      <input type="number" placeholder="0.00" value={totalPrice} onChange={e => setTotalPrice(e.target.value === '' ? '' : +e.target.value)}
-                        className="w-full h-14 pl-12 pr-4 rounded-2xl border border-muted text-lg font-black focus:border-primary outline-none" />
-                    </div>
+                  <input type="number" value={qtyInput} onChange={e => setQtyInput(+e.target.value)} placeholder="Qty" className="w-24 h-14 rounded-2xl border border-muted text-lg font-black text-center" />
+                  <div className="flex-1 relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground/30">RM</span>
+                    <input type="number" value={totalPrice} onChange={e => setTotalPrice(+e.target.value)} placeholder="Total Price" className="w-full h-14 pl-12 pr-4 rounded-2xl border border-muted text-lg font-black" />
                   </div>
                 </div>
               )}
-
-              <button 
-                onClick={handleRestockSubmit} 
-                disabled={loading || (!qtyInput && !numPacks)} 
-                className="w-full h-14 bg-primary text-white rounded-2xl font-black shadow-lg shadow-primary/20 active:scale-95 transition-all"
-              >
-                {loading ? 'Recording...' : ingredient.type === 'component' ? 'Adjust Stock' : 'Record Purchase'}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block tracking-widest">Name</label>
-                  <input value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})}
-                    className="w-full h-12 px-4 rounded-xl border-2 border-muted font-bold focus:border-primary outline-none bg-white" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block tracking-widest">Base Unit</label>
-                  <select value={editForm.unit} onChange={e => setEditForm({...editForm, unit: e.target.value})}
-                    className="w-full h-12 px-4 rounded-xl border-2 border-muted font-bold bg-white focus:border-primary">
-                    {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u}>{u}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block tracking-widest">Category</label>
-                  <select value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })}
-                    className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none bg-white font-bold text-sm">
-                    {['Tepung', 'Tenusu', 'Gula', 'Lemak', 'Hiasan', 'Packaging', 'Lain-lain'].map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="bg-muted/30 p-5 rounded-3xl space-y-4">
-                <p className="text-[10px] font-black text-foreground/30 uppercase tracking-widest">Alerts & Packaging</p>
-                <div>
-                  <label className="text-[10px] font-black text-foreground/40 mb-1 block">Low Stock Threshold</label>
-                  <input type="number" value={editForm.low_stock_threshold} onChange={e => setEditForm({...editForm, low_stock_threshold: +e.target.value})}
-                    className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[10px] font-black text-foreground/40 mb-1 block">Pack Size</label>
-                    <input type="number" placeholder="1" value={editForm.pack_size} onChange={e => setEditForm({...editForm, pack_size: e.target.value === '' ? '' : +e.target.value})}
-                      className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-foreground/40 mb-1 block">Pack Unit Name</label>
-                    <input placeholder="pek/botol" value={editForm.pack_unit} onChange={e => setEditForm({...editForm, pack_unit: e.target.value})}
-                      className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3 pt-4">
-                <button onClick={handleEditSubmit} disabled={loading} className="w-full h-14 bg-foreground text-white rounded-2xl font-black shadow-lg active:scale-95 transition-all">
-                  {loading ? 'Updating...' : 'Update Details'}
-                </button>
-                <button onClick={() => onDelete(ingredient.id)} className="w-full h-10 text-red-500 font-bold text-xs hover:bg-red-50 rounded-xl transition-colors">
-                  Hapus Item Dari Inventori
-                </button>
-              </div>
             </div>
           )}
+        </div>
+
+        <div className="pt-6 flex-none space-y-3">
+          {tab === 'edit' ? (
+            <>
+              <button onClick={() => onUpdate(ingredient, editData).then(onClose)} className="w-full h-16 bg-primary text-white rounded-2xl font-black text-lg">SAVE CHANGES</button>
+              <button onClick={() => onDelete(ingredient.id).then(onClose)} className="w-full h-10 text-red-500 font-bold text-xs">DELETE ITEM</button>
+            </>
+          ) : tab === 'restock' ? (
+            <button onClick={handleRestockSubmit} disabled={loading} className="w-full h-16 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20">
+              {loading ? 'RECORDING...' : 'SAVE RESTOCK'}
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
