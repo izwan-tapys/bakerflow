@@ -57,7 +57,6 @@ export default function InventoryPage() {
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   const [pendingAlertAction, setPendingAlertAction] = useState<any>(null);
   const [manualShoppingIds, setManualShoppingIds] = useState<string[]>([]);
-  const [lsReady, setLsReady] = useState(false);
   
   // Form State for Add Ingredient
   const [form, setForm] = useState({ 
@@ -98,7 +97,12 @@ export default function InventoryPage() {
     })) as Ingredient[];
 
     setIngredients(loadedIngredients);
-    // Note: manualShoppingIds is managed by localStorage, not DB
+    // Sync shopping list from DB (source of truth)
+    const dbShoppingIds = loadedIngredients
+      .filter(i => i.is_on_shopping_list)
+      .map(i => i.id);
+    setManualShoppingIds(dbShoppingIds);
+    localStorage.setItem(`bf_shopping_${user.id}`, JSON.stringify(dbShoppingIds));
     
     const activeOrders = ordersRes.data || [];
     const allRecipes = recipesRes.data || [];
@@ -141,30 +145,16 @@ export default function InventoryPage() {
     setLoading(false);
   }, []);
 
-  // Load shopping list from localStorage after user is known
+  // On mount: load from localStorage immediately (fast), DB will sync via loadData
   useEffect(() => {
-    const init = async () => {
+    const preload = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const key = `bf_shopping_${user.id}`;
-      const saved = localStorage.getItem(key);
-      if (saved) setManualShoppingIds(JSON.parse(saved));
-      setLsReady(true);
+      const cached = localStorage.getItem(`bf_shopping_${user.id}`);
+      if (cached) setManualShoppingIds(JSON.parse(cached));
     };
-    init();
+    preload();
   }, []);
-
-  // Persist shopping list to localStorage whenever it changes
-  useEffect(() => {
-    if (!lsReady) return;
-    const persist = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const key = `bf_shopping_${user.id}`;
-      localStorage.setItem(key, JSON.stringify(manualShoppingIds));
-    };
-    persist();
-  }, [manualShoppingIds, lsReady]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -179,12 +169,18 @@ export default function InventoryPage() {
     return 'Lain-lain';
   };
 
-  const handleToggleShoppingList = (ids: string[], status: boolean) => {
+  const handleToggleShoppingList = async (ids: string[], status: boolean) => {
+    // Update local state immediately (optimistic)
     if (status) {
       setManualShoppingIds(prev => [...new Set([...prev, ...ids])]);
     } else {
       setManualShoppingIds(prev => prev.filter(id => !ids.includes(id)));
     }
+    // Persist to Supabase DB
+    await supabase
+      .from('ingredients')
+      .update({ is_on_shopping_list: status })
+      .in('id', ids);
   };
 
   const handleAddIngredient = async (formData: any) => {
