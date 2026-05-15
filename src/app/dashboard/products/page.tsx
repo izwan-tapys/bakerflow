@@ -27,7 +27,7 @@ interface Recipe {
   id: string;
   ingredient_id: string;
   quantity_needed: number;
-  ingredient?: Ingredient;
+  ingredients?: { name: string; unit: string };
 }
 
 interface PendingRecipe {
