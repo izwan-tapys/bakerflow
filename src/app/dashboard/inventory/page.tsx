@@ -953,7 +953,7 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
         </div>
       </div>
 
-      <div className="bg-white rounded-[16px] border border-muted shadow-sm overflow-hidden flex flex-col max-h-[70vh] relative">
+      <div className="bg-white rounded-[16px] border border-muted shadow-sm overflow-hidden flex flex-col max-h-[75vh] md:max-h-[70vh] relative">
         {/* Scanning Overlay */}
         {scanning && (
           <div className="absolute inset-0 z-[100] bg-white/60 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
@@ -965,16 +965,12 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
             </div>
             <h3 className="text-lg font-black text-foreground tracking-tight">AI is reading your receipt</h3>
             <p className="text-sm text-foreground/40 font-medium">Please wait a moment...</p>
-            <div className="mt-6 flex gap-1">
-              <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
-              <span className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
-              <span className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-            </div>
           </div>
         )}
 
         <div className="overflow-auto flex-1">
-          <table className="w-full text-left border-collapse relative">
+          {/* DESKTOP TABLE VIEW */}
+          <table className="w-full text-left border-collapse relative hidden md:table">
             <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
               <tr className="bg-muted/30">
                 <th className="pl-4 py-4 w-12 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">No</th>
@@ -1071,6 +1067,85 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
               )}
             </tbody>
           </table>
+
+          {/* MOBILE CARD VIEW */}
+          <div className="md:hidden divide-y divide-muted/50 p-4 space-y-4">
+            {combinedList.length === 0 ? (
+              <div className="py-20 text-center text-foreground/30 font-bold italic text-sm">Your shopping list is empty.</div>
+            ) : (
+              combinedList.map((item: any, idx: number) => {
+                const data = receiptData[item.ingredient.id] || { qty: 0, price: 0 };
+                const isReady = data.price > 0 && data.qty > 0;
+                const isScanned = scannedIds.includes(item.ingredient.id);
+                
+                return (
+                  <div key={item.ingredient.id + idx} className={`p-4 rounded-2xl border-2 transition-all duration-700 ${
+                    isScanned ? 'bg-green-100 border-green-500 scale-[1.02]' : 
+                    isReady ? 'bg-green-50/30 border-green-200' : 'bg-white border-muted/50'
+                  }`}>
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <p className="font-black text-base text-foreground leading-tight">{item.ingredient.name}</p>
+                        <p className="text-[10px] text-foreground/40 font-bold uppercase mt-0.5">{item.ingredient.brand || 'No Brand'}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-black text-amber-600/60 uppercase">Stock: {item.ingredient.current_stock}{item.ingredient.unit}</p>
+                        <p className="text-[10px] font-black text-primary uppercase mt-1">Need: {item.suggestedPacks > 0 ? `${item.suggestedPacks} pk` : `${item.shortfall}${item.ingredient.unit}`}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div>
+                        <label className="text-[9px] font-black uppercase text-foreground/40 mb-1 block">Qty Bought</label>
+                        <div className="relative">
+                          <input 
+                            type="number"
+                            value={data.qty}
+                            onChange={e => updateReceipt(item.ingredient.id, 'qty', Number(e.target.value))}
+                            className="w-full h-12 px-3 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold text-base"
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black text-primary uppercase">{Number(item.ingredient.pack_size) > 0 ? (item.ingredient.pack_unit || 'PK') : item.ingredient.unit}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-black uppercase text-foreground/40 mb-1 block">Total Price</label>
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-foreground/30">RM</span>
+                          <input 
+                            type="number"
+                            placeholder="0.00"
+                            value={data.price || ''}
+                            onChange={e => updateReceipt(item.ingredient.id, 'price', Number(e.target.value))}
+                            className="w-full h-12 pl-8 pr-3 rounded-xl border-2 border-muted focus:border-green-500 outline-none font-bold text-base text-green-600"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button 
+                        disabled={!isReady}
+                        onClick={() => onQuickConfirm(item, data.qty, data.price)}
+                        className={`flex-1 h-12 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
+                          isReady ? 'bg-green-500 text-white shadow-lg shadow-green-500/20' : 'bg-muted text-foreground/20'
+                        }`}
+                      >
+                        Confirm Purchase
+                      </button>
+                      {item.isManual && (
+                        <button 
+                          onClick={() => onRemoveManual(item.ingredient.id)}
+                          className="w-12 h-12 rounded-xl bg-red-50 text-red-400 flex items-center justify-center text-xl"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
     </div>
