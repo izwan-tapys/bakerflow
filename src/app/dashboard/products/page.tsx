@@ -124,12 +124,25 @@ export default function ProductsPage() {
   };
 
   const handleSaveProduct = async () => {
-    if (!form.name) {
-      alert("Sila masukkan nama produk.");
-      return;
+    // 0. Auto-add current input if forgot to click ADD
+    if (ingSearch && ingForm.quantity_needed > 0) {
+      const existing = ingredients.find(i => i.id === ingForm.ingredient_id || i.name.toLowerCase() === ingSearch.toLowerCase());
+      const newPending = existing 
+        ? { ingredient_id: existing.id, unit: ingForm.unit, quantity_needed: ingForm.quantity_needed, display_name: existing.name }
+        : { new_name: ingSearch, brand: ingForm.brand || null, unit: ingForm.unit, quantity_needed: ingForm.quantity_needed, display_name: ingSearch };
+      
+      // We need the latest pendingRecipes, but since state update is async, 
+      // we'll manually combine them for the save process.
+      const finalPending = [...pendingRecipes, newPending];
+      processSave(finalPending);
+    } else {
+      processSave(pendingRecipes);
     }
-    if (form.price <= 0) {
-      alert("Sila masukkan harga produk yang sah.");
+  };
+
+  const processSave = async (recipesToSave: PendingRecipe[]) => {
+    if (!form.name || form.price <= 0) {
+      alert("Sila masukkan nama dan harga produk.");
       return;
     }
     
@@ -137,9 +150,7 @@ export default function ProductsPage() {
     
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error(userError?.message || "Sila log masuk semula.");
-      }
+      if (userError || !user) throw new Error("Sila log masuk semula.");
 
       // 1. Insert Product
       const { data: prodData, error: prodError } = await supabase.from('products').insert({
@@ -154,15 +165,12 @@ export default function ProductsPage() {
       }).select();
 
       if (prodError) throw prodError;
-      if (!prodData || prodData.length === 0) throw new Error("Gagal menyimpan produk. Sila cuba lagi.");
-
       const newProduct = prodData[0];
 
       // 2. Insert Recipes & New Ingredients
-      for (const recipe of pendingRecipes) {
+      for (const recipe of recipesToSave) {
         let finalIngredientId = recipe.ingredient_id;
         
-        // If it's a new ingredient, create it in inventory first
         if (recipe.new_name) {
           const { data: newIng, error: ingError } = await supabase.from('ingredients').insert({
             baker_id: user.id,
@@ -174,48 +182,36 @@ export default function ProductsPage() {
             low_stock_threshold: 0
           }).select();
           
-          if (ingError) {
-            console.error("Failed to create ingredient:", ingError);
-            // We continue even if one ingredient fails, or we could throw?
-            // Let's at least log it.
-            continue; 
-          }
           if (newIng && newIng.length > 0) finalIngredientId = newIng[0].id;
         }
 
-        // Link to product
         if (finalIngredientId) {
           let finalQty = recipe.quantity_needed;
           const ing = ingredients.find(i => i.id === finalIngredientId);
           const baseUnit = ing?.unit || recipe.unit;
           
-          // Bidirectional Conversion
-          if (recipe.unit === 'kg' && baseUnit === 'g') finalQty = recipe.quantity_needed * 1000;
-          else if (recipe.unit === 'g' && baseUnit === 'kg') finalQty = recipe.quantity_needed / 1000;
-          else if (recipe.unit === 'L' && baseUnit === 'ml') finalQty = recipe.quantity_needed * 1000;
-          else if (recipe.unit === 'ml' && baseUnit === 'L') finalQty = recipe.quantity_needed / 1000;
+          if (recipe.unit === 'kg' && baseUnit === 'g') finalQty *= 1000;
+          else if (recipe.unit === 'g' && baseUnit === 'kg') finalQty /= 1000;
+          else if (recipe.unit === 'L' && baseUnit === 'ml') finalQty *= 1000;
+          else if (recipe.unit === 'ml' && baseUnit === 'L') finalQty /= 1000;
 
-          const { error: recipeError } = await supabase.from('recipes').insert({
+          await supabase.from('recipes').insert({
             baker_id: user.id,
             product_id: newProduct.id,
             ingredient_id: finalIngredientId,
             quantity_needed: finalQty
           });
-
-          if (recipeError) console.error("Failed to link recipe:", recipeError);
         }
       }
 
-      // Success!
       setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 });
       setPendingRecipes([]);
       setIngSearch('');
       setShowAdd(false);
       loadData();
-      alert("Produk berjaya disimpan! ✨");
+      alert("Produk & Resepi berjaya disimpan! ✨");
     } catch (err: any) {
-      console.error("Save Product Error:", err);
-      alert("Gagal simpan: " + (err.message || "Sila semak sambungan internet anda."));
+      alert("Gagal simpan: " + (err.message || "Ralat tidak diketahui"));
     } finally {
       setSavingProduct(false);
     }
