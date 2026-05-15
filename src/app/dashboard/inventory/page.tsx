@@ -411,6 +411,16 @@ export default function InventoryPage() {
               ingredients={filteredIngredients}
               onSelect={setSelectedIngredient}
               loading={loading}
+              onAddToShopping={(ids: string[]) => {
+                const newIds = ids.filter(id => !manualShoppingIds.includes(id));
+                setManualShoppingIds(prev => [...prev, ...newIds]);
+                setActiveMainTab('shopping');
+              }}
+              onBulkDelete={async (ids: string[]) => {
+                if (!confirm(`Delete ${ids.length} item(s)?`)) return;
+                await Promise.all(ids.map(id => supabase.from('ingredients').delete().eq('id', id)));
+                loadData();
+              }}
             />
           </>
         )}
@@ -698,63 +708,155 @@ function InventoryFilterBar({ searchQuery, onSearchChange, selectedCategory, onC
   );
 }
 
-function IngredientsList({ ingredients, onSelect, loading }: any) {
+function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBulkDelete }: any) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectMode, setSelectMode] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const exitSelectMode = () => { setSelectMode(false); setSelectedIds([]); };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const startLongPress = (id: string) => {
+    longPressTimer.current = setTimeout(() => {
+      setSelectMode(true);
+      setSelectedIds([id]);
+    }, 500);
+  };
+
+  const cancelLongPress = () => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+  };
+
+  const allSelected = selectedIds.length === ingredients.length && ingredients.length > 0;
+
   return (
-    <div className="bg-white rounded-[16px] border border-muted overflow-hidden shadow-sm">
-      {/* Frozen header - separate from scrollable body */}
-      <div className="overflow-x-auto border-b border-muted/50">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-muted/30">
-              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Inventory</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Avg Cost</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-10"></th>
-            </tr>
-          </thead>
-        </table>
+    <div className="relative">
+      {/* Select mode header bar */}
+      {selectMode && (
+        <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-primary text-white rounded-t-[16px] shadow-md">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => allSelected ? setSelectedIds([]) : setSelectedIds(ingredients.map((i: Ingredient) => i.id))}
+              className="w-6 h-6 rounded border-2 border-white flex items-center justify-center"
+            >
+              {allSelected ? '✓' : ''}
+            </button>
+            <span className="font-black text-sm">{selectedIds.length} selected</span>
+          </div>
+          <button onClick={exitSelectMode} className="text-white/70 font-black text-xs uppercase tracking-widest">Cancel</button>
+        </div>
+      )}
+
+      <div className="bg-white rounded-[16px] border border-muted overflow-hidden shadow-sm">
+        {/* Frozen header */}
+        <div className="overflow-x-auto border-b border-muted/50">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-muted/30">
+                {selectMode && <th className="px-4 py-4 w-10" />}
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Inventory</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Avg Cost</th>
+                {!selectMode && <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-10" />}
+              </tr>
+            </thead>
+          </table>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
+          <table className="w-full text-left border-collapse">
+            <tbody className="divide-y divide-muted/50">
+              {loading ? (
+                [1,2,3].map(i => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-6 py-5"><div className="h-4 bg-muted rounded w-32" /></td>
+                    <td className="px-6 py-5 text-right"><div className="h-4 bg-muted rounded w-16 ml-auto" /></td>
+                    <td className="px-6 py-5 text-right"><div className="h-4 bg-muted rounded w-20 ml-auto" /></td>
+                  </tr>
+                ))
+              ) : ingredients.length === 0 ? (
+                <tr><td colSpan={selectMode ? 5 : 4} className="px-6 py-20 text-center text-foreground/30 font-bold italic text-sm">No items found.</td></tr>
+              ) : (
+                ingredients.map((ing: Ingredient) => {
+                  const isSelected = selectedIds.includes(ing.id);
+                  return (
+                    <tr
+                      key={ing.id}
+                      onPointerDown={() => { if (!selectMode) startLongPress(ing.id); }}
+                      onPointerUp={() => {
+                        cancelLongPress();
+                        if (selectMode) toggleSelect(ing.id);
+                        else onSelect(ing);
+                      }}
+                      onPointerLeave={cancelLongPress}
+                      onContextMenu={e => e.preventDefault()}
+                      className={`cursor-pointer transition-colors select-none ${
+                        isSelected
+                          ? 'bg-primary/10'
+                          : 'hover:bg-primary/[0.02] active:bg-primary/[0.05]'
+                      }`}
+                    >
+                      {selectMode && (
+                        <td className="px-4 py-5">
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                            isSelected ? 'bg-primary border-primary text-white' : 'border-muted'
+                          }`}>
+                            {isSelected && <span className="text-[10px] font-black">✓</span>}
+                          </div>
+                        </td>
+                      )}
+                      <td className="px-6 py-5">
+                        <p className="font-bold text-foreground text-sm">{ing.name}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {ing.brand && <span className="text-[9px] font-black text-primary/60 bg-primary/5 px-1.5 py-0.5 rounded uppercase tracking-tighter">@{ing.brand}</span>}
+                          <span className="text-[9px] font-bold text-foreground/30 uppercase tracking-tighter">{ing.category}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-right font-black text-sm text-foreground/80">
+                        {ing.current_stock}<span className="text-[10px] ml-0.5 opacity-40">{ing.unit}</span>
+                      </td>
+                      <td className="px-6 py-5 text-right font-black text-primary/80 text-sm">
+                        RM {ing.avg_cost_per_unit.toFixed(2)}
+                      </td>
+                      {!selectMode && <td className="px-6 py-5 text-center text-foreground/20">›</td>}
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-      {/* Scrollable body */}
-      <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
-        <table className="w-full text-left border-collapse">
-          <tbody className="divide-y divide-muted/50">
-            {loading ? (
-              [1,2,3].map(i => (
-                <tr key={i} className="animate-pulse">
-                  <td className="px-6 py-5"><div className="h-4 bg-muted rounded w-32" /></td>
-                  <td className="px-6 py-5 text-right"><div className="h-4 bg-muted rounded w-16 ml-auto" /></td>
-                  <td className="px-6 py-5 text-right"><div className="h-4 bg-muted rounded w-20 ml-auto" /></td>
-                </tr>
-              ))
-            ) : ingredients.length === 0 ? (
-              <tr><td colSpan={4} className="px-6 py-20 text-center text-foreground/30 font-bold italic text-sm">No items found.</td></tr>
-            ) : (
-              ingredients.map((ing: Ingredient) => (
-                <tr 
-                  key={ing.id} 
-                  onClick={() => onSelect(ing)}
-                  className="hover:bg-primary/[0.02] cursor-pointer transition-colors active:bg-primary/[0.05]"
-                >
-                  <td className="px-6 py-5">
-                    <p className="font-bold text-foreground text-sm">{ing.name}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      {ing.brand && <span className="text-[9px] font-black text-primary/60 bg-primary/5 px-1.5 py-0.5 rounded uppercase tracking-tighter">@{ing.brand}</span>}
-                      <span className="text-[9px] font-bold text-foreground/30 uppercase tracking-tighter">{ing.category}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 text-right font-black text-sm text-foreground/80">
-                    {ing.current_stock}<span className="text-[10px] ml-0.5 opacity-40">{ing.unit}</span>
-                  </td>
-                  <td className="px-6 py-5 text-right font-black text-primary/80 text-sm">
-                    RM {ing.avg_cost_per_unit.toFixed(2)}
-                  </td>
-                  <td className="px-6 py-5 text-center text-foreground/20">›</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+
+      {/* Group Action Bar */}
+      {selectMode && selectedIds.length > 0 && (
+        <div className="sticky bottom-4 left-0 right-0 mt-3 mx-2">
+          <div className="bg-foreground text-white rounded-2xl px-4 py-3 flex items-center gap-3 shadow-2xl">
+            <span className="text-xs font-black text-white/60 flex-shrink-0">{selectedIds.length} item{selectedIds.length > 1 ? 's' : ''}</span>
+            <div className="flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar">
+              <button
+                onClick={() => { onAddToShopping(selectedIds); exitSelectMode(); }}
+                className="flex items-center gap-1.5 px-4 h-9 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap transition-all flex-shrink-0"
+              >
+                🛒 Add to Shopping
+              </button>
+              <button
+                onClick={() => { onBulkDelete(selectedIds); exitSelectMode(); }}
+                className="flex items-center gap-1.5 px-4 h-9 bg-red-500/80 hover:bg-red-500 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap transition-all flex-shrink-0"
+              >
+                🗑 Delete All
+              </button>
+            </div>
+            <button onClick={exitSelectMode} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/10 text-white font-black text-sm flex-shrink-0">✕</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
