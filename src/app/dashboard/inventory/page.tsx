@@ -29,6 +29,8 @@ interface ShoppingItem {
   ingredient: Ingredient;
   needed: number;
   shortfall: number;
+  suggestedPacks: number;
+  suggestedTotalQty: number;
 }
 
 interface PurchaseRecord {
@@ -716,7 +718,7 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
   const manualItems = manualIds.map((id: string) => {
     const ing = allIngredients.find((i: any) => i.id === id);
     if (!ing) return null;
-    return { ingredient: ing, needed: 0, shortfall: 0, isManual: true };
+    return { ingredient: ing, needed: 0, shortfall: 0, suggestedPacks: 0, suggestedTotalQty: 0, isManual: true };
   }).filter(Boolean);
 
   // Deduplicate: If an item is in ordersShopping, don't show it again from manualItems
