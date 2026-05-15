@@ -170,12 +170,20 @@ export default function InventoryPage() {
   };
 
   const handleToggleShoppingList = async (ids: string[], status: boolean) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     // Update local state immediately (optimistic)
+    let newIds: string[];
     if (status) {
-      setManualShoppingIds(prev => [...new Set([...prev, ...ids])]);
+      newIds = [...new Set([...manualShoppingIds, ...ids])];
     } else {
-      setManualShoppingIds(prev => prev.filter(id => !ids.includes(id)));
+      newIds = manualShoppingIds.filter(id => !ids.includes(id));
     }
+    
+    setManualShoppingIds(newIds);
+    localStorage.setItem(`bf_shopping_${user.id}`, JSON.stringify(newIds));
+
     // Persist to Supabase DB
     await supabase
       .from('ingredients')
