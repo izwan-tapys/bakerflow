@@ -50,6 +50,9 @@ export default function InventoryPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const [notifSelectedIds, setNotifSelectedIds] = useState<string[]>([]);
+  const [notifSelectMode, setNotifSelectMode] = useState(false);
+  const notifLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   const [pendingAlertAction, setPendingAlertAction] = useState<any>(null);
   const [manualShoppingIds, setManualShoppingIds] = useState<string[]>([]);
@@ -289,46 +292,124 @@ export default function InventoryPage() {
             {/* Notification Dropdown */}
             {showNotifications && (
               <>
-                <div className="fixed inset-0 z-30" onClick={() => setShowNotifications(false)} />
+                <div className="fixed inset-0 z-30" onClick={() => { setShowNotifications(false); setNotifSelectMode(false); setNotifSelectedIds([]); }} />
                 <div className="absolute right-0 top-14 w-80 bg-white rounded-2xl shadow-2xl border border-muted/50 z-40 overflow-hidden">
                   {/* Header */}
                   <div className="px-4 py-3 border-b border-muted/30 flex items-center justify-between">
-                    <span className="font-black text-sm text-foreground">Notifications</span>
-                    {alerts.length > 0 && <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{alerts.length} alerts</span>}
+                    {notifSelectMode ? (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => notifSelectedIds.length === alerts.length
+                              ? setNotifSelectedIds([])
+                              : setNotifSelectedIds(alerts.map(a => a.id))
+                            }
+                            className="w-5 h-5 rounded border-2 border-primary flex items-center justify-center"
+                          >
+                            {notifSelectedIds.length === alerts.length && <span className="text-[10px] font-black text-primary">✓</span>}
+                          </button>
+                          <span className="font-black text-sm text-foreground">{notifSelectedIds.length} selected</span>
+                        </div>
+                        <button onClick={() => { setNotifSelectMode(false); setNotifSelectedIds([]); }} className="text-xs font-black text-foreground/40 uppercase tracking-widest">Cancel</button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-black text-sm text-foreground">Notifications</span>
+                        {alerts.length > 0 && <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{alerts.length} alerts</span>}
+                      </>
+                    )}
                   </div>
+
                   {/* List */}
-                  <div className="max-h-[380px] overflow-y-auto divide-y divide-muted/30">
+                  <div className="max-h-[320px] overflow-y-auto divide-y divide-muted/30">
                     {alerts.length === 0 ? (
                       <div className="py-10 text-center">
                         <p className="text-2xl mb-2">🎉</p>
                         <p className="text-sm font-bold text-foreground/40">All good! No alerts.</p>
                       </div>
                     ) : (
-                      alerts.map(a => (
-                        <div 
-                          key={a.id} 
-                          onClick={() => {
-                            setPendingAlertAction(a);
-                            setShowNotifications(false);
-                          }}
-                          className={`flex items-start gap-3 px-4 py-3 hover:bg-muted/10 transition-colors cursor-pointer active:bg-muted/20`}
-                        >
-                          <div className={`w-9 h-9 rounded-xl ${a.bg} flex items-center justify-center text-base flex-shrink-0 mt-0.5`}>
-                            {a.icon}
+                      alerts.map(a => {
+                        const isSelected = notifSelectedIds.includes(a.id);
+                        return (
+                          <div
+                            key={a.id}
+                            onPointerDown={() => {
+                              if (!notifSelectMode) {
+                                notifLongPressTimer.current = setTimeout(() => {
+                                  setNotifSelectMode(true);
+                                  setNotifSelectedIds([a.id]);
+                                }, 500);
+                              }
+                            }}
+                            onPointerUp={() => {
+                              if (notifLongPressTimer.current) clearTimeout(notifLongPressTimer.current);
+                              if (notifSelectMode) {
+                                setNotifSelectedIds(prev =>
+                                  prev.includes(a.id) ? prev.filter(i => i !== a.id) : [...prev, a.id]
+                                );
+                              } else {
+                                setPendingAlertAction(a);
+                                setShowNotifications(false);
+                              }
+                            }}
+                            onPointerLeave={() => { if (notifLongPressTimer.current) clearTimeout(notifLongPressTimer.current); }}
+                            onContextMenu={e => e.preventDefault()}
+                            className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors select-none ${
+                              isSelected ? 'bg-primary/10' : 'hover:bg-muted/10 active:bg-muted/20'
+                            }`}
+                          >
+                            {/* Checkbox in select mode */}
+                            {notifSelectMode && (
+                              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
+                                isSelected ? 'bg-primary border-primary' : 'border-muted'
+                              }`}>
+                                {isSelected && <span className="text-[9px] font-black text-white">✓</span>}
+                              </div>
+                            )}
+                            <div className={`w-9 h-9 rounded-xl ${a.bg} flex items-center justify-center text-base flex-shrink-0`}>
+                              {a.icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-black text-sm text-foreground truncate">{a.label}</p>
+                              <p className={`text-xs font-semibold mt-0.5 ${a.color}`}>{a.msg}</p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-black text-sm text-foreground truncate">{a.label}</p>
-                            <p className={`text-xs font-semibold mt-0.5 ${a.color}`}>{a.msg}</p>
-                          </div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
+
                   {/* Footer */}
-                  {alerts.length > 0 && (
-                    <div className="px-4 py-2.5 border-t border-muted/30 bg-muted/10">
-                      <p className="text-[10px] font-bold text-foreground/30 text-center uppercase tracking-widest">Tap an item to restock</p>
+                  {notifSelectMode && notifSelectedIds.length > 0 ? (
+                    <div className="px-3 py-3 border-t border-muted/30 flex gap-2">
+                      <button
+                        onClick={() => {
+                          const selectedAlerts = alerts.filter((a: any) => notifSelectedIds.includes(a.id));
+                          const ids = selectedAlerts.map((a: any) => a.ingredient?.id).filter(Boolean);
+                          const newIds = ids.filter((id: string) => !manualShoppingIds.includes(id));
+                          setManualShoppingIds(prev => [...prev, ...newIds]);
+                          setNotifSelectMode(false);
+                          setNotifSelectedIds([]);
+                          setShowNotifications(false);
+                          setActiveMainTab('shopping');
+                        }}
+                        className="flex-1 h-10 bg-primary text-white rounded-xl font-black text-[10px] uppercase tracking-wide flex items-center justify-center gap-1"
+                      >
+                        🛒 Add to Shopping
+                      </button>
+                      <button
+                        onClick={() => { setNotifSelectMode(false); setNotifSelectedIds([]); }}
+                        className="h-10 px-4 bg-muted/40 rounded-xl font-black text-[10px] uppercase text-foreground/50"
+                      >
+                        Cancel
+                      </button>
                     </div>
+                  ) : (
+                    alerts.length > 0 && (
+                      <div className="px-4 py-2.5 border-t border-muted/30 bg-muted/10">
+                        <p className="text-[10px] font-bold text-foreground/30 text-center uppercase tracking-widest">Hold to select multiple</p>
+                      </div>
+                    )
                   )}
                 </div>
               </>
