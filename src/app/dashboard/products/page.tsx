@@ -744,21 +744,44 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
             <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">🥣 Ingredients List</p>
             {/* Existing Recipe Items - SCROLLABLE (max 3 items visible) */}
             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
-              {loading ? <p className="text-sm text-foreground/40 text-center py-4">Loading...</p> : 
-               recipes.length === 0 ? <p className="text-sm text-foreground/40 italic text-center py-4">No ingredients added yet.</p> :
-               recipes.map(r => {
-                 const ing = ingredients.find(i => i.id === r.ingredient_id);
-                 return (
-                   <div key={r.id} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
-                     <div>
-                       <p className="font-bold text-sm text-foreground">{ing?.name || r.ingredient_id}</p>
-                       <p className="text-xs text-foreground/50">{r.quantity_needed} {ing?.unit || ''}</p>
-                     </div>
-                     <button onClick={() => handleRemove(r.id)} className="text-red-400 hover:text-red-600 text-lg px-2">×</button>
-                   </div>
-                 );
-               })
-              }
+              {(() => {
+                if (loading) return <p className="text-sm text-foreground/40 text-center py-4">Loading...</p>;
+                if (recipes.length === 0) return <p className="text-sm text-foreground/40 italic text-center py-4">No ingredients added yet.</p>;
+
+                // Group recipes by ingredient_id
+                const grouped = recipes.reduce((acc: any[], r) => {
+                  const existing = acc.find(item => item.ingredient_id === r.ingredient_id);
+                  if (existing) {
+                    existing.quantity_needed += r.quantity_needed;
+                    existing.ids.push(r.id);
+                  } else {
+                    acc.push({ ...r, ids: [r.id] });
+                  }
+                  return acc;
+                }, []);
+
+                return grouped.map(r => {
+                  const ing = ingredients.find(i => i.id === r.ingredient_id);
+                  return (
+                    <div key={r.ingredient_id} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
+                      <div>
+                        <p className="font-bold text-sm text-foreground">{ing?.name || r.ingredient_id}</p>
+                        <p className="text-xs text-foreground/50">{r.quantity_needed} {ing?.unit || ''}</p>
+                      </div>
+                      <button 
+                        onClick={async () => {
+                          setLoading(true);
+                          await Promise.all(r.ids.map((id: string) => supabase.from('recipes').delete().eq('id', id)));
+                          await loadRecipes();
+                        }} 
+                        className="text-red-400 hover:text-red-600 text-lg px-2"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
 
