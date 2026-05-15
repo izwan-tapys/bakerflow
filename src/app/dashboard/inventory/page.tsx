@@ -3,11 +3,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { KitchenTabs } from '@/components/dashboard/KitchenTabs';
+import { formatDate } from '@/lib/utils';
+
+type IngredientType = 'raw' | 'component' | 'supply';
 
 interface Ingredient {
   id: string;
   name: string;
   brand?: string | null;
+  type: IngredientType;
   unit: string;
   current_stock: number;
   avg_cost_per_unit: number;
@@ -24,32 +28,61 @@ interface ShoppingItem {
   shortfall: number;
 }
 
+interface PurchaseRecord {
+  id: string;
+  ingredient_name: string;
+  quantity: number;
+  unit: string;
+  total_cost: number;
+  purchased_at: string;
+}
+
 export default function InventoryPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
+  const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeMainTab, setActiveMainTab] = useState<IngredientType | 'purchases'>('raw');
+  
+  // Modal States
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ name: '', brand: '', unit: 'g', current_stock: 0, category: 'Lain-lain' });
+  const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
+  
+  // Form State for Add Ingredient
+  const [form, setForm] = useState({ 
+    name: '', 
+    brand: '', 
+    type: 'raw' as IngredientType, 
+    unit: 'g', 
+    current_stock: 0, 
+    category: 'Lain-lain' 
+  });
+
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const CATEGORIES = ['Semua', 'Tepung', 'Tenusu', 'Gula', 'Lemak', 'Hiasan', 'Packaging', 'Lain-lain'];
-  
-  // Modal State
-  const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
 
-  const loadIngredients = useCallback(async () => {
+  const loadData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     
-    const [ingRes, ordersRes, recipesRes] = await Promise.all([
+    setLoading(true);
+    const [ingRes, ordersRes, recipesRes, purchasesRes] = await Promise.all([
       supabase.from('ingredients').select('*').eq('baker_id', user.id).order('name'),
       supabase.from('orders').select('product_id, quantity').eq('baker_id', user.id).in('status', ['pending', 'approved', 'production']),
-      supabase.from('recipes').select('*').eq('baker_id', user.id)
+      supabase.from('recipes').select('*').eq('baker_id', user.id),
+      supabase.from('ingredient_purchases').select('*, ingredients(name)').eq('baker_id', user.id).order('purchased_at', { ascending: false }).limit(50)
     ]);
 
-    const loadedIngredients = ingRes.data || [];
+    const loadedIngredients = (ingRes.data || []).map(ing => ({
+      ...ing,
+      type: ing.type || 'raw'
+    })) as Ingredient[];
+    
     const activeOrders = ordersRes.data || [];
     const allRecipes = recipesRes.data || [];
+    const rawPurchases = purchasesRes.data || [];
 
+    // Calculate Shopping List
     const requiredMap = new Map<string, number>();
     activeOrders.forEach(order => {
       if (!order.product_id) return;
@@ -74,10 +107,18 @@ export default function InventoryPage() {
 
     setShoppingList(newShoppingList);
     setIngredients(loadedIngredients);
+    setPurchases(rawPurchases.map(p => ({
+      id: p.id,
+      ingredient_name: p.ingredients?.name || 'Unknown',
+      quantity: p.quantity,
+      unit: p.unit || '',
+      total_cost: p.total_cost,
+      purchased_at: p.purchased_at
+    })));
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadIngredients(); }, [loadIngredients]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const getAutoCategory = (name: string): string => {
     const n = name.toLowerCase();
@@ -93,68 +134,79 @@ export default function InventoryPage() {
   const handleAddIngredient = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+    
     const autoCat = getAutoCategory(form.name);
-    await supabase.from('ingredients').insert({ 
+    const { error } = await supabase.from('ingredients').insert({ 
       baker_id: user.id,
       name: form.name,
       brand: form.brand || null,
+      type: form.type,
       unit: form.unit,
       current_stock: form.current_stock,
-      category: form.category === 'Lain-lain' ? autoCat : form.category,
-      avg_cost_per_unit: 0,
-      low_stock_threshold: 0
-    });
-    setForm({ name: '', brand: '', unit: 'g', current_stock: 0, category: 'Lain-lain' });
-    setShowAdd(false);
-    loadIngredients();
-  };
-
-  const handleRestock = async (ingredient: Ingredient, qty: number, cost: number) => {
-    const totalExistingValue = ingredient.current_stock * ingredient.avg_cost_per_unit;
-    const newPurchaseValue = qty * cost;
-    const newTotalStock = ingredient.current_stock + qty;
-    const newAvgCost = newTotalStock > 0 ? (totalExistingValue + newPurchaseValue) / newTotalStock : cost;
-
-    const { data: { user } } = await supabase.auth.getUser();
-
-    await supabase.from('ingredients').update({
-      current_stock: newTotalStock,
-      avg_cost_per_unit: Math.round(newAvgCost * 10000) / 10000,
-    }).eq('id', ingredient.id);
-
-    await supabase.from('ingredient_purchases').insert({
-      ingredient_id: ingredient.id,
-      baker_id: user?.id,
-      quantity: qty,
-      unit_cost: cost,
-      total_cost: qty * cost,
+      category: form.type === 'supply' ? 'Packaging' : (form.category === 'Lain-lain' ? autoCat : form.category),
+      low_stock_threshold: form.unit === 'kg' || form.unit === 'L' ? 1 : 100
     });
 
-    loadIngredients();
-  };
-
-  const handleUpdateInfo = async (ingredient: Ingredient, updatedData: any) => {
-    const { error } = await supabase.from('ingredients').update(updatedData).eq('id', ingredient.id);
-    if (error) throw error;
-    await loadIngredients();
+    if (error) alert(error.message);
+    else {
+      setShowAdd(false);
+      setForm({ name: '', brand: '', type: 'raw', unit: 'g', current_stock: 0, category: 'Lain-lain' });
+      loadData();
+    }
   };
 
   const handleDeleteIngredient = async (id: string) => {
-    if (!confirm('Are you sure? This will remove the ingredient from all recipes.')) return;
-    await supabase.from('ingredients').delete().eq('id', id);
-    loadIngredients();
+    if (!confirm('Are you sure you want to delete this?')) return;
+    const { error } = await supabase.from('ingredients').delete().eq('id', id);
+    if (error) alert(error.message);
+    else loadData();
+  };
+
+  const handleRestock = async (ing: Ingredient, qty: number, totalCost: number) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const newStock = Number(ing.current_stock) + Number(qty);
+    const newTotalCost = (Number(ing.current_stock) * Number(ing.avg_cost_per_unit)) + Number(totalCost);
+    const newAvgCost = newTotalCost / newStock;
+
+    const { error: ingError } = await supabase.from('ingredients').update({
+      current_stock: newStock,
+      avg_cost_per_unit: newAvgCost
+    }).eq('id', ing.id);
+
+    if (ingError) throw ingError;
+
+    const { error: purchaseError } = await supabase.from('ingredient_purchases').insert({
+      baker_id: user.id,
+      ingredient_id: ing.id,
+      quantity: qty,
+      unit_cost: totalCost / qty,
+      total_cost: totalCost
+    });
+
+    if (purchaseError) throw purchaseError;
+    loadData();
+  };
+
+  const handleUpdateInfo = async (ing: Ingredient, updates: any) => {
+    const { error } = await supabase.from('ingredients').update(updates).eq('id', ing.id);
+    if (error) throw error;
+    loadData();
   };
 
   const filteredIngredients = ingredients.filter(i => {
+    // First filter by active tab type
+    if (activeMainTab !== 'purchases' && i.type !== activeMainTab) return false;
+    
+    // Then filter by sub-category
     if (selectedCategory === 'Semua') return true;
     return i.category === selectedCategory;
   });
 
-  const lowStock = ingredients.filter(i => i.current_stock <= i.low_stock_threshold && !shoppingList.find(s => s.ingredient.id === i.id));
-
   const handleShareWhatsApp = () => {
     if (shoppingList.length === 0) return;
-    let message = `🛒 *SHOPPING LIST - BAKERSBESTIE*\n\n`;
+    let message = `🛒 *SHOPPING LIST - BAKERFLOW*\n\n`;
     shoppingList.forEach((item, idx) => {
       let packInfo = '';
       if (item.ingredient.pack_size) {
@@ -173,37 +225,78 @@ export default function InventoryPage() {
   };
 
   return (
-    <div className="space-y-5 pb-4">
+    <div className="space-y-6 pb-4">
       <KitchenTabs />
 
-      <div className="flex items-start justify-between">
+      {/* Main Header */}
+      <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-foreground">Inventory 📦</h1>
-          <p className="text-foreground/50 text-sm">Efficient ingredient management</p>
+          <h1 className="text-3xl font-black text-foreground tracking-tight">Inventory</h1>
+          <p className="text-foreground/50 text-sm font-medium">Manage your kitchen resources</p>
         </div>
-        <button onClick={() => setShowAdd(!showAdd)} className="h-10 px-4 bg-primary text-white rounded-xl font-bold text-sm shadow-md shadow-primary/20">
-          + Add
+        <button 
+          onClick={() => {
+            setForm({ ...form, type: activeMainTab === 'purchases' ? 'raw' : activeMainTab });
+            setShowAdd(true);
+          }} 
+          className="h-12 px-6 bg-primary text-white rounded-2xl font-black text-sm shadow-lg shadow-primary/20 hover:scale-105 transition-transform active:scale-95"
+        >
+          + Add Item
         </button>
       </div>
 
-      {/* Shopping List & Alerts (Keep these as they are helpful) */}
-      {shoppingList.length > 0 && (
-        <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 space-y-3 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="font-bold text-orange-800 text-sm flex items-center gap-2">🛒 Shopping List <span className="bg-orange-200 text-orange-800 px-2 py-0.5 rounded text-[10px]">{shoppingList.length}</span></p>
+      {/* Main Navigation Tabs */}
+      <div className="flex bg-muted/30 p-1.5 rounded-[24px] border border-muted/50">
+        {[
+          { id: 'raw', label: 'Raw Ingredients', icon: '🥣' },
+          { id: 'component', label: 'Components', icon: '🍰' },
+          { id: 'supply', label: 'Supplies', icon: '📦' },
+          { id: 'purchases', label: 'Purchases', icon: '🧾' }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => {
+              setActiveMainTab(tab.id as any);
+              setSelectedCategory('Semua');
+            }}
+            className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl transition-all ${
+              activeMainTab === tab.id 
+                ? 'bg-white text-primary shadow-sm border border-muted/50' 
+                : 'text-foreground/40 hover:text-foreground/60'
+            }`}
+          >
+            <span className="text-lg mb-1">{tab.icon}</span>
+            <span className="text-[10px] font-black uppercase tracking-wider">{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Shopping List Banner */}
+      {shoppingList.length > 0 && activeMainTab !== 'purchases' && (
+        <div className="bg-orange-50 border-2 border-orange-200 rounded-[32px] p-5 space-y-4 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10 text-4xl rotate-12">🛒</div>
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="font-black text-orange-800 flex items-center gap-2">
+                Shopping List 
+                <span className="bg-orange-200 text-orange-800 px-2.5 py-0.5 rounded-full text-[10px] font-black">
+                  {shoppingList.length} ITEMS
+                </span>
+              </p>
+              <p className="text-[11px] text-orange-700/60 font-bold mt-0.5">Ingredients needed for active orders</p>
+            </div>
             <button 
               onClick={handleShareWhatsApp}
-              className="flex items-center gap-1.5 px-3 py-1 bg-green-500 text-white rounded-lg text-[10px] font-bold hover:bg-green-600 transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl text-xs font-black hover:bg-green-600 transition-all shadow-md shadow-green-500/20"
             >
-              Share WhatsApp
+              <span>💬</span> WhatsApp List
             </button>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar relative z-10">
             {shoppingList.map(item => {
               let packs = null;
               if (item.ingredient.pack_size) {
                 let sizeInBase = item.ingredient.pack_size;
-                // Convert pack size to base unit for division
                 if ((item.ingredient.pack_size_unit === 'kg' && item.ingredient.unit === 'g') || 
                     (item.ingredient.pack_size_unit === 'L' && item.ingredient.unit === 'ml')) {
                   sizeInBase = item.ingredient.pack_size * 1000;
@@ -211,15 +304,12 @@ export default function InventoryPage() {
                 packs = Math.ceil(item.shortfall / sizeInBase);
               }
               return (
-                <div key={item.ingredient.id} onClick={() => setSelectedIngredient(item.ingredient)} className="flex-none bg-white p-2 px-3 rounded-xl border border-orange-200 cursor-pointer hover:border-orange-400 transition-all">
+                <div key={item.ingredient.id} onClick={() => setSelectedIngredient(item.ingredient)} className="flex-none bg-white p-3 rounded-2xl border border-orange-200 cursor-pointer hover:border-orange-400 transition-all shadow-sm active:scale-95">
                   <p className="font-black text-xs text-orange-900">{item.ingredient.name}</p>
-                  {packs ? (
-                    <p className="text-[10px] font-bold text-orange-600">
-                      {packs} {item.ingredient.pack_unit || 'pek'} ({item.shortfall.toFixed(0)}{item.ingredient.unit})
-                    </p>
-                  ) : (
-                    <p className="text-[10px] font-bold text-orange-600">Buy {item.shortfall.toFixed(0)}{item.ingredient.unit}</p>
-                  )}
+                  <p className="text-[10px] font-bold text-orange-600 mt-0.5">
+                    {packs ? `${packs} ${item.ingredient.pack_unit || 'pek'} ` : ''}
+                    ({item.shortfall.toFixed(0)}{item.ingredient.unit})
+                  </p>
                 </div>
               );
             })}
@@ -227,174 +317,160 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {/* Add Ingredient Modal */}
-      {showAdd && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-6 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-            <div className="flex justify-between items-center mb-6 flex-none">
-              <p className="font-black text-xl text-primary">New Ingredient</p>
-              <button onClick={() => setShowAdd(false)} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold">&times;</button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Ingredient Name</label>
-                  <input 
-                    placeholder="e.g. Premium Flour" 
-                    value={form.name} 
-                    onChange={e => {
-                      const name = e.target.value;
-                      setForm({ ...form, name, category: getAutoCategory(name) });
-                    }}
-                    className="w-full h-12 px-4 rounded-2xl border border-muted focus:border-primary outline-none font-bold shadow-sm bg-white" 
-                  />
-                  <p className="text-[9px] text-blue-500 mt-1 font-bold">Auto-detected: {form.category}</p>
-                </div>
-
-                <div className="col-span-2">
-                  <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Brand (Optional)</label>
-                  <input 
-                    placeholder="e.g. Anchor, Baker's Choice" 
-                    value={form.brand} 
-                    onChange={e => setForm({ ...form, brand: e.target.value })}
-                    className="w-full h-12 px-4 rounded-2xl border border-muted focus:border-primary outline-none font-bold shadow-sm bg-white" 
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Category</label>
-                  <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
-                    className="w-full h-12 px-4 rounded-2xl border border-muted focus:border-primary outline-none bg-white font-bold shadow-sm">
-                    {CATEGORIES.filter(c => c !== 'Semua').map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Base Unit</label>
-                  <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
-                    className="w-full h-12 px-4 rounded-2xl border border-muted focus:border-primary outline-none bg-white font-bold shadow-sm">
-                    {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u}>{u}</option>)}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Initial Stock</label>
-                  <input type="number" placeholder="0" value={form.current_stock || ''} onChange={e => setForm({ ...form, current_stock: +e.target.value })}
-                    className="w-full h-12 px-4 rounded-2xl border border-muted focus:border-primary outline-none font-bold shadow-sm" />
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-6 pb-8 md:pb-0 flex-none">
-              <button onClick={handleAddIngredient} className="w-full h-14 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20">
-                Create Ingredient
-              </button>
-            </div>
+      {/* Purchases Tab Content */}
+      {activeMainTab === 'purchases' ? (
+        <div className="bg-white rounded-[32px] border border-muted overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-muted/30">
+                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Date</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Qty</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-muted/50">
+                {purchases.length === 0 ? (
+                  <tr><td colSpan={4} className="px-6 py-20 text-center text-foreground/30 font-bold italic">No purchase history yet.</td></tr>
+                ) : (
+                  purchases.map(p => (
+                    <tr key={p.id} className="hover:bg-muted/10 transition-colors">
+                      <td className="px-6 py-4 text-xs font-bold text-foreground/60">{formatDate(p.purchased_at)}</td>
+                      <td className="px-6 py-4 text-sm font-black text-foreground">{p.ingredient_name}</td>
+                      <td className="px-6 py-4 text-right text-sm font-bold text-foreground/70">{p.quantity}{p.unit}</td>
+                      <td className="px-6 py-4 text-right text-sm font-black text-primary">RM {p.total_cost.toFixed(2)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      )}
+      ) : (
+        <>
+          {/* Sub-Category Filter (Only for Raw & Supplies) */}
+          {(activeMainTab === 'raw' || activeMainTab === 'supply') && (
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+              {CATEGORIES.map(c => (
+                <button
+                  key={c}
+                  onClick={() => setSelectedCategory(c)}
+                  className={`px-5 py-2.5 rounded-full text-[11px] font-black transition-all whitespace-nowrap border-2 ${
+                    selectedCategory === c 
+                      ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-105' 
+                      : 'bg-white border-muted text-foreground/40 hover:border-primary/30'
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
 
-      {/* Category Filter */}
-      <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-        {CATEGORIES.map(c => (
-          <button
-            key={c}
-            onClick={() => setSelectedCategory(c)}
-            className={`px-4 py-2 rounded-full text-xs font-black transition-all whitespace-nowrap border-2 ${
-              selectedCategory === c 
-                ? 'bg-primary border-primary text-white shadow-lg' 
-                : 'bg-white border-muted text-foreground/40 hover:border-primary/30'
-            }`}
-          >
-            {c}
-          </button>
-        ))}
-      </div>
-
-      {/* Ingredients List Table */}
-      <div className="bg-white rounded-[32px] border border-muted overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-muted/30">
-                <th className="px-5 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Ingredient</th>
-                <th className="px-5 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Stock</th>
-                <th className="px-5 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Cost/Unit</th>
-                <th className="px-5 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-10"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-muted/50">
-              {loading ? (
-                [1,2,3,4,5].map(i => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-5 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
-                    <td className="px-5 py-4 text-right"><div className="h-4 bg-muted rounded w-16 ml-auto" /></td>
-                    <td className="px-5 py-4 text-right"><div className="h-4 bg-muted rounded w-20 ml-auto" /></td>
+          {/* Ingredients List Table */}
+          <div className="bg-white rounded-[32px] border border-muted overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-muted/30">
+                    <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Stock</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Avg Cost</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-10"></th>
                   </tr>
-                ))
-              ) : filteredIngredients.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-5 py-20 text-center text-foreground/30 font-bold italic">No ingredients found in this category.</td>
-                </tr>
-              ) : (
-                filteredIngredients.map(ing => {
-                  const committed = shoppingList.find(s => s.ingredient.id === ing.id)?.needed || 0;
-                  const available = ing.current_stock - committed;
-                  const isLow = available <= ing.low_stock_threshold;
-                  const isNegative = available < 0;
-                  
-                  return (
-                    <tr 
-                      key={ing.id} 
-                      onClick={() => setSelectedIngredient(ing)}
-                      className="hover:bg-primary/[0.02] cursor-pointer transition-colors active:bg-primary/[0.05]"
-                    >
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-foreground">{ing.name}</p>
-                          {ing.brand && <span className="text-[10px] font-bold text-primary/50 bg-primary/5 px-1.5 py-0.5 rounded">@{ing.brand}</span>}
-                          {isLow && !isNegative && <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" title="Low Stock" />}
-                          {isNegative && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Insufficient Stock" />}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex flex-col items-end">
-                          <p className={`font-black ${isNegative ? 'text-red-600' : isLow ? 'text-orange-500' : 'text-foreground/70'}`}>
-                            {available.toLocaleString()}<span className="text-[10px] font-bold ml-0.5 opacity-40">{ing.unit}</span>
-                          </p>
-                          {committed > 0 && (
-                            <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-tighter">
-                              On Hand: {ing.current_stock}{ing.unit}
-                            </p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-right font-bold text-primary/80">
-                        RM {ing.avg_cost_per_unit.toFixed(4)}
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); handleDeleteIngredient(ing.id); }}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-red-300 hover:text-red-600 hover:bg-red-50 transition-all"
-                        >
-                          🗑️
-                        </button>
+                </thead>
+                <tbody className="divide-y divide-muted/50">
+                  {loading ? (
+                    [1,2,3,4,5].map(i => (
+                      <tr key={i} className="animate-pulse">
+                        <td className="px-6 py-5"><div className="h-4 bg-muted rounded w-32" /></td>
+                        <td className="px-6 py-5 text-right"><div className="h-4 bg-muted rounded w-16 ml-auto" /></td>
+                        <td className="px-6 py-5 text-right"><div className="h-4 bg-muted rounded w-20 ml-auto" /></td>
+                      </tr>
+                    ))
+                  ) : filteredIngredients.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-24 text-center text-foreground/30 font-bold italic">
+                        <div className="text-3xl mb-2">🔭</div>
+                        No items found in this section.
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  ) : (
+                    filteredIngredients.map(ing => {
+                      const committed = shoppingList.find(s => s.ingredient.id === ing.id)?.needed || 0;
+                      const available = ing.current_stock - committed;
+                      const isLow = available <= ing.low_stock_threshold;
+                      const isNegative = available < 0;
+                      
+                      return (
+                        <tr 
+                          key={ing.id} 
+                          onClick={() => setSelectedIngredient(ing)}
+                          className="hover:bg-primary/[0.02] cursor-pointer transition-colors active:bg-primary/[0.05]"
+                        >
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-2">
+                              <div>
+                                <p className="font-bold text-foreground text-sm">{ing.name}</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  {ing.brand && <span className="text-[9px] font-black text-primary/60 bg-primary/5 px-1.5 py-0.5 rounded uppercase tracking-tighter">@{ing.brand}</span>}
+                                  <span className="text-[9px] font-bold text-foreground/30 uppercase tracking-tighter">{ing.category}</span>
+                                </div>
+                              </div>
+                              {isLow && !isNegative && <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" title="Low Stock" />}
+                              {isNegative && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Insufficient Stock" />}
+                            </div>
+                          </td>
+                          <td className="px-6 py-5 text-right">
+                            <div className="flex flex-col items-end">
+                              <p className={`font-black text-sm ${isNegative ? 'text-red-600' : isLow ? 'text-orange-500' : 'text-foreground/80'}`}>
+                                {available.toLocaleString()}<span className="text-[10px] font-bold ml-0.5 opacity-40">{ing.unit}</span>
+                              </p>
+                              {committed > 0 && (
+                                <p className="text-[9px] font-black text-foreground/20 uppercase tracking-tighter">
+                                  On Hand: {ing.current_stock}{ing.unit}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-5 text-right">
+                            <p className="text-sm font-black text-primary/80">RM {ing.avg_cost_per_unit.toFixed(2)}</p>
+                            <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-tighter">Per {ing.unit}</p>
+                          </td>
+                          <td className="px-6 py-5 text-center">
+                            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/30 text-foreground/20 text-xs">
+                              ›
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
 
-      {/* Unified Action Modal */}
+      {/* Modal Components */}
+      {showAdd && (
+        <AddIngredientModal 
+          isOpen={showAdd} 
+          onClose={() => setShowAdd(false)} 
+          onAdd={handleAddIngredient}
+          form={form}
+          setForm={setForm}
+          categories={CATEGORIES}
+          getAutoCategory={getAutoCategory}
+        />
+      )}
+
       {selectedIngredient && (
         <IngredientActionModal 
           ingredient={selectedIngredient}
-          onClose={() => { setSelectedIngredient(null); }}
+          onClose={() => setSelectedIngredient(null)}
           onRestock={handleRestock}
           onUpdate={handleUpdateInfo}
           onDelete={handleDeleteIngredient}
@@ -404,22 +480,105 @@ export default function InventoryPage() {
   );
 }
 
-function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDelete }: { 
-  ingredient: Ingredient, 
-  onClose: () => void,
-  onRestock: (i: Ingredient, q: number, c: number) => Promise<void>,
-  onUpdate: (i: Ingredient, d: any) => Promise<void>,
-  onDelete: (id: string) => Promise<void>
-}) {
-  const [tab, setTab] = useState<'restock' | 'edit'>('restock');
+// Sub-components for better organization
+function AddIngredientModal({ isOpen, onClose, onAdd, form, setForm, categories, getAutoCategory }: any) {
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
+      <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-8 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+        <div className="flex justify-between items-center mb-8 flex-none">
+          <div>
+            <h2 className="text-2xl font-black text-primary tracking-tight">New Item</h2>
+            <p className="text-xs text-foreground/40 font-bold uppercase tracking-widest mt-1">Add to {form.type} inventory</p>
+          </div>
+          <button onClick={onClose} className="w-12 h-12 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold hover:bg-muted/80 transition-colors">&times;</button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-6">
+          <div className="space-y-5">
+            <div>
+              <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Type</label>
+              <div className="flex bg-muted/40 p-1 rounded-xl">
+                {['raw', 'component', 'supply'].map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setForm({ ...form, type: t })}
+                    className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${
+                      form.type === t ? 'bg-white text-primary shadow-sm' : 'text-foreground/30'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Item Name</label>
+              <input 
+                placeholder="e.g. Premium Flour" 
+                value={form.name} 
+                onChange={e => {
+                  const name = e.target.value;
+                  setForm({ ...form, name, category: getAutoCategory(name) });
+                }}
+                className="w-full h-14 px-5 rounded-2xl border-2 border-muted focus:border-primary outline-none font-bold text-lg transition-all" 
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Brand (Opt)</label>
+                <input 
+                  placeholder="Anchor" 
+                  value={form.brand} 
+                  onChange={e => setForm({ ...form, brand: e.target.value })}
+                  className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold shadow-sm" 
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Category</label>
+                <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
+                  className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none bg-white font-bold text-sm shadow-sm">
+                  {categories.filter((c: string) => c !== 'Semua').map((c: string) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Base Unit</label>
+                <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
+                  className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none bg-white font-bold text-sm shadow-sm">
+                  {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u}>{u}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Initial Stock</label>
+                <input type="number" placeholder="0" value={form.current_stock || ''} onChange={e => setForm({ ...form, current_stock: +e.target.value })}
+                  className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold shadow-sm" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-8 pb-10 md:pb-0 flex-none">
+          <button onClick={onAdd} className="w-full h-16 bg-primary text-white rounded-2xl font-black text-xl shadow-xl shadow-primary/20 active:scale-95 transition-all">
+            Create {form.type}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDelete }: any) {
+  const [tab, setTab] = useState<'restock' | 'recipe' | 'edit'>(ingredient.type === 'component' ? 'recipe' : 'restock');
   const [loading, setLoading] = useState(false);
 
-  // Restock State - Single Unit
+  // Restock State
   const [qtyInput, setQtyInput] = useState<number | ''>('');
   const [purchaseUnit, setPurchaseUnit] = useState(ingredient.unit);
   const [totalPrice, setTotalPrice] = useState<number | ''>('');
-
-  // Restock State - Bulk/Pack Mode
   const [isBulk, setIsBulk] = useState(!!ingredient.pack_size);
   const [numPacks, setNumPacks] = useState<number | ''>('');
   const [packSize, setPackSize] = useState<number | ''>(ingredient.pack_size ?? '');
@@ -439,60 +598,76 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
     pack_size_unit: ingredient.pack_size_unit ?? ingredient.unit,
   });
 
-  // Dynamic Calculations for UI Display
-  const isKgToG = (isBulk ? packSizeUnit : purchaseUnit) === 'kg' && ingredient.unit === 'g';
-  const isGToKg = (isBulk ? packSizeUnit : purchaseUnit) === 'g' && ingredient.unit === 'kg';
-  const isLToMl = (isBulk ? packSizeUnit : purchaseUnit) === 'L' && ingredient.unit === 'ml';
-  const isMlToL = (isBulk ? packSizeUnit : purchaseUnit) === 'ml' && ingredient.unit === 'L';
+  // Recipe/Component State
+  const [subRecipes, setSubRecipes] = useState<any[]>([]);
+  const [allIngredients, setAllIngredients] = useState<Ingredient[]>([]);
+  const [recipeForm, setRecipeForm] = useState({ ingredient_id: '', quantity_needed: 0 });
 
-  let displayQty = 0;
-  if (isBulk) {
-    let sizeInBase = Number(packSize);
-    if (isKgToG || isLToMl) sizeInBase = Number(packSize) * 1000;
-    if (isGToKg || isMlToL) sizeInBase = Number(packSize) / 1000;
-    displayQty = Number(numPacks) * sizeInBase;
-  } else {
-    if (isKgToG || isLToMl) displayQty = Number(qtyInput) * 1000;
-    else if (isGToKg || isMlToL) displayQty = Number(qtyInput) / 1000;
-    else displayQty = Number(qtyInput);
-  }
+  useEffect(() => {
+    if (tab === 'recipe') {
+      loadRecipeData();
+    }
+  }, [tab]);
 
-  const displayTotal = isBulk ? (Number(numPacks) * Number(pricePerPack)) : Number(totalPrice);
+  const loadRecipeData = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const [recipeRes, ingRes] = await Promise.all([
+      supabase.from('recipes').select('*, ingredients(*)').eq('parent_ingredient_id', ingredient.id),
+      supabase.from('ingredients').select('*').eq('baker_id', user?.id).eq('type', 'raw').order('name')
+    ]);
+    setSubRecipes(recipeRes.data || []);
+    setAllIngredients(ingRes.data || []);
+  };
+
+  const handleAddSubIngredient = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from('recipes').insert({
+      baker_id: user?.id,
+      parent_ingredient_id: ingredient.id,
+      ingredient_id: recipeForm.ingredient_id,
+      quantity_needed: recipeForm.quantity_needed
+    });
+    if (error) alert(error.message);
+    else {
+      setRecipeForm({ ingredient_id: '', quantity_needed: 0 });
+      loadRecipeData();
+    }
+  };
+
+  const handleRemoveSubIngredient = async (id: string) => {
+    await supabase.from('recipes').delete().eq('id', id);
+    loadRecipeData();
+  };
 
   const handleRestockSubmit = async () => {
-    if (!displayQty || !displayTotal) return;
-    
     setLoading(true);
-    const finalQty = displayQty;
-    const finalTotalVal = displayTotal;
-    const finalCostPerBaseUnit = finalTotalVal / finalQty;
-    
-    await onRestock(ingredient, finalQty, finalCostPerBaseUnit);
-    onClose();
+    try {
+      let finalQty = Number(isBulk ? (numPacks || 0) * (packSize || 0) : qtyInput);
+      let finalTotal = Number(isBulk ? (numPacks || 0) * (pricePerPack || 0) : totalPrice);
+
+      // Unit conversion for qty
+      const activeUnit = isBulk ? packSizeUnit : purchaseUnit;
+      if (activeUnit === 'kg' && ingredient.unit === 'g') finalQty *= 1000;
+      else if (activeUnit === 'g' && ingredient.unit === 'kg') finalQty /= 1000;
+      else if (activeUnit === 'L' && ingredient.unit === 'ml') finalQty *= 1000;
+      else if (activeUnit === 'ml' && ingredient.unit === 'L') finalQty /= 1000;
+
+      await onRestock(ingredient, finalQty, finalTotal);
+      onClose();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditSubmit = async () => {
-    if (!editForm.name) return alert("Nama bahan wajib isi!");
-    
     setLoading(true);
     try {
-      const cleanData = {
-        name: editForm.name,
-        unit: editForm.unit,
-        current_stock: Number(editForm.current_stock) || 0,
-        low_stock_threshold: Number(editForm.low_stock_threshold) || 0,
-        category: editForm.category,
-        brand: editForm.brand || null,
-        pack_size: editForm.pack_size === '' ? null : Number(editForm.pack_size),
-        pack_unit: editForm.pack_unit || null,
-        pack_size_unit: editForm.pack_size_unit || null
-      };
-      
-      await onUpdate(ingredient, cleanData);
+      await onUpdate(ingredient, editForm);
       onClose();
     } catch (err: any) {
-      console.error("Failed to update ingredient:", err);
-      alert("Gagal update: " + (err.message || "Sila semak console"));
+      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -500,204 +675,210 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
-      <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-6 shadow-2xl flex flex-col max-h-[95vh] md:max-h-[85vh] overflow-hidden">
-        <div className="flex justify-between items-start flex-none mb-4">
+      <div className="bg-white w-full max-w-md md:rounded-[40px] rounded-t-[40px] p-8 shadow-2xl flex flex-col max-h-[95vh] md:max-h-[85vh] overflow-hidden">
+        <div className="flex justify-between items-start flex-none mb-6">
           <div>
-            <h2 className="text-xl font-black text-foreground">{ingredient.name}</h2>
-            <div className="flex items-center gap-2">
-              <p className={`text-xs font-bold ${ingredient.current_stock < 0 ? 'text-red-600' : 'text-foreground/40'}`}>
-                Current: {ingredient.current_stock}{ingredient.unit}
+            <h2 className="text-2xl font-black text-foreground tracking-tight">{ingredient.name}</h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${
+                ingredient.type === 'component' ? 'bg-purple-100 text-purple-600' : 
+                ingredient.type === 'supply' ? 'bg-blue-100 text-blue-600' : 'bg-primary/10 text-primary'
+              }`}>
+                {ingredient.type}
+              </span>
+              <p className="text-[11px] font-bold text-foreground/40 italic">
+                Stock: {ingredient.current_stock}{ingredient.unit}
               </p>
-              {ingredient.current_stock < 0 && (
-                <span className="bg-red-100 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
-                  ⚠️ SHORT: {Math.abs(ingredient.current_stock)}{ingredient.unit}
-                </span>
-              )}
             </div>
           </div>
-          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold">&times;</button>
+          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold hover:bg-muted/80 transition-colors">&times;</button>
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-muted/50 p-1.5 rounded-2xl flex-none mb-6">
-          <button onClick={() => setTab('restock')} className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${tab === 'restock' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>🚚 Restock</button>
-          <button onClick={() => setTab('edit')} className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase transition-all ${tab === 'edit' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>⚙️ Edit Info</button>
+        <div className="flex bg-muted/40 p-1.5 rounded-2xl flex-none mb-6 border border-muted/50">
+          {ingredient.type === 'component' && (
+            <button onClick={() => setTab('recipe')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'recipe' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>🍳 Recipe</button>
+          )}
+          <button onClick={() => setTab('restock')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'restock' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>🚚 {ingredient.type === 'component' ? 'Produce' : 'Restock'}</button>
+          <button onClick={() => setTab('edit')} className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'edit' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>⚙️ Edit</button>
         </div>
 
         <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
-          {tab === 'restock' ? (
-            <div className="space-y-5">
-            <div className="flex justify-between items-center px-1">
-              <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest">Restock Mode</p>
-              <button 
-                onClick={() => setIsBulk(!isBulk)}
-                className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${isBulk ? 'bg-primary text-white shadow-md' : 'bg-muted text-foreground/40'}`}
-              >
-                {isBulk ? '📦 Bulk / Packs' : '⚖️ Single Unit'}
-              </button>
-            </div>
+          {tab === 'recipe' ? (
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest px-1">Sub-Ingredients</p>
+                {subRecipes.length === 0 ? (
+                  <div className="text-center py-8 bg-muted/20 rounded-2xl border-2 border-dashed border-muted/50">
+                    <p className="text-xs font-bold text-foreground/30">No ingredients in recipe yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {subRecipes.map(r => (
+                      <div key={r.id} className="flex justify-between items-center bg-white border border-muted/50 p-3 rounded-xl shadow-sm">
+                        <div>
+                          <p className="text-sm font-black text-foreground">{r.ingredients?.name}</p>
+                          <p className="text-[10px] font-bold text-foreground/40">{r.quantity_needed}{r.ingredients?.unit}</p>
+                        </div>
+                        <button onClick={() => handleRemoveSubIngredient(r.id)} className="text-red-300 hover:text-red-600 p-2">×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            {isBulk ? (
-              <>
-                <div className="grid grid-cols-3 gap-2 bg-muted/20 p-4 rounded-3xl border border-muted/50">
-                  <div>
-                    <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">How many?</label>
-                    <input type="number" placeholder="e.g. 10" value={numPacks} onChange={e => setNumPacks(e.target.value === '' ? '' : +e.target.value)}
-                      className="w-full h-11 px-3 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
-                    <p className="text-[9px] font-bold text-foreground/30 mt-1 text-center">Packs/Bottles</p>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Size each</label>
-                    <input type="number" placeholder="e.g. 1" value={packSize} onChange={e => setPackSize(e.target.value === '' ? '' : +e.target.value)}
-                      className="w-full h-11 px-3 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Unit</label>
-                    <select value={packSizeUnit} onChange={e => setPackSizeUnit(e.target.value)}
-                      className="w-full h-11 px-2 rounded-xl border border-muted text-xs font-black bg-white focus:border-primary">
-                      {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
-                    </select>
-                  </div>
-                  <div className="col-span-3">
-                    <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Price each (RM)</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground/30">RM</span>
-                      <input type="number" placeholder="e.g. 2.50" value={pricePerPack} onChange={e => setPricePerPack(e.target.value === '' ? '' : +e.target.value)}
-                        className="w-full h-11 pl-10 pr-2 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
+              <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-3">
+                <p className="text-[10px] font-black text-primary uppercase tracking-widest">Add To Recipe</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <select 
+                    value={recipeForm.ingredient_id} 
+                    onChange={e => setRecipeForm({...recipeForm, ingredient_id: e.target.value})}
+                    className="col-span-2 h-11 px-3 rounded-xl border border-muted text-sm font-bold bg-white"
+                  >
+                    <option value="">Select ingredient...</option>
+                    {allIngredients.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+                  </select>
+                  <input 
+                    type="number" 
+                    placeholder="Qty" 
+                    value={recipeForm.quantity_needed || ''} 
+                    onChange={e => setRecipeForm({...recipeForm, quantity_needed: +e.target.value})}
+                    className="h-11 px-3 rounded-xl border border-muted text-sm font-bold"
+                  />
+                  <button 
+                    onClick={handleAddSubIngredient}
+                    disabled={!recipeForm.ingredient_id || !recipeForm.quantity_needed}
+                    className="h-11 bg-primary text-white rounded-xl font-black text-xs uppercase disabled:opacity-50"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : tab === 'restock' ? (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center px-1">
+                <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest">
+                  {ingredient.type === 'component' ? 'Manual Adjustment' : 'Restock Record'}
+                </p>
+                {ingredient.type !== 'component' && (
+                  <button onClick={() => setIsBulk(!isBulk)} className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase transition-all shadow-sm ${isBulk ? 'bg-primary text-white' : 'bg-muted text-foreground/40'}`}>
+                    {isBulk ? '📦 Bulk Mode' : '⚖️ Single Unit'}
+                  </button>
+                )}
+              </div>
+
+              {isBulk ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3 bg-muted/20 p-5 rounded-3xl border border-muted/50">
+                    <div>
+                      <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block">Num Packs</label>
+                      <input type="number" placeholder="10" value={numPacks} onChange={e => setNumPacks(e.target.value === '' ? '' : +e.target.value)}
+                        className="w-full h-12 px-3 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block">Size Each</label>
+                      <input type="number" placeholder="1" value={packSize} onChange={e => setPackSize(e.target.value === '' ? '' : +e.target.value)}
+                        className="w-full h-12 px-3 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block">Unit</label>
+                      <select value={packSizeUnit} onChange={e => setPackSizeUnit(e.target.value)}
+                        className="w-full h-12 px-2 rounded-xl border border-muted text-xs font-black bg-white focus:border-primary">
+                        {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
+                      </select>
+                    </div>
+                    <div className="col-span-3">
+                      <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block">Total Price (RM)</label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground/30">RM</span>
+                        <input type="number" placeholder="0.00" value={pricePerPack} onChange={e => setPricePerPack(e.target.value === '' ? '' : +e.target.value)}
+                          className="w-full h-12 pl-12 pr-4 rounded-xl border border-muted text-sm font-black focus:border-primary outline-none" />
+                      </div>
                     </div>
                   </div>
                 </div>
-                {numPacks && packSize && pricePerPack && (
-                  <div className="bg-green-50 border border-green-100 rounded-2xl px-4 py-3 flex justify-between items-center text-sm">
-                    <span className="font-bold text-green-700">📦 {numPacks} pek × {packSize}{packSizeUnit} =</span>
-                    <span className="font-black text-green-800">{displayQty}{ingredient.unit} · RM {displayTotal.toFixed(2)}</span>
+              ) : (
+                <div className="flex gap-3">
+                  <div className="w-24">
+                    <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block">Qty</label>
+                    <input type="number" placeholder="0" value={qtyInput} onChange={e => setQtyInput(e.target.value === '' ? '' : +e.target.value)}
+                      className="w-full h-14 px-3 rounded-2xl border border-muted text-lg font-black text-center focus:border-primary outline-none" />
                   </div>
-                )}
-              </>
-            ) : (
-              <div className="flex items-center gap-2">
-                <div className="w-24">
-                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Qty</label>
-                  <input type="number" placeholder="0" value={qtyInput} onChange={e => setQtyInput(e.target.value === '' ? '' : +e.target.value)}
-                    className="w-full h-12 px-3 rounded-2xl border border-muted text-sm font-black focus:outline-none focus:border-primary text-center" />
+                  <div className="flex-1">
+                    <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block">Total Price (RM)</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground/30">RM</span>
+                      <input type="number" placeholder="0.00" value={totalPrice} onChange={e => setTotalPrice(e.target.value === '' ? '' : +e.target.value)}
+                        className="w-full h-14 pl-12 pr-4 rounded-2xl border border-muted text-lg font-black focus:border-primary outline-none" />
+                    </div>
+                  </div>
                 </div>
-                <div className="w-20">
-                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Unit</label>
-                  <select value={purchaseUnit} onChange={e => setPurchaseUnit(e.target.value)}
-                    className="w-full h-12 px-2 rounded-2xl border border-muted text-[10px] font-black bg-white focus:border-primary">
-                    {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
+              )}
+
+              <button 
+                onClick={handleRestockSubmit} 
+                disabled={loading || (!qtyInput && !numPacks)} 
+                className="w-full h-14 bg-primary text-white rounded-2xl font-black shadow-lg shadow-primary/20 active:scale-95 transition-all"
+              >
+                {loading ? 'Recording...' : ingredient.type === 'component' ? 'Adjust Stock' : 'Record Purchase'}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block tracking-widest">Name</label>
+                  <input value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})}
+                    className="w-full h-12 px-4 rounded-xl border-2 border-muted font-bold focus:border-primary outline-none bg-white" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block tracking-widest">Base Unit</label>
+                  <select value={editForm.unit} onChange={e => setEditForm({...editForm, unit: e.target.value})}
+                    className="w-full h-12 px-4 rounded-xl border-2 border-muted font-bold bg-white focus:border-primary">
+                    {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u}>{u}</option>)}
                   </select>
                 </div>
-                <div className="flex-1">
-                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Jumlah Bayar (Total RM)</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-foreground/30">RM</span>
-                    <input type="number" placeholder="0.00" value={totalPrice} onChange={e => setTotalPrice(e.target.value === '' ? '' : +e.target.value)}
-                      className="w-full h-12 pl-10 pr-3 rounded-2xl border border-muted text-sm font-black focus:outline-none focus:border-primary" />
-                  </div>
+                <div>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1.5 block tracking-widest">Category</label>
+                  <select value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })}
+                    className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none bg-white font-bold text-sm">
+                    {['Tepung', 'Tenusu', 'Gula', 'Lemak', 'Hiasan', 'Packaging', 'Lain-lain'].map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
               </div>
-            )}
 
-            <div className="bg-primary/5 p-4 rounded-3xl border border-primary/10 space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-foreground/40 font-bold uppercase tracking-tighter">Summary:</span>
-                <span className="font-black text-primary">
-                  {displayQty > 0 ? `${displayQty}${ingredient.unit} @ RM ${displayTotal.toFixed(2)}` : '-'}
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-6 pb-8 md:pb-0 flex-none">
-              <button onClick={handleRestockSubmit} disabled={loading || !displayQty || !displayTotal} className="w-full h-14 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/20 disabled:opacity-50">
-                {loading ? 'Processing...' : 'Confirm Restock'}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Category</label>
-                <select value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })}
-                  className="w-full h-11 px-4 rounded-xl border border-muted focus:border-primary outline-none bg-white font-bold text-sm">
-                  {['Tepung', 'Tenusu', 'Gula', 'Lemak', 'Hiasan', 'Packaging', 'Lain-lain'].map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <div className="col-span-2">
-                <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Ingredient Name</label>
-                <input value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})}
-                  className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none bg-white" />
-              </div>
-              <div className="col-span-2">
-                <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Brand (Optional)</label>
-                <input value={editForm.brand} onChange={e => setEditForm({...editForm, brand: e.target.value})}
-                  className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none bg-white" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Base Unit</label>
-                <select value={editForm.unit} onChange={e => setEditForm({...editForm, unit: e.target.value})}
-                  className="w-full h-12 px-4 rounded-2xl border border-muted font-bold bg-white focus:border-primary">
-                  {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u}>{u}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Stock Level</label>
-                <input type="number" value={editForm.current_stock} onChange={e => setEditForm({...editForm, current_stock: +e.target.value})}
-                  className="w-full h-12 px-4 rounded-2xl border border-muted font-bold focus:border-primary outline-none" />
-              </div>
-            </div>
-            <div>
-              <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Low Stock Alert Threshold</label>
-              <input type="number" value={editForm.low_stock_threshold} onChange={e => setEditForm({...editForm, low_stock_threshold: +e.target.value})}
-                className="w-full h-12 px-4 rounded-2xl border border-muted font-bold focus:border-primary outline-none" />
-            </div>
-
-            {/* Pack Setting */}
-            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 space-y-3">
-              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">📦 Pack Setting (Optional)</p>
-              <p className="text-[9px] text-blue-400">Tetapkan saiz pek supaya Shopping List tunjuk bilangan pek yang perlu dibeli.</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2 grid grid-cols-2 gap-2">
+              <div className="bg-muted/30 p-5 rounded-3xl space-y-4">
+                <p className="text-[10px] font-black text-foreground/30 uppercase tracking-widest">Alerts & Packaging</p>
+                <div>
+                  <label className="text-[10px] font-black text-foreground/40 mb-1 block">Low Stock Threshold</label>
+                  <input type="number" value={editForm.low_stock_threshold} onChange={e => setEditForm({...editForm, low_stock_threshold: +e.target.value})}
+                    className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Saiz 1 Pek</label>
-                    <input type="number" placeholder={`e.g. 1`} value={editForm.pack_size} onChange={e => setEditForm({...editForm, pack_size: e.target.value === '' ? '' : +e.target.value})}
-                      className="w-full h-11 px-3 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
+                    <label className="text-[10px] font-black text-foreground/40 mb-1 block">Pack Size</label>
+                    <input type="number" placeholder="1" value={editForm.pack_size} onChange={e => setEditForm({...editForm, pack_size: e.target.value === '' ? '' : +e.target.value})}
+                      className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Unit Saiz</label>
-                    <select value={editForm.pack_size_unit} onChange={e => setEditForm({...editForm, pack_size_unit: e.target.value})}
-                      className="w-full h-11 px-3 rounded-xl border border-muted font-bold bg-white focus:border-primary outline-none text-xs">
-                      {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
-                    </select>
+                    <label className="text-[10px] font-black text-foreground/40 mb-1 block">Pack Unit Name</label>
+                    <input placeholder="pek/botol" value={editForm.pack_unit} onChange={e => setEditForm({...editForm, pack_unit: e.target.value})}
+                      className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
                   </div>
                 </div>
-                <div className="col-span-2">
-                  <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Nama Unit Pek (cth: botol, pek, tin)</label>
-                  <input placeholder="e.g. botol" value={editForm.pack_unit} onChange={e => setEditForm({...editForm, pack_unit: e.target.value})}
-                    className="w-full h-11 px-3 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
-                </div>
               </div>
-              {editForm.pack_size && editForm.pack_unit && (
-                <p className="text-[10px] font-bold text-blue-600">✓ 1 {editForm.pack_unit} = {editForm.pack_size}{editForm.pack_size_unit}</p>
-              )}
+
+              <div className="space-y-3 pt-4">
+                <button onClick={handleEditSubmit} disabled={loading} className="w-full h-14 bg-foreground text-white rounded-2xl font-black shadow-lg active:scale-95 transition-all">
+                  {loading ? 'Updating...' : 'Update Details'}
+                </button>
+                <button onClick={() => onDelete(ingredient.id)} className="w-full h-10 text-red-500 font-bold text-xs hover:bg-red-50 rounded-xl transition-colors">
+                  Hapus Item Dari Inventori
+                </button>
+              </div>
             </div>
-            
-            <div className="pt-6 pb-8 md:pb-0 flex-none">
-              <button onClick={handleEditSubmit} disabled={loading} className="w-full h-12 bg-foreground text-white rounded-2xl font-black shadow-lg">
-                {loading ? 'Saving...' : 'Update Details'}
-              </button>
-              <button 
-                onClick={() => { if(confirm('Hapus bahan ini?')) { onDelete(ingredient.id); onClose(); } }} 
-                className="w-full h-10 flex items-center justify-center rounded-2xl text-red-500 font-bold hover:bg-red-50 transition-colors text-xs"
-              >
-                🗑️ Hapus Bahan Dari Inventory
-              </button>
-            </div>
-          </div>
-        )}
+          )}
         </div>
       </div>
     </div>

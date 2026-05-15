@@ -156,6 +156,7 @@ CREATE TABLE ingredients (
   baker_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   brand TEXT,
+  type TEXT DEFAULT 'raw', -- 'raw', 'component', 'supply'
   unit TEXT NOT NULL DEFAULT 'g',  -- g, kg, ml, L, pcs
   current_stock DECIMAL(10, 3) DEFAULT 0,
   avg_cost_per_unit DECIMAL(10, 4) DEFAULT 0,  -- Moving Average Cost
@@ -183,8 +184,9 @@ CREATE TABLE ingredient_purchases (
 CREATE TABLE recipes (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   baker_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-  ingredient_id UUID REFERENCES ingredients(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE, -- Optional if it's a product recipe
+  parent_ingredient_id UUID REFERENCES ingredients(id) ON DELETE CASCADE, -- Optional if it's a component recipe
+  ingredient_id UUID REFERENCES ingredients(id) ON DELETE CASCADE, -- The ingredient used in this recipe
   quantity_needed DECIMAL(10, 3) NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
