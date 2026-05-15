@@ -51,6 +51,8 @@ export default function InventoryPage() {
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
+  const [pendingAlertAction, setPendingAlertAction] = useState<any>(null);
+  const [manualShoppingIds, setManualShoppingIds] = useState<string[]>([]);
   
   // Form State for Add Ingredient
   const [form, setForm] = useState({ 
@@ -119,6 +121,7 @@ export default function InventoryPage() {
 
     setShoppingList(newShoppingList);
     setIngredients(loadedIngredients);
+    // Note: We'll merge manualShoppingIds in the filtered view or here
     setPurchases(rawPurchases.map(p => ({
       id: p.id,
       ingredient_name: p.ingredients?.name || 'Unknown',
@@ -205,7 +208,8 @@ export default function InventoryPage() {
   };
 
   const filteredIngredients = ingredients.filter(i => {
-    if (activeMainTab !== 'purchases' && i.type !== activeMainTab) return false;
+    if (activeMainTab === 'shopping' || activeMainTab === 'purchases') return false;
+    if (i.type !== activeMainTab) return false;
     if (searchQuery && !i.name.toLowerCase().includes(searchQuery.toLowerCase()) && !(i.brand || '').toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (selectedCategory !== 'Semua' && i.category !== selectedCategory) return false;
     if (statusFilter === 'in_stock') return i.current_stock > i.low_stock_threshold;
@@ -243,9 +247,14 @@ export default function InventoryPage() {
       id: `expd_${i.id}`, type: 'expd' as const,
       icon: '🚫', label: i.name,
       msg: `Expired`,
-      color: 'text-red-600', bg: 'bg-red-50'
+      color: 'text-red-600', bg: 'bg-red-50',
+      ingredient: i
     })),
-  ];
+  ].map(a => ({
+    ...a,
+    // Add the source ingredient for interaction
+    ingredient: ingredients.find(ing => ing.id === (a.id.split('_')[1])) || (a as any).ingredient
+  }));
 
   return (
     <div className="pb-4">
@@ -293,7 +302,14 @@ export default function InventoryPage() {
                       </div>
                     ) : (
                       alerts.map(a => (
-                        <div key={a.id} className={`flex items-start gap-3 px-4 py-3 hover:bg-muted/10 transition-colors cursor-pointer`}>
+                        <div 
+                          key={a.id} 
+                          onClick={() => {
+                            setPendingAlertAction(a);
+                            setShowNotifications(false);
+                          }}
+                          className={`flex items-start gap-3 px-4 py-3 hover:bg-muted/10 transition-colors cursor-pointer active:bg-muted/20`}
+                        >
                           <div className={`w-9 h-9 rounded-xl ${a.bg} flex items-center justify-center text-base flex-shrink-0 mt-0.5`}>
                             {a.icon}
                           </div>
@@ -338,10 +354,11 @@ export default function InventoryPage() {
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md -mx-4 md:-mx-8 px-4 md:px-8 py-3 border-b border-muted/30 mb-4">
         <div className="flex bg-muted/30 p-1.5 rounded-[12px] border border-muted/50 overflow-x-auto no-scrollbar">
           {[
-            { id: 'raw', label: 'Raw Ingredients', icon: '🥣' },
-            { id: 'component', label: 'Components', icon: '🍰' },
-            { id: 'supply', label: 'Supplies', icon: '📦' },
-            { id: 'purchases', label: 'Purchases', icon: '🧾' }
+            { id: 'raw', label: 'Raw', icon: '🥣' },
+            { id: 'component', label: 'Comp', icon: '🍰' },
+            { id: 'supply', label: 'Supp', icon: '📦' },
+            { id: 'shopping', label: 'Shop', icon: '🛒' },
+            { id: 'purchases', label: 'Purch', icon: '🧾' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -364,11 +381,19 @@ export default function InventoryPage() {
 
       {/* List Views */}
       <div className="space-y-4">
-        {activeMainTab === 'purchases' ? (
-          <PurchasesList purchases={purchases} />
-        ) : (
-          <>
-            <InventoryFilterBar
+            {activeMainTab === 'purchases' ? (
+              <PurchasesList purchases={purchases} />
+            ) : activeMainTab === 'shopping' ? (
+              <ShoppingListView 
+                ordersShopping={shoppingList} 
+                manualIds={manualShoppingIds}
+                allIngredients={ingredients}
+                onRestock={(ing: any) => { setSelectedIngredient(ing); setShowNotifications(false); }}
+                onRemoveManual={(id: string) => setManualShoppingIds(prev => prev.filter(i => i !== id))}
+              />
+            ) : (
+              <>
+                <InventoryFilterBar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               selectedCategory={selectedCategory}
@@ -387,6 +412,51 @@ export default function InventoryPage() {
           </>
         )}
       </div>
+
+      {/* Notification Action Chooser */}
+      {pendingAlertAction && (
+        <div className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-md flex items-end justify-center sm:items-center p-4">
+          <div className="bg-white w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] p-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+                {pendingAlertAction.icon}
+              </div>
+              <h3 className="text-xl font-black text-foreground">{pendingAlertAction.label}</h3>
+              <p className="text-sm text-foreground/40 font-medium mt-1">{pendingAlertAction.msg}</p>
+            </div>
+            
+            <div className="space-y-3">
+              <button 
+                onClick={() => {
+                  if (!manualShoppingIds.includes(pendingAlertAction.ingredient.id)) {
+                    setManualShoppingIds(prev => [...prev, pendingAlertAction.ingredient.id]);
+                  }
+                  setPendingAlertAction(null);
+                  setActiveMainTab('shopping');
+                }}
+                className="w-full h-14 bg-primary text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+              >
+                🛒 ADD TO SHOPPING LIST
+              </button>
+              <button 
+                onClick={() => {
+                  setSelectedIngredient(pendingAlertAction.ingredient);
+                  setPendingAlertAction(null);
+                }}
+                className="w-full h-14 bg-white text-foreground border-2 border-muted rounded-2xl font-black text-sm flex items-center justify-center gap-2"
+              >
+                ➕ RESTOCK MANUALLY
+              </button>
+              <button 
+                onClick={() => setPendingAlertAction(null)}
+                className="w-full h-12 text-foreground/30 font-black text-[10px] uppercase tracking-widest pt-2"
+              >
+                CANCEL
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       {showAdd && (
@@ -450,6 +520,88 @@ function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
             )}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock, onRemoveManual }: any) {
+  // Combine orders-based shopping list with manual IDs
+  const manualItems = manualIds.map((id: string) => {
+    const ing = allIngredients.find((i: any) => i.id === id);
+    if (!ing) return null;
+    return { ingredient: ing, needed: 0, shortfall: 0, isManual: true };
+  }).filter(Boolean);
+
+  const combinedList = [...ordersShopping, ...manualItems];
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-primary/5 border border-primary/10 p-4 rounded-2xl flex items-start gap-3">
+        <span className="text-xl">💡</span>
+        <p className="text-xs font-bold text-primary/80 leading-relaxed">
+          Items below are auto-calculated from your pending orders or added manually from notifications.
+        </p>
+      </div>
+
+      <div className="bg-white rounded-[16px] border border-muted overflow-hidden shadow-sm">
+        <div className="overflow-x-auto border-b border-muted/50">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-muted/30">
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item To Buy</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Needed</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-12"></th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+        <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
+          <table className="w-full text-left border-collapse">
+            <tbody className="divide-y divide-muted/50">
+              {combinedList.length === 0 ? (
+                <tr><td colSpan={3} className="px-6 py-20 text-center text-foreground/30 font-bold italic text-sm">Your shopping list is empty.</td></tr>
+              ) : (
+                combinedList.map((item: any, idx: number) => (
+                  <tr key={item.ingredient.id + idx} className="group">
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-foreground text-sm">{item.ingredient.name}</p>
+                        {item.isManual && <span className="text-[8px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded font-black uppercase">Manual</span>}
+                      </div>
+                      <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-tight">{item.ingredient.brand || 'No Brand'}</p>
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      {item.needed > 0 ? (
+                        <p className="text-sm font-black text-red-500">{item.shortfall}{item.ingredient.unit}</p>
+                      ) : (
+                        <p className="text-[10px] font-black text-foreground/30 italic">Not in orders</p>
+                      )}
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button 
+                          onClick={() => onRestock(item.ingredient)}
+                          className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all"
+                        >
+                          ➕
+                        </button>
+                        {item.isManual && (
+                          <button 
+                            onClick={() => onRemoveManual(item.ingredient.id)}
+                            className="w-8 h-8 rounded-lg bg-red-50 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
