@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { KitchenTabs } from '@/components/dashboard/KitchenTabs';
 import { formatDate } from '@/lib/utils';
@@ -48,6 +48,8 @@ export default function InventoryPage() {
   
   // Modal States
   const [showAdd, setShowAdd] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   
   // Form State for Add Ingredient
@@ -217,30 +219,119 @@ export default function InventoryPage() {
   const hasActiveFilter = !!(searchQuery || selectedCategory !== 'Semua' || statusFilter);
   const clearFilters = () => { setSearchQuery(''); setSelectedCategory('Semua'); setStatusFilter(''); };
 
+  // Notification alerts
+  const alerts = [
+    ...ingredients.filter(i => i.current_stock <= 0).map(i => ({
+      id: `out_${i.id}`, type: 'out' as const,
+      icon: '❌', label: i.name,
+      msg: `Out of stock (${i.current_stock}${i.unit})`,
+      color: 'text-red-500', bg: 'bg-red-50'
+    })),
+    ...ingredients.filter(i => i.current_stock > 0 && i.current_stock <= i.low_stock_threshold).map(i => ({
+      id: `low_${i.id}`, type: 'low' as const,
+      icon: '⚠️', label: i.name,
+      msg: `Low stock — ${i.current_stock}${i.unit} left (threshold: ${i.low_stock_threshold}${i.unit})`,
+      color: 'text-amber-500', bg: 'bg-amber-50'
+    })),
+    ...ingredients.filter(i => !!i.shelf_life && i.current_stock > 0 && (i.shelf_life as number) <= 7 && (i.shelf_life as number) >= 0).map(i => ({
+      id: `exp_${i.id}`, type: 'exp' as const,
+      icon: '⏳', label: i.name,
+      msg: `Expiring in ${i.shelf_life} day${(i.shelf_life as number) === 1 ? '' : 's'}`,
+      color: 'text-orange-500', bg: 'bg-orange-50'
+    })),
+    ...ingredients.filter(i => !!i.shelf_life && i.current_stock > 0 && (i.shelf_life as number) < 0).map(i => ({
+      id: `expd_${i.id}`, type: 'expd' as const,
+      icon: '🚫', label: i.name,
+      msg: `Expired`,
+      color: 'text-red-600', bg: 'bg-red-50'
+    })),
+  ];
+
   return (
     <div className="pb-4">
       <KitchenTabs />
 
       {/* Main Header */}
-      <div className="flex items-end justify-between mb-4">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-3xl font-black text-foreground tracking-tight">Inventory</h1>
           <p className="text-foreground/50 text-sm font-medium">Manage your kitchen resources</p>
         </div>
-        <button 
-          onClick={() => {
-            setForm({ 
-              name: '', brand: '', type: activeMainTab === 'purchases' ? 'raw' : activeMainTab as IngredientType, 
-              unit: 'g', current_stock: 0, category: 'Lain-lain',
-              sku: '', shelf_life: '', pack_size: '', pack_unit: '', pack_size_unit: 'g',
-              low_stock_threshold: 10
-            });
-            setShowAdd(true);
-          }} 
-          className="h-12 px-6 bg-primary text-white rounded-2xl font-black text-sm shadow-lg shadow-primary/20 hover:scale-105 transition-transform active:scale-95"
-        >
-          + Add Item
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Notification Bell */}
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => setShowNotifications(v => !v)}
+              className="relative w-12 h-12 flex items-center justify-center rounded-2xl border-2 border-muted bg-white hover:border-primary/30 hover:bg-primary/5 transition-all active:scale-95"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-foreground/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              {alerts.length > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-md animate-pulse">
+                  {alerts.length > 99 ? '99+' : alerts.length}
+                </span>
+              )}
+            </button>
+
+            {/* Notification Dropdown */}
+            {showNotifications && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setShowNotifications(false)} />
+                <div className="absolute right-0 top-14 w-80 bg-white rounded-2xl shadow-2xl border border-muted/50 z-40 overflow-hidden">
+                  {/* Header */}
+                  <div className="px-4 py-3 border-b border-muted/30 flex items-center justify-between">
+                    <span className="font-black text-sm text-foreground">Notifications</span>
+                    {alerts.length > 0 && <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{alerts.length} alerts</span>}
+                  </div>
+                  {/* List */}
+                  <div className="max-h-[380px] overflow-y-auto divide-y divide-muted/30">
+                    {alerts.length === 0 ? (
+                      <div className="py-10 text-center">
+                        <p className="text-2xl mb-2">🎉</p>
+                        <p className="text-sm font-bold text-foreground/40">All good! No alerts.</p>
+                      </div>
+                    ) : (
+                      alerts.map(a => (
+                        <div key={a.id} className={`flex items-start gap-3 px-4 py-3 hover:bg-muted/10 transition-colors cursor-pointer`}>
+                          <div className={`w-9 h-9 rounded-xl ${a.bg} flex items-center justify-center text-base flex-shrink-0 mt-0.5`}>
+                            {a.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-black text-sm text-foreground truncate">{a.label}</p>
+                            <p className={`text-xs font-semibold mt-0.5 ${a.color}`}>{a.msg}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {/* Footer */}
+                  {alerts.length > 0 && (
+                    <div className="px-4 py-2.5 border-t border-muted/30 bg-muted/10">
+                      <p className="text-[10px] font-bold text-foreground/30 text-center uppercase tracking-widest">Tap an item to restock</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Add Item Button */}
+          <button 
+            onClick={() => {
+              setForm({ 
+                name: '', brand: '', type: activeMainTab === 'purchases' ? 'raw' : activeMainTab as IngredientType, 
+                unit: 'g', current_stock: 0, category: 'Lain-lain',
+                sku: '', shelf_life: '', pack_size: '', pack_unit: '', pack_size_unit: 'g',
+                low_stock_threshold: 10
+              });
+              setShowAdd(true);
+            }} 
+            className="h-12 px-6 bg-primary text-white rounded-2xl font-black text-sm shadow-lg shadow-primary/20 hover:scale-105 transition-transform active:scale-95"
+          >
+            + Add Item
+          </button>
+        </div>
       </div>
 
       {/* Main Navigation Tabs - STICKY within main scroll container */}
