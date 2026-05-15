@@ -123,12 +123,30 @@ export default function InventoryPage() {
 
     const newShoppingList: ShoppingItem[] = [];
     loadedIngredients.forEach(ing => {
-      const needed = requiredMap.get(ing.id) || 0;
-      if (needed > 0 && ing.current_stock < needed) {
+      const neededForOrders = requiredMap.get(ing.id) || 0;
+      const buffer = ing.low_stock_threshold || 0;
+      
+      const isShortForOrders = neededForOrders > 0 && ing.current_stock < neededForOrders;
+      const isBelowThreshold = ing.current_stock < buffer;
+
+      if (isShortForOrders || isBelowThreshold) {
+        const targetStock = Math.max(neededForOrders, buffer);
+        const shortfall = targetStock - ing.current_stock;
+        
+        let suggestedPacks = 0;
+        let suggestedTotalQty = shortfall;
+
+        if (ing.pack_size && ing.pack_size > 0) {
+          suggestedPacks = Math.ceil(shortfall / ing.pack_size);
+          suggestedTotalQty = suggestedPacks * ing.pack_size;
+        }
+
         newShoppingList.push({
           ingredient: ing,
-          needed,
-          shortfall: needed - ing.current_stock
+          needed: neededForOrders,
+          shortfall,
+          suggestedPacks,
+          suggestedTotalQty
         });
       }
     });
@@ -796,10 +814,20 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                       <p className="text-[10px] text-foreground/30 font-bold uppercase tracking-tight">{item.ingredient.brand || 'No Brand'}</p>
                     </td>
                     <td className="px-6 py-5 text-right">
-                      {item.needed > 0 ? (
-                        <p className="text-sm font-black text-red-500">{item.shortfall}{item.ingredient.unit}</p>
+                      {item.needed > 0 || item.suggestedPacks > 0 ? (
+                        <div className="flex flex-col items-end">
+                          <p className="text-sm font-black text-red-500">
+                            {item.suggestedPacks > 0 
+                              ? `Buy ${item.suggestedPacks} ${item.ingredient.pack_unit || 'pack'}${item.suggestedPacks > 1 ? 's' : ''}`
+                              : `${item.shortfall}${item.ingredient.unit}`
+                            }
+                          </p>
+                          <p className="text-[9px] font-bold text-foreground/30 uppercase tracking-tighter">
+                            Total: {item.suggestedTotalQty || item.shortfall}{item.ingredient.unit}
+                          </p>
+                        </div>
                       ) : (
-                        <p className="text-[10px] font-black text-foreground/30 italic">Not in orders</p>
+                        <p className="text-[10px] font-black text-foreground/30 italic">Check Stock</p>
                       )}
                     </td>
                     <td className="px-6 py-5 text-center">
