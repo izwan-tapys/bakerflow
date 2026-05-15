@@ -716,7 +716,6 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
   const selectedIng = ingredients.find(i => i.id === form.ingredient_id);
 
   return (
-  return (
     <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
       <div className="bg-white w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
         <div className="flex-none mb-6">
