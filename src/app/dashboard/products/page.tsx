@@ -18,6 +18,7 @@ interface Product {
 interface Ingredient {
   id: string;
   name: string;
+  brand?: string | null;
   unit: string;
   avg_cost_per_unit: number;
 }
@@ -51,7 +52,7 @@ export default function ProductsPage() {
   // Inline Add Ingredient State
   const [ingSearch, setIngSearch] = useState('');
   const [showIngSuggestions, setShowIngSuggestions] = useState(false);
-  const [ingForm, setIngForm] = useState({ ingredient_id: '', unit: 'g', quantity_needed: 0 });
+  const [ingForm, setIngForm] = useState({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 });
 
   // Recipe Modal State
   const [editingRecipe, setEditingRecipe] = useState<Product | null>(null);
@@ -104,14 +105,15 @@ export default function ProductsPage() {
     } else {
       setPendingRecipes(prev => [...prev, {
         new_name: ingSearch,
+        brand: ingForm.brand || null,
         unit: ingForm.unit,
         quantity_needed: ingForm.quantity_needed,
-        display_name: ingSearch
+        display_name: ingForm.brand ? `${ingSearch} (@${ingForm.brand})` : ingSearch
       }]);
     }
     
     // Reset ingredient form
-    setIngForm({ ingredient_id: '', unit: 'g', quantity_needed: 0 });
+    setIngForm({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 });
     setIngSearch('');
     setShowIngSuggestions(false);
   };
@@ -164,6 +166,7 @@ export default function ProductsPage() {
           const { data: newIng, error: ingError } = await supabase.from('ingredients').insert({
             baker_id: user.id,
             name: recipe.new_name,
+            brand: recipe.brand || null,
             unit: recipe.unit,
             current_stock: 0,
             avg_cost_per_unit: 0,
@@ -364,47 +367,60 @@ export default function ProductsPage() {
               </div>
             )}
 
-            {/* Add Recipe Form */}
             <div className="bg-muted/30 p-3 rounded-xl border border-muted/50 space-y-3">
-              <div className="relative">
-                <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Search or Add Ingredient</label>
-                <input 
-                  placeholder="Type ingredient name..." 
-                  value={ingSearch} 
-                  onChange={e => {
-                    setIngSearch(e.target.value);
-                    setIngForm({ ...ingForm, ingredient_id: '' });
-                    setShowIngSuggestions(true);
-                  }}
-                  onFocus={() => setShowIngSuggestions(true)}
-                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" 
-                />
-                
-                {/* Suggestions Dropdown */}
-                {showIngSuggestions && ingSearch && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-muted rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                    {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).length > 0 ? (
-                      ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
-                        <div 
-                          key={i.id} 
-                          onClick={() => {
-                            setIngSearch(i.name);
-                            setIngForm({ ...ingForm, ingredient_id: i.id, unit: i.unit });
-                            setShowIngSuggestions(false);
-                          }}
-                          className="px-4 py-2 hover:bg-primary/5 cursor-pointer text-sm font-medium border-b border-muted/30 last:border-0"
-                        >
-                          <p className="text-foreground">{i.name}</p>
-                          <p className="text-[10px] text-foreground/40">{i.unit}</p>
+              <div className="flex gap-2">
+                <div className="flex-[2] relative">
+                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Search or Add Ingredient</label>
+                  <input 
+                    placeholder="Type ingredient name..." 
+                    value={ingSearch} 
+                    onChange={e => {
+                      setIngSearch(e.target.value);
+                      setIngForm({ ...ingForm, ingredient_id: '' });
+                      setShowIngSuggestions(true);
+                    }}
+                    onFocus={() => setShowIngSuggestions(true)}
+                    className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" 
+                  />
+                  
+                  {/* Suggestions Dropdown */}
+                  {showIngSuggestions && ingSearch && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-muted rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                      {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).length > 0 ? (
+                        ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
+                          <div 
+                            key={i.id} 
+                            onClick={() => {
+                              setIngSearch(i.name);
+                              setIngForm({ ...ingForm, ingredient_id: i.id, brand: i.brand || '', unit: i.unit });
+                              setShowIngSuggestions(false);
+                            }}
+                            className="px-4 py-2 hover:bg-primary/5 cursor-pointer text-sm font-medium border-b border-muted/30 last:border-0"
+                          >
+                            <div className="flex items-center gap-2">
+                              <p className="text-foreground">{i.name}</p>
+                              {i.brand && <span className="text-[10px] text-primary/50 font-bold bg-primary/5 px-1.5 py-0.5 rounded">@{i.brand}</span>}
+                            </div>
+                            <p className="text-[10px] text-foreground/40">{i.unit}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-xs text-foreground/40 italic">
+                          No match found. Press "Add" to create "{ingSearch}"
                         </div>
-                      ))
-                    ) : (
-                      <div className="px-4 py-3 text-xs text-foreground/40 italic">
-                        No match found. Press "Add" to create "{ingSearch}"
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Brand (Opt)</label>
+                  <input 
+                    placeholder="Anchor" 
+                    value={ingForm.brand} 
+                    onChange={e => setIngForm({ ...ingForm, brand: e.target.value })}
+                    className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" 
+                  />
+                </div>
               </div>
 
               <div className="flex gap-2">
@@ -666,7 +682,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
   // Modal Inline Add State
   const [ingSearch, setIngSearch] = useState('');
   const [showIngSuggestions, setShowIngSuggestions] = useState(false);
-  const [form, setForm] = useState({ ingredient_id: '', unit: 'g', quantity_needed: 0 });
+  const [form, setForm] = useState({ ingredient_id: '', brand: '', unit: 'g', quantity_needed: 0 });
 
   const loadRecipes = useCallback(async () => {
     const { data } = await supabase
@@ -701,6 +717,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
         const { data: newIng, error: ingError } = await supabase.from('ingredients').insert({
           baker_id: user.id,
           name: ingSearch,
+          brand: form.brand || null,
           unit: form.unit,
           current_stock: 0,
           avg_cost_per_unit: 0,
@@ -786,45 +803,59 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
 
           {/* Add New Item */}
           <div className="bg-muted/30 p-3 rounded-xl border border-muted/50 space-y-3">
-            <div className="relative">
-              <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Search or Add Ingredient</label>
-              <input 
-                placeholder="Type ingredient name..." 
-                value={ingSearch} 
-                onChange={e => {
-                  setIngSearch(e.target.value);
-                  setForm({ ...form, ingredient_id: '' });
-                  setShowIngSuggestions(true);
-                }}
-                onFocus={() => setShowIngSuggestions(true)}
-                className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" 
-              />
-              
-              {/* Suggestions Dropdown */}
-              {showIngSuggestions && ingSearch && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-muted rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                  {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).length > 0 ? (
-                    ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
-                      <div 
-                        key={i.id} 
-                        onClick={() => {
-                          setIngSearch(i.name);
-                          setForm({ ...form, ingredient_id: i.id, unit: i.unit });
-                          setShowIngSuggestions(false);
-                        }}
-                        className="px-4 py-2 hover:bg-primary/5 cursor-pointer text-sm font-medium border-b border-muted/30 last:border-0"
-                      >
-                        <p className="text-foreground">{i.name}</p>
-                        <p className="text-[10px] text-foreground/40">{i.unit}</p>
+            <div className="flex gap-2">
+              <div className="flex-[2] relative">
+                <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Search or Add Ingredient</label>
+                <input 
+                  placeholder="Type ingredient name..." 
+                  value={ingSearch} 
+                  onChange={e => {
+                    setIngSearch(e.target.value);
+                    setForm({ ...form, ingredient_id: '' });
+                    setShowIngSuggestions(true);
+                  }}
+                  onFocus={() => setShowIngSuggestions(true)}
+                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" 
+                />
+                
+                {/* Suggestions Dropdown */}
+                {showIngSuggestions && ingSearch && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-muted rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                    {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).length > 0 ? (
+                      ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
+                        <div 
+                          key={i.id} 
+                          onClick={() => {
+                            setIngSearch(i.name);
+                            setForm({ ...form, ingredient_id: i.id, brand: i.brand || '', unit: i.unit });
+                            setShowIngSuggestions(false);
+                          }}
+                          className="px-4 py-2 hover:bg-primary/5 cursor-pointer text-sm font-medium border-b border-muted/30 last:border-0"
+                        >
+                          <div className="flex items-center gap-2">
+                            <p className="text-foreground">{i.name}</p>
+                            {i.brand && <span className="text-[10px] text-primary/50 font-bold bg-primary/5 px-1.5 py-0.5 rounded">@{i.brand}</span>}
+                          </div>
+                          <p className="text-[10px] text-foreground/40">{i.unit}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-xs text-foreground/40 italic">
+                        No match found. Press "Add" to create "{ingSearch}"
                       </div>
-                    ))
-                  ) : (
-                    <div className="px-4 py-3 text-xs text-foreground/40 italic">
-                      No match found. Press "Add" to create "{ingSearch}"
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Brand (Opt)</label>
+                <input 
+                  placeholder="Anchor" 
+                  value={form.brand} 
+                  onChange={e => setForm({ ...form, brand: e.target.value })}
+                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" 
+                />
+              </div>
             </div>
 
             <div className="flex gap-2 items-end">

@@ -155,6 +155,7 @@ CREATE TABLE ingredients (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   baker_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
+  brand TEXT,
   unit TEXT NOT NULL DEFAULT 'g',  -- g, kg, ml, L, pcs
   current_stock DECIMAL(10, 3) DEFAULT 0,
   avg_cost_per_unit DECIMAL(10, 4) DEFAULT 0,  -- Moving Average Cost

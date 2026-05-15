@@ -7,6 +7,7 @@ import { KitchenTabs } from '@/components/dashboard/KitchenTabs';
 interface Ingredient {
   id: string;
   name: string;
+  brand?: string | null;
   unit: string;
   current_stock: number;
   avg_cost_per_unit: number;
@@ -28,7 +29,7 @@ export default function InventoryPage() {
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ name: '', unit: 'g', current_stock: 0, category: 'Lain-lain' });
+  const [form, setForm] = useState({ name: '', brand: '', unit: 'g', current_stock: 0, category: 'Lain-lain' });
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const CATEGORIES = ['Semua', 'Tepung', 'Tenusu', 'Gula', 'Lemak', 'Hiasan', 'Packaging', 'Lain-lain'];
   
@@ -96,13 +97,14 @@ export default function InventoryPage() {
     await supabase.from('ingredients').insert({ 
       baker_id: user.id,
       name: form.name,
+      brand: form.brand || null,
       unit: form.unit,
       current_stock: form.current_stock,
       category: form.category === 'Lain-lain' ? autoCat : form.category,
       avg_cost_per_unit: 0,
       low_stock_threshold: 0
     });
-    setForm({ name: '', unit: 'g', current_stock: 0, category: 'Lain-lain' });
+    setForm({ name: '', brand: '', unit: 'g', current_stock: 0, category: 'Lain-lain' });
     setShowAdd(false);
     loadIngredients();
   };
@@ -245,9 +247,19 @@ export default function InventoryPage() {
                       const name = e.target.value;
                       setForm({ ...form, name, category: getAutoCategory(name) });
                     }}
-                    className="w-full h-12 px-4 rounded-2xl border border-muted focus:border-primary outline-none font-bold shadow-sm" 
+                    className="w-full h-12 px-4 rounded-2xl border border-muted focus:border-primary outline-none font-bold shadow-sm bg-white" 
                   />
                   <p className="text-[9px] text-blue-500 mt-1 font-bold">Auto-detected: {form.category}</p>
+                </div>
+
+                <div className="col-span-2">
+                  <label className="text-[10px] font-black uppercase text-foreground/40 mb-1 block">Brand (Optional)</label>
+                  <input 
+                    placeholder="e.g. Anchor, Baker's Choice" 
+                    value={form.brand} 
+                    onChange={e => setForm({ ...form, brand: e.target.value })}
+                    className="w-full h-12 px-4 rounded-2xl border border-muted focus:border-primary outline-none font-bold shadow-sm bg-white" 
+                  />
                 </div>
 
                 <div className="col-span-2">
@@ -341,6 +353,7 @@ export default function InventoryPage() {
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
                           <p className="font-bold text-foreground">{ing.name}</p>
+                          {ing.brand && <span className="text-[10px] font-bold text-primary/50 bg-primary/5 px-1.5 py-0.5 rounded">@{ing.brand}</span>}
                           {isLow && !isNegative && <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" title="Low Stock" />}
                           {isNegative && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Insufficient Stock" />}
                         </div>
@@ -420,6 +433,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
     category: ingredient.category || 'Lain-lain',
     current_stock: ingredient.current_stock,
     low_stock_threshold: ingredient.low_stock_threshold,
+    brand: ingredient.brand || '',
     pack_size: ingredient.pack_size ?? '' as number | '',
     pack_unit: ingredient.pack_unit ?? '',
     pack_size_unit: ingredient.pack_size_unit ?? ingredient.unit,
@@ -468,6 +482,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
         current_stock: Number(editForm.current_stock) || 0,
         low_stock_threshold: Number(editForm.low_stock_threshold) || 0,
         category: editForm.category,
+        brand: editForm.brand || null,
         pack_size: editForm.pack_size === '' ? null : Number(editForm.pack_size),
         pack_unit: editForm.pack_unit || null,
         pack_size_unit: editForm.pack_size_unit || null
@@ -612,7 +627,12 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
               <div className="col-span-2">
                 <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Ingredient Name</label>
                 <input value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})}
-                  className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none" />
+                  className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none bg-white" />
+              </div>
+              <div className="col-span-2">
+                <label className="text-[10px] font-black text-foreground/40 uppercase mb-1 block">Brand (Optional)</label>
+                <input value={editForm.brand} onChange={e => setEditForm({...editForm, brand: e.target.value})}
+                  className="w-full h-11 px-4 rounded-xl border border-muted font-bold focus:border-primary outline-none bg-white" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
