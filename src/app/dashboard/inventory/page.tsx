@@ -257,11 +257,19 @@ export default function InventoryPage() {
     if (!user) return;
 
     try {
-      // 1. Update ingredient stock and turn off shopping flag
+      const currentStock = Number(item.ingredient.current_stock);
+      const currentAvgCost = Number(item.ingredient.avg_cost_per_unit);
+      
+      const newStock = currentStock + qty;
+      const newTotalValue = (currentStock * currentAvgCost) + totalCost;
+      const newAvgCost = newStock > 0 ? newTotalValue / newStock : currentAvgCost;
+
+      // 1. Update ingredient stock and avg cost
       const { error: ingError } = await supabase
         .from('ingredients')
         .update({ 
-          current_stock: item.ingredient.current_stock + qty,
+          current_stock: newStock,
+          avg_cost_per_unit: newAvgCost,
           is_on_shopping_list: false 
         })
         .eq('id', item.ingredient.id);
@@ -275,9 +283,8 @@ export default function InventoryPage() {
           baker_id: user.id,
           ingredient_id: item.ingredient.id,
           quantity: qty,
-          unit: item.ingredient.unit,
-          total_cost: totalCost,
-          purchased_at: new Date().toISOString()
+          unit_cost: totalCost / qty,
+          total_cost: totalCost
         });
 
       if (purError) throw purError;
