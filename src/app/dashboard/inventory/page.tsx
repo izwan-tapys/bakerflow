@@ -702,6 +702,21 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
         </div>
         <div className="flex items-center gap-2">
           <button 
+            onClick={(e) => {
+              const btn = e.currentTarget;
+              const original = btn.innerHTML;
+              btn.innerHTML = 'Saved! ✅';
+              btn.classList.replace('bg-primary', 'bg-green-500');
+              setTimeout(() => {
+                btn.innerHTML = original;
+                btn.classList.replace('bg-green-500', 'bg-primary');
+              }, 2000);
+            }}
+            className="h-12 px-6 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 active:scale-95"
+          >
+            Save List
+          </button>
+          <button 
             onClick={() => handleShare('wa')}
             className="w-12 h-12 rounded-2xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all shadow-sm active:scale-95"
             title="Share to WhatsApp"
