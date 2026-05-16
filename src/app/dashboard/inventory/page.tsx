@@ -481,11 +481,26 @@ export default function InventoryPage() {
           </div>
 
           {(activeMainTab === 'raw' || activeMainTab === 'component' || activeMainTab === 'supply') && (
-            <div className="grid grid-cols-[1fr_80px_100px] gap-4 px-2">
-              <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest">Resource</p>
-              <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest text-center">Stock</p>
-              <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest text-right">Status</p>
-            </div>
+            <>
+              <div className="px-1">
+                <InventoryFilterBar
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  selectedCategory={selectedCategory}
+                  onCategoryChange={setSelectedCategory}
+                  categories={CATEGORIES}
+                  statusFilter={statusFilter}
+                  onStatusChange={setStatusFilter}
+                  hasActiveFilter={hasActiveFilter}
+                  onClearFilters={clearFilters}
+                />
+              </div>
+              <div className="grid grid-cols-[1fr_80px_100px] gap-4 px-2 pt-2 border-t border-muted/10">
+                <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest">Resource</p>
+                <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest text-center">Stock</p>
+                <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest text-right">Status</p>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -506,17 +521,6 @@ export default function InventoryPage() {
               />
             ) : (
               <>
-            <InventoryFilterBar
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              selectedCategory={selectedCategory}
-              onCategoryChange={setSelectedCategory}
-              categories={CATEGORIES}
-              statusFilter={statusFilter}
-              onStatusChange={setStatusFilter}
-              hasActiveFilter={hasActiveFilter}
-              onClearFilters={clearFilters}
-            />
             <IngredientsList
               ingredients={filteredIngredients}
               onSelect={setSelectedIngredient}
