@@ -1037,7 +1037,6 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
           </div>
         </div>
       </div>
-      </div>
     </div>
   );
 }
