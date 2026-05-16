@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { KitchenTabs } from '@/components/dashboard/KitchenTabs';
 import { formatDate } from '@/lib/utils';
@@ -49,24 +49,7 @@ export default function InventoryPage() {
   const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const [activeMainTab, setActiveMainTab] = useState<'raw' | 'component' | 'supply' | 'shopping' | 'purchases'>('raw');
-  
-  // Sync tab with URL search params
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab && ['raw', 'component', 'supply', 'shopping', 'purchases'].includes(tab)) {
-      setActiveMainTab(tab as any);
-    }
-  }, [searchParams]);
-
-  const handleTabChange = (tab: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('tab', tab);
-    router.replace(`/dashboard/inventory?${params.toString()}`);
-    setActiveMainTab(tab as any);
-    setSelectedCategory('Semua');
-  };
+  const [activeMainTab, setActiveMainTab] = useState<IngredientType | 'purchases' | 'shopping'>('raw');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [statusFilter, setStatusFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -486,7 +469,7 @@ export default function InventoryPage() {
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
+                onClick={() => { setActiveMainTab(tab.id as any); setSelectedCategory('Semua'); }}
                 className={`flex-1 min-w-[64px] py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex flex-col items-center gap-0.5 ${
                   activeMainTab === tab.id ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'
                 }`}

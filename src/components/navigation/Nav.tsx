@@ -12,13 +12,6 @@ const navItems = [
   { href: '/dashboard/settings', label: 'Settings', icon: '⚙️' },
 ];
 
-const inventoryNavItems = [
-  { href: '/dashboard/inventory?tab=raw', label: 'Inventory', icon: '📦' },
-  { href: '/dashboard/inventory?tab=shopping', label: 'Shopping', icon: '🛒' },
-  { href: '/dashboard/inventory?tab=purchases', label: 'Purchases', icon: '🧾' },
-  { href: '/dashboard/settings', label: 'Menu', icon: '⋮' },
-];
-
 export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -28,34 +21,27 @@ export function BottomNav() {
     router.push('/login');
   };
 
-  const isInventoryPage = pathname.startsWith('/dashboard/inventory');
-  const currentItems = isInventoryPage ? inventoryNavItems : navItems;
-
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-muted safe-area-pb md:hidden">
       <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
-        {currentItems.map(item => {
-          // Special active logic for inventory tabs
-          const isActive = isInventoryPage 
-            ? (item.label === 'Menu' ? pathname === '/dashboard/settings' : pathname === '/dashboard/inventory')
-            : (pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)));
-            
+        {navItems.map(item => {
+          const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex-1 flex flex-col items-center justify-center gap-0.5 h-full transition-all ${
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${
                 isActive ? 'text-primary' : 'text-foreground/40'
               }`}
             >
-              <span className={`text-xl transition-transform font-bold ${isActive ? 'scale-110' : ''}`}>
+              <span className={`text-xl transition-transform ${isActive ? 'scale-110' : ''}`}>
                 {item.icon}
               </span>
-              <span className={`text-[10px] font-black uppercase tracking-wider transition-all ${isActive ? 'text-primary' : 'text-foreground/40'}`}>
+              <span className={`text-[10px] font-bold transition-all ${isActive ? 'text-primary' : 'text-foreground/40'}`}>
                 {item.label}
               </span>
               {isActive && (
-                <div className="w-1 h-1 rounded-full bg-primary mt-0.5" />
+                <div className="w-1 h-1 rounded-full bg-primary" />
               )}
             </Link>
           );
