@@ -244,7 +244,7 @@ export default function OrdersPage() {
 
       {/* Manual Order Modal (Same as before but with modernized classes) */}
       {showManual && (
-        <div className="fixed inset-0 z-[100] bg-background/40 backdrop-blur-md flex items-center justify-center p-[5%] pb-[90px] md:pb-[5%]">
+        <div className="fixed inset-0 z-[100] bg-background/40 backdrop-blur-md flex items-center justify-center p-3 md:p-[5%]">
           <div className="bg-card w-full max-w-xl h-fit max-h-[90vh] rounded-xl p-8 shadow-2xl flex flex-col overflow-hidden border border-primary/10">
             <div className="flex justify-between items-center mb-6 flex-none">
               <p className="text-xl font-black text-foreground tracking-tight">{editingOrder ? 'Edit Order' : 'Add Manual Order'}</p>

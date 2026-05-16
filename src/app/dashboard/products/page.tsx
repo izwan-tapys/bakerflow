@@ -339,7 +339,7 @@ export default function ProductsPage() {
 
       {/* Add Form with Inline Recipe */}
       {showAdd && (
-        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-3 pb-[90px] md:p-[10%]">
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-3 md:p-[10%]">
           <div className="bg-card w-full h-full rounded-xl p-5 md:p-8 shadow-2xl flex flex-col overflow-hidden border border-primary/10">
             <div className="flex justify-between items-center mb-6 flex-none">
               <p className="text-xl font-black text-primary">Add New Product</p>
@@ -611,7 +611,7 @@ export default function ProductsPage() {
 
       {/* Edit Product Modal */}
       {editingProduct && (
-        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-3 md:p-[10%]">
           <div className="bg-card w-full h-full rounded-xl p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
             <div className="flex justify-between items-center mb-6 flex-none">
               <h2 className="text-xl font-black text-primary">Edit Product</h2>
@@ -794,7 +794,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
+    <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-3 md:p-[10%]">
       <div className="bg-card w-full h-full rounded-xl p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
         <div className="flex-none mb-6">
           <div className="flex items-center justify-between mb-1">
