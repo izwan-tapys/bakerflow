@@ -29,6 +29,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       }
 
       // Check setup status — skip for setup page itself
+      /* 
       if (!pathname.startsWith('/dashboard/setup')) {
         const { data: settings, error: settingsError } = await supabase
           .from('baker_settings')
@@ -46,6 +47,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
           return;
         }
       }
+      */
       
       setChecking(false);
     });
