@@ -147,59 +147,248 @@ export default function ProductionPage() {
     loadOrders();
   };
 
-  const queued = orders.filter(o => o.status === 'approved');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   const baking = orders.filter(o => o.status === 'production');
+  const queued = orders.filter(o => o.status === 'approved');
   const ready = orders.filter(o => o.status === 'ready');
 
   return (
-    <div className="space-y-6 pb-4">
-      <KitchenTabs />
+    <div className="space-y-5 pb-4">
+      {/* Unified Sticky Header Section */}
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
+        <div className="pt-4">
+          <KitchenTabs />
+        </div>
+        
+        <div className="flex items-start justify-between pt-6 pb-4">
+          <div>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Production Line 🥣</h1>
+            <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Kitchen Workflow</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+            <span className="text-[10px] font-black uppercase text-foreground/40">{baking.length} Baking</span>
+          </div>
+        </div>
 
-      <div>
-        <h1 className="text-2xl font-extrabold text-foreground">Production Line 🥣</h1>
-        <p className="text-foreground/50 text-sm">Track your production workflow</p>
+        {/* Column Headers */}
+        <div className="pb-3 px-2">
+          <div className="grid grid-cols-[1fr_80px_100px] gap-4">
+            <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest">Product / Order</p>
+            <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest text-center">Status</p>
+            <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest text-right">Delivery</p>
+          </div>
+        </div>
       </div>
 
       {loading ? (
-        <div className="space-y-4">{[1,2].map(i => <div key={i} className="h-48 bg-muted rounded-2xl animate-pulse" />)}</div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-2xl animate-pulse" />)}
+        </div>
       ) : orders.length === 0 ? (
-        <div className="text-center py-16 space-y-2">
-          <div className="text-5xl">🎉</div>
-          <p className="text-foreground/50 font-medium">Kitchen is clear!</p>
-          <p className="text-foreground/40 text-sm">No active production tasks right now.</p>
+        <div className="text-center py-20 bg-white rounded-xl border border-dashed border-muted">
+          <div className="text-5xl mb-3">🎉</div>
+          <p className="font-bold text-foreground/40 text-sm">Kitchen is clear!</p>
         </div>
       ) : (
-        <>
+        <div className="space-y-8">
+          {/* Baking Section */}
           {baking.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="font-bold text-foreground flex items-center gap-2">
+            <div className="space-y-3">
+              <h2 className="text-[10px] font-black uppercase text-orange-600 tracking-[0.2em] px-2 flex items-center gap-2">
                 🔥 Currently Baking
-                <span className="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full font-bold">{baking.length}</span>
               </h2>
-              {baking.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadOrders} />)}
-            </section>
+              <ProductionList orders={baking} expandedId={expandedId} setExpandedId={setExpandedId} onStatusChange={handleStatusChange} onRefresh={loadOrders} />
+            </div>
           )}
 
+          {/* Queued Section */}
           {queued.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="font-bold text-foreground flex items-center gap-2">
+            <div className="space-y-3">
+              <h2 className="text-[10px] font-black uppercase text-blue-600 tracking-[0.2em] px-2 flex items-center gap-2">
                 📋 Queued
-                <span className="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full font-bold">{queued.length}</span>
               </h2>
-              {queued.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadOrders} />)}
-            </section>
+              <ProductionList orders={queued} expandedId={expandedId} setExpandedId={setExpandedId} onStatusChange={handleStatusChange} onRefresh={loadOrders} />
+            </div>
           )}
 
+          {/* Ready Section */}
           {ready.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="font-bold text-foreground flex items-center gap-2">
+            <div className="space-y-3">
+              <h2 className="text-[10px] font-black uppercase text-green-600 tracking-[0.2em] px-2 flex items-center gap-2">
                 ✅ Ready for Pickup/Delivery
-                <span className="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full font-bold">{ready.length}</span>
               </h2>
-              {ready.map(o => <ProductionCard key={o.id} order={o} onStatusChange={handleStatusChange} onRefresh={loadOrders} />)}
-            </section>
+              <ProductionList orders={ready} expandedId={expandedId} setExpandedId={setExpandedId} onStatusChange={handleStatusChange} onRefresh={loadOrders} />
+            </div>
           )}
-        </>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProductionList({ orders, expandedId, setExpandedId, onStatusChange, onRefresh }: { 
+  orders: Order[]; 
+  expandedId: string | null; 
+  setExpandedId: (id: string | null) => void; 
+  onStatusChange: (id: string, s: OrderStatus) => void;
+  onRefresh: () => void;
+}) {
+  return (
+    <div className="bg-white rounded-xl border border-muted/50 overflow-hidden shadow-sm">
+      <div className="divide-y divide-muted/20">
+        {orders.map(order => (
+          <ProductionRow 
+            key={order.id} 
+            order={order} 
+            isExpanded={expandedId === order.id} 
+            onExpand={() => setExpandedId(expandedId === order.id ? null : order.id)}
+            onStatusChange={onStatusChange}
+            onRefresh={onRefresh}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProductionRow({ order, isExpanded, onExpand, onStatusChange, onRefresh }: { 
+  order: Order; 
+  isExpanded: boolean; 
+  onExpand: () => void;
+  onStatusChange: (id: string, s: OrderStatus) => void;
+  onRefresh: () => void;
+}) {
+  const [stockStatus, setStockStatus] = useState<{ isOk: boolean; checked: boolean }>({ isOk: true, checked: false });
+
+  useEffect(() => {
+    if (order.status === 'approved') {
+      const { checkOrderStock } = require('@/lib/services/baker.service');
+      checkOrderStock(order.id!).then((res: any) => setStockStatus({ isOk: res.isOk, checked: true }));
+    } else {
+      setStockStatus({ isOk: true, checked: true });
+    }
+  }, [order.id, order.status]);
+
+  const nextStatus: Record<string, { label: string; status: OrderStatus; color: string; icon: string }> = {
+    approved: { label: 'START BAKING', status: 'production', color: 'bg-orange-500', icon: '🔥' },
+    production: { label: 'MARK AS READY', status: 'ready', color: 'bg-green-600', icon: '✅' },
+    ready: { label: 'OUT FOR DELIVERY', status: 'otw', color: 'bg-blue-600', icon: '🚗' },
+  };
+
+  const next = nextStatus[order.status];
+
+  return (
+    <div className="contents">
+      <div 
+        onClick={onExpand}
+        className={`grid grid-cols-[1fr_80px_100px] gap-4 items-center px-6 py-4 cursor-pointer transition-colors hover:bg-muted/10 ${isExpanded ? 'bg-primary/5' : ''}`}
+      >
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className={`text-[10px] flex-none transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}>▶</span>
+            <p className="font-black text-foreground text-sm truncate">{order.product_name}</p>
+          </div>
+          <p className="text-[10px] font-bold text-foreground/30 uppercase tracking-tighter ml-6">For {order.customer_name} • ×{order.quantity}</p>
+        </div>
+
+        <div className="flex justify-center">
+          <div className={`px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-widest ${
+            order.status === 'approved' ? 'bg-blue-100 text-blue-600' :
+            order.status === 'production' ? 'bg-orange-100 text-orange-600' :
+            'bg-green-100 text-green-600'
+          }`}>
+            {order.status === 'approved' ? 'Queued' : order.status}
+          </div>
+        </div>
+
+        <div className="text-right">
+          <p className="text-xs font-black text-primary leading-none">
+            {new Date(order.delivery_date).toLocaleDateString('en-MY', { day: '2-digit', month: 'short' })}
+          </p>
+          <p className="text-[10px] font-bold text-foreground/30">{order.delivery_time}</p>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="bg-muted/5 px-8 py-8 border-b border-muted/20 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div>
+                <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-2">Production Task</p>
+                <p className="text-sm font-black text-foreground leading-tight">{order.product_name} (×{order.quantity})</p>
+                <p className="text-xs font-bold text-foreground/60 mt-1">Order #{order.order_number}</p>
+              </div>
+
+              <div>
+                <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-2">Customer & Note</p>
+                <p className="text-sm font-bold text-foreground/80">{order.customer_name} ({order.customer_phone})</p>
+                {order.special_notes && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-100 rounded-xl mt-2">
+                    <p className="text-xs font-bold text-yellow-700 italic">“{order.special_notes}”</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-4">
+                <button 
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const newStatus = order.payment_status === 'paid' ? 'unpaid' : 'paid';
+                    const { updatePaymentStatus } = await import('@/lib/services/baker.service');
+                    const success = await updatePaymentStatus(order.id!, newStatus);
+                    if (success) onRefresh();
+                  }}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase border-2 transition-all ${
+                    order.payment_status === 'paid' ? 'bg-green-50 border-green-200 text-green-600' : 'bg-orange-50 border-orange-200 text-orange-600'
+                  }`}
+                >
+                  {order.payment_status === 'paid' ? '✅ PAID' : '⏳ UNPAID'}
+                </button>
+                <a
+                  href={`https://wa.me/60${order.customer_phone?.replace(/^0/, '')}?text=${encodeURIComponent(
+                    `Hi ${order.customer_name}! 👋 Your order of *${order.product_name}* (×${order.quantity}) is now ${
+                      order.status === 'production' ? 'being baked 🔥' : 'ready for delivery ✅'
+                    }. Thank you for ordering from us! 🎂`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  className="px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-green-50 text-green-700 border-2 border-green-200"
+                >
+                  💬 WHATSAPP
+                </a>
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-end">
+              {next && (
+                <div className="space-y-3">
+                  <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest text-right mb-2">Next Step</p>
+                  {order.status === 'approved' && stockStatus.checked && !stockStatus.isOk ? (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); window.location.href = '/dashboard/inventory?filter=negative'; }}
+                      className="w-full h-14 rounded-2xl bg-amber-500 text-white font-black text-sm shadow-xl shadow-amber-200 flex items-center justify-center gap-2"
+                    >
+                      ⚠️ INSUFFICIENT STOCK
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onStatusChange(order.id!, next.status); }}
+                      className={`w-full h-14 rounded-2xl text-white font-black text-sm shadow-xl transition-all hover:scale-[1.02] ${next.color} ${
+                        next.status === 'production' ? 'shadow-orange-200' : 'shadow-green-200'
+                      }`}
+                    >
+                      {next.icon} {next.label}
+                    </button>
+                  )}
+                  <p className="text-[10px] text-right font-bold text-foreground/30 italic">Target: {order.delivery_date} {order.delivery_time}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

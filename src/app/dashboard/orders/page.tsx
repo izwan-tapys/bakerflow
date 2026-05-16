@@ -181,94 +181,133 @@ export default function OrdersPage() {
     return matchesSearch && matchesStatus;
   });
 
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   return (
     <div className="space-y-5 pb-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-foreground">Orders 📝</h1>
-          <p className="text-foreground/50 text-sm">Manage all your customer orders</p>
+      {/* Unified Sticky Header Section */}
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
+        <div className="flex items-start justify-between pt-6 pb-4">
+          <div>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Orders 📝</h1>
+            <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Customer Orders</p>
+          </div>
+          <button 
+            onClick={() => setShowManual(true)}
+            className="h-10 px-4 bg-primary text-white rounded-xl font-black text-xs shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+          >
+            + Manual Order
+          </button>
         </div>
-        <button 
-          onClick={() => setShowManual(true)}
-          className="h-10 px-4 bg-primary text-white rounded-xl font-bold text-sm shadow-md shadow-primary/20 hover:scale-105 transition-all"
-        >
-          + Manual Order
-        </button>
+
+        {/* Filters & Search Combo */}
+        <div className="space-y-4 pb-3">
+          <div className="flex gap-3">
+            {/* Search */}
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs">🔍</span>
+              <input
+                type="search"
+                placeholder="Search..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full h-9 pl-8 pr-4 rounded-lg border border-muted bg-white focus:border-primary focus:outline-none text-[10px] font-bold"
+              />
+            </div>
+            {/* Filter Pills */}
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+              {STATUS_FILTERS.map(f => (
+                <button
+                  key={f.value}
+                  onClick={() => setFilter(f.value)}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${
+                    filter === f.value
+                      ? 'bg-primary text-white border-primary shadow-sm'
+                      : 'bg-white text-foreground/40 border-muted hover:border-primary'
+                  }`}
+                >
+                  {f.label.split(' ')[1]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Table Header */}
+          <div className="grid grid-cols-[1fr_80px_100px] gap-4 px-2">
+            <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest">Customer / Order</p>
+            <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest text-center">Status</p>
+            <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest text-right">Delivery</p>
+          </div>
+        </div>
       </div>
 
-      {/* Manual Order Modal */}
+      {/* Manual Order Modal (Same as before but with modernized classes) */}
       {showManual && (
-        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
-          <div className="bg-white w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[5%] pb-[90px] md:pb-[5%]">
+          <div className="bg-white w-full max-w-xl h-fit max-h-[90vh] rounded-[32px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
             <div className="flex justify-between items-center mb-6 flex-none">
               <p className="text-xl font-black text-primary">{editingOrder ? 'Edit Order' : 'Add Manual Order'}</p>
               <button onClick={() => { setShowManual(false); setEditingOrder(null); }} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
             </div>
             
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-black uppercase text-foreground/40">Customer Name</label>
+                    <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Customer Name</label>
                     <input value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})}
-                      className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+                      className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase text-foreground/40">Customer Phone</label>
+                    <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Phone</label>
                     <input value={manualForm.customer_phone} onChange={e => setManualForm({...manualForm, customer_phone: e.target.value})} placeholder="0123456789"
-                      className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+                      className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase text-foreground/40">Delivery/Pickup Address</label>
+                  <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Address / Pickup</label>
                   <input value={manualForm.customer_address} onChange={e => setManualForm({...manualForm, customer_address: e.target.value})}
-                    className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+                    className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-black uppercase text-foreground/40">Product</label>
+                    <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Product</label>
                     <select value={manualForm.product_id} onChange={e => setManualForm({...manualForm, product_id: e.target.value})}
-                      className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold bg-white">
+                      className="w-full h-12 px-3 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold bg-white">
                       <option value="">Select Product</option>
-                      {products.map(p => <option key={p.id} value={p.id}>{p.name} (RM{p.price})</option>)}
+                      {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase text-foreground/40">Quantity</label>
+                    <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Qty</label>
                     <input type="number" value={manualForm.quantity} onChange={e => setManualForm({...manualForm, quantity: +e.target.value})}
-                      className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+                      className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-black uppercase text-foreground/40">Date</label>
+                    <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Delivery Date</label>
                     <input type="date" value={manualForm.delivery_date} onChange={e => setManualForm({...manualForm, delivery_date: e.target.value})}
-                      className="w-full h-11 px-3 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold" />
+                      className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase text-foreground/40">Payment</label>
+                    <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Payment</label>
                     <select value={manualForm.payment_status} onChange={e => setManualForm({...manualForm, payment_status: e.target.value as any})}
-                      className="w-full h-11 px-2 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold bg-white">
-                      <option value="unpaid">Unpaid</option>
-                      <option value="paid">Paid</option>
+                      className="w-full h-12 px-3 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold bg-white text-primary">
+                      <option value="unpaid">🔴 UNPAID</option>
+                      <option value="paid">🟢 PAID</option>
                     </select>
                   </div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-black uppercase text-foreground/40">Special Note (Optional)</label>
-                  <textarea value={manualForm.special_notes} onChange={e => setManualForm({...manualForm, special_notes: e.target.value})} rows={2}
-                    className="w-full px-3 py-2 rounded-xl border border-muted focus:border-primary outline-none text-sm font-bold resize-none" />
                 </div>
               </div>
             </div>
 
             <div className="pt-6 flex-none">
               <button onClick={editingOrder ? handleUpdateOrder : handleAddManualOrder} disabled={!manualForm.customer_name || !manualForm.product_id}
-                className="w-full h-14 bg-primary text-white rounded-xl font-black text-lg disabled:opacity-50 shadow-xl shadow-primary/20 transition-all">
+                className="w-full h-16 bg-primary text-white rounded-2xl font-black text-lg disabled:opacity-50 shadow-xl shadow-primary/20 transition-all">
                 {editingOrder ? 'UPDATE ORDER' : 'SAVE ORDER'}
               </button>
             </div>
@@ -276,50 +315,99 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {/* Search */}
-      <div className="relative">
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40">🔍</span>
-        <input
-          type="search"
-          placeholder="Search by name, product, order no..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full h-12 pl-10 pr-4 rounded-2xl border-2 border-muted bg-white focus:border-primary focus:outline-none text-sm"
-        />
-      </div>
-
-      {/* Filter Pills */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-        {STATUS_FILTERS.map(f => (
-          <button
-            key={f.value}
-            onClick={() => setFilter(f.value)}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${
-              filter === f.value
-                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                : 'bg-white text-foreground/60 border border-muted hover:border-primary hover:text-primary'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
       {/* Orders List */}
       {loading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map(i => <div key={i} className="h-28 bg-muted rounded-2xl animate-pulse" />)}
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-2xl animate-pulse" />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 space-y-2">
-          <div className="text-4xl">📭</div>
-          <p className="text-foreground/50 font-medium">No orders found</p>
+        <div className="text-center py-20 bg-white rounded-xl border border-dashed border-muted">
+          <div className="text-4xl mb-3">📭</div>
+          <p className="font-bold text-foreground/40">No {filter} orders found</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {filtered.map(order => (
-            <OrderCard key={order.id} order={order} onStatusChange={handleStatusChange} onEdit={handleEditOrder} onRefresh={loadData} />
-          ))}
+        <div className="bg-white rounded-xl border border-muted/50 overflow-hidden shadow-sm">
+          <div className="divide-y divide-muted/20">
+            {filtered.map(order => (
+              <div key={order.id} className="contents">
+                <div 
+                  onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
+                  className={`grid grid-cols-[1fr_80px_100px] gap-4 items-center px-6 py-4 cursor-pointer transition-colors hover:bg-muted/10 ${expandedId === order.id ? 'bg-primary/5' : ''}`}
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] flex-none transition-transform duration-300 ${expandedId === order.id ? 'rotate-90' : ''}`}>▶</span>
+                      <p className="font-black text-foreground text-sm truncate">{order.customer_name}</p>
+                    </div>
+                    <p className="text-[10px] font-bold text-foreground/30 uppercase tracking-tighter ml-6">#{order.order_number}</p>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <div className={`px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-widest ${
+                      order.status === 'pending' ? 'bg-yellow-100 text-yellow-600' :
+                      order.status === 'approved' ? 'bg-blue-100 text-blue-600' :
+                      order.status === 'production' ? 'bg-orange-100 text-orange-600' :
+                      order.status === 'completed' ? 'bg-green-100 text-green-600' :
+                      'bg-muted text-foreground/40'
+                    }`}>
+                      {order.status}
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-xs font-black text-primary leading-none">
+                      {new Date(order.delivery_date).toLocaleDateString('en-MY', { day: '2-digit', month: 'short' })}
+                    </p>
+                    <p className="text-[10px] font-bold text-foreground/30">{order.delivery_time}</p>
+                  </div>
+                </div>
+
+                {expandedId === order.id && (
+                  <div className="bg-muted/5 px-8 py-8 border-b border-muted/20 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-6">
+                        <div>
+                          <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-2">Order Details</p>
+                          <p className="text-sm font-black text-foreground leading-tight">{order.product_name}</p>
+                          <p className="text-xs font-bold text-foreground/60 mt-1">Qty: {order.quantity} | RM {order.total_amount.toFixed(2)}</p>
+                        </div>
+                        
+                        <div>
+                          <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-2">Customer & Address</p>
+                          <p className="text-sm font-bold text-foreground/80">{order.customer_phone}</p>
+                          <p className="text-sm text-foreground/60 mt-1 leading-relaxed">{order.customer_address}</p>
+                        </div>
+
+                        {order.special_notes && (
+                          <div className="p-3 bg-yellow-50 border border-yellow-100 rounded-xl">
+                            <p className="text-[9px] font-black uppercase text-yellow-600 tracking-widest mb-1">Notes</p>
+                            <p className="text-xs font-bold text-yellow-700">{order.special_notes}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-4">
+                        <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-2">Actions</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {order.status === 'pending' && (
+                            <button onClick={() => handleStatusChange(order.id, 'approved')} className="h-12 rounded-xl bg-blue-500 text-white font-black text-xs shadow-lg shadow-blue-200">APPROVE</button>
+                          )}
+                          {order.status === 'approved' && (
+                            <button onClick={() => handleStatusChange(order.id, 'production')} className="h-12 rounded-xl bg-orange-500 text-white font-black text-xs shadow-lg shadow-orange-200">START BAKING</button>
+                          )}
+                          {order.status === 'production' && (
+                            <button onClick={() => handleStatusChange(order.id, 'ready')} className="h-12 rounded-xl bg-green-500 text-white font-black text-xs shadow-lg shadow-green-200">MARK READY</button>
+                          )}
+                          <button onClick={() => handleEditOrder(order)} className="h-12 rounded-xl bg-muted text-foreground/60 font-black text-xs">EDIT INFO</button>
+                        </div>
+                        <p className="text-[10px] text-center font-bold text-foreground/30 italic">Payment: {order.payment_status.toUpperCase()}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
