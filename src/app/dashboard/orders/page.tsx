@@ -274,7 +274,7 @@ export default function OrdersPage() {
                     className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Product</label>
                     <select value={manualForm.product_id} onChange={e => setManualForm({...manualForm, product_id: e.target.value})}
@@ -290,7 +290,7 @@ export default function OrdersPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Delivery Date</label>
                     <input type="date" value={manualForm.delivery_date} onChange={e => setManualForm({...manualForm, delivery_date: e.target.value})}
