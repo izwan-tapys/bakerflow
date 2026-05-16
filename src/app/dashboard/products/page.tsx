@@ -476,7 +476,9 @@ export default function ProductsPage() {
             </div>
           </div>
         </div>
-          {/* Product List - Table Style */}
+      )}
+
+      {/* Product List - Table Style */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-2xl animate-pulse" />)}
