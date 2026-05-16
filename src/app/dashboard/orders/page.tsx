@@ -79,8 +79,7 @@ export default function OrdersPage() {
       delivery_date: manualForm.delivery_date,
       delivery_time: manualForm.delivery_time,
       status: 'approved',
-      special_notes: manualForm.special_notes,
-      order_number: `M-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
+      special_notes: manualForm.special_notes
     });
 
     if (error) {
@@ -337,9 +336,9 @@ export default function OrdersPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className={`text-[10px] flex-none transition-transform duration-300 ${expandedId === order.id ? 'rotate-90' : ''}`}>▶</span>
-                      <p className="font-black text-foreground text-sm truncate">{order.customer_name}</p>
+                      <p className="font-black text-foreground text-sm truncate">{order.product_name}</p>
                     </div>
-                    <p className="text-[10px] font-bold text-foreground/30 uppercase tracking-tighter ml-6">#{order.order_number}</p>
+                    <p className="text-[10px] font-bold text-foreground/30 uppercase tracking-tighter ml-6">#{order.order_number} • For {order.customer_name} • ×{order.quantity}</p>
                   </div>
                   
                   <div className="flex justify-center">

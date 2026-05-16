@@ -290,7 +290,7 @@ function ProductionRow({ order, isExpanded, onExpand, onStatusChange, onRefresh 
             <span className={`text-[10px] flex-none transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}>▶</span>
             <p className="font-black text-foreground text-sm truncate">{order.product_name}</p>
           </div>
-          <p className="text-[10px] font-bold text-foreground/30 uppercase tracking-tighter ml-6">For {order.customer_name} • ×{order.quantity}</p>
+          <p className="text-[10px] font-bold text-foreground/30 uppercase tracking-tighter ml-6">#{order.order_number} • For {order.customer_name} • ×{order.quantity}</p>
         </div>
 
         <div className="flex justify-center">
