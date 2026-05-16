@@ -511,10 +511,12 @@ export default function ProductsPage() {
                       onClick={() => setExpandedId(expandedId === product.id ? null : product.id)}
                       className={`group cursor-pointer transition-colors hover:bg-muted/10 border-b border-muted/20 ${expandedId === product.id ? 'bg-primary/5' : ''}`}
                     >
-                      <td className="px-6 py-3">
+                      <td className="px-6 py-3 max-w-[200px] md:max-w-xs">
                         <div className="flex items-center gap-3">
-                          <span className={`text-[10px] transition-transform duration-300 ${expandedId === product.id ? 'rotate-90' : ''}`}>▶</span>
-                          <p className="font-black text-foreground text-sm leading-tight">{product.name}</p>
+                          <span className={`text-[10px] flex-none transition-transform duration-300 ${expandedId === product.id ? 'rotate-90' : ''}`}>▶</span>
+                          <p className="font-black text-foreground text-sm leading-tight truncate flex-1 min-w-0" title={product.name}>
+                            {product.name}
+                          </p>
                         </div>
                       </td>
                       <td className="px-6 py-3 text-right font-black text-primary text-sm">
