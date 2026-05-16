@@ -390,13 +390,13 @@ export default function OrdersPage() {
                         <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-2">Actions</p>
                         <div className="grid grid-cols-2 gap-2">
                           {order.status === 'pending' && (
-                            <button onClick={() => handleStatusChange(order.id, 'approved')} className="h-12 rounded-xl bg-blue-500 text-white font-black text-xs shadow-lg shadow-blue-200">APPROVE</button>
+                            <button onClick={() => handleStatusChange(order.id!, 'approved')} className="h-12 rounded-xl bg-blue-500 text-white font-black text-xs shadow-lg shadow-blue-200">APPROVE</button>
                           )}
                           {order.status === 'approved' && (
-                            <button onClick={() => handleStatusChange(order.id, 'production')} className="h-12 rounded-xl bg-orange-500 text-white font-black text-xs shadow-lg shadow-orange-200">START BAKING</button>
+                            <button onClick={() => handleStatusChange(order.id!, 'production')} className="h-12 rounded-xl bg-orange-500 text-white font-black text-xs shadow-lg shadow-orange-200">START BAKING</button>
                           )}
                           {order.status === 'production' && (
-                            <button onClick={() => handleStatusChange(order.id, 'ready')} className="h-12 rounded-xl bg-green-500 text-white font-black text-xs shadow-lg shadow-green-200">MARK READY</button>
+                            <button onClick={() => handleStatusChange(order.id!, 'ready')} className="h-12 rounded-xl bg-green-500 text-white font-black text-xs shadow-lg shadow-green-200">MARK READY</button>
                           )}
                           <button onClick={() => handleEditOrder(order)} className="h-12 rounded-xl bg-muted text-foreground/60 font-black text-xs">EDIT INFO</button>
                         </div>

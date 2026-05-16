@@ -243,7 +243,7 @@ function ProductionList({ orders, expandedId, setExpandedId, onStatusChange, onR
             key={order.id} 
             order={order} 
             isExpanded={expandedId === order.id} 
-            onExpand={() => setExpandedId(expandedId === order.id ? null : order.id)}
+            onExpand={() => setExpandedId(expandedId === order.id ? null : (order.id ?? null))}
             onStatusChange={onStatusChange}
             onRefresh={onRefresh}
           />
