@@ -6,7 +6,8 @@ import { Order, OrderStatus } from '@/lib/types';
 import { updateOrderStatus } from '@/lib/services/baker.service';
 import { formatDate } from '@/lib/utils';
 
-import { checkOrderStock } from '@/lib/services/baker.service';
+import { checkOrderStock, updatePaymentStatus } from '@/lib/services/baker.service';
+import { Flame, CheckCircle2, Truck, Clock, MessageCircle, AlertTriangle, Timer, Package, ChevronRight } from 'lucide-react';
 
 function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; onStatusChange: (id: string, s: OrderStatus) => void; onRefresh?: () => void }) {
   const [stockStatus, setStockStatus] = useState<{ isOk: boolean; checked: boolean }>({ isOk: true, checked: false });
@@ -19,11 +20,9 @@ function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; on
     }
   }, [order.id, order.status]);
 
-  const nextStatus: Record<string, { label: string; status: OrderStatus; color: string }> = {
-    approved: { label: 'Start Baking 🔥', status: 'production', color: 'bg-orange-500' },
-    production: { label: 'Mark as Ready ✅', status: 'ready', color: 'bg-green-600' },
-    ready: { label: 'Out for Delivery 🚗', status: 'otw', color: 'bg-blue-600' },
-  };
+    approved: { label: 'START BAKING', status: 'production', color: 'bg-orange-500', icon: <Flame className="w-3 h-3" /> },
+    production: { label: 'MARK AS READY', status: 'ready', color: 'bg-green-600', icon: <CheckCircle2 className="w-3 h-3" /> },
+    ready: { label: 'OUT FOR DELIVERY', status: 'otw', color: 'bg-blue-600', icon: <Truck className="w-3 h-3" /> },
 
   const next = nextStatus[order.status];
 
@@ -40,7 +39,11 @@ function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; on
           'bg-green-600'
         }`}>
           {order.status === 'approved' ? 'Queued' :
-           order.status === 'production' ? 'Baking 🔥' : 'Ready ✅'}
+           order.status === 'production' ? (
+             <span className="flex items-center gap-1"><Flame className="w-3 h-3" /> Baking</span>
+           ) : (
+             <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Ready</span>
+           )}
         </div>
       </div>
 
@@ -64,30 +67,30 @@ function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; on
           }`}
         >
           <p className={`text-xs font-bold uppercase ${order.payment_status === 'paid' ? 'text-green-700/60' : 'text-orange-700/60'}`}>Payment</p>
-          <p className={`font-black mt-0.5 ${order.payment_status === 'paid' ? 'text-green-600' : 'text-orange-600'}`}>
-            {order.payment_status === 'paid' ? '✅ Paid' : '⏳ Mark Paid'}
+          <p className={`font-black mt-0.5 flex items-center gap-1 ${order.payment_status === 'paid' ? 'text-green-600' : 'text-orange-600'}`}>
+            {order.payment_status === 'paid' ? <CheckCircle2 className="w-4 h-4" /> : <Timer className="w-4 h-4" />}
+            {order.payment_status === 'paid' ? 'Paid' : 'Mark Paid'}
           </p>
         </button>
       </div>
 
-      {order.special_notes && (
-        <div className="bg-accent/10 rounded-xl p-3 text-sm text-foreground/70">
-          📝 <span className="font-medium">{order.special_notes}</span>
+        <div className="bg-accent/10 rounded-xl p-3 text-sm text-foreground/70 flex items-start gap-2">
+          <Package className="w-4 h-4 mt-0.5 flex-none" />
+          <span className="font-medium">{order.special_notes}</span>
         </div>
-      )}
 
       {/* WhatsApp Button */}
       <a
         href={`https://wa.me/60${order.customer_phone?.replace(/^0/, '')}?text=${encodeURIComponent(
-          `Hi ${order.customer_name}! 👋 Your order of *${order.product_name}* (×${order.quantity}) is now ${
-            order.status === 'production' ? 'being baked 🔥' : 'ready for delivery ✅'
-          }. Thank you for ordering from us! 🎂`
+          `Hi ${order.customer_name}! Your order of *${order.product_name}* (×${order.quantity}) is now ${
+            order.status === 'production' ? 'being baked' : 'ready for delivery'
+          }. Thank you for ordering from us!`
         )}`}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-green-50 text-green-700 font-semibold text-sm hover:bg-green-100 transition-colors"
       >
-        <span>💬</span> WhatsApp Customer
+        <MessageCircle className="w-4 h-4" /> WhatsApp Customer
       </a>
 
       {next && (
@@ -97,7 +100,7 @@ function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; on
               onClick={() => window.location.href = '/kitchen/inventory?filter=negative'}
               className="w-full h-12 rounded-xl bg-amber-500 text-white font-bold transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
             >
-              ⚠️ Check Inventory (Insufficient Stock)
+              <AlertTriangle className="w-5 h-5" /> Check Inventory (Insufficient Stock)
             </button>
           ) : (
             <button
@@ -158,7 +161,7 @@ export default function ProductionPage() {
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
         <div className="flex items-start justify-between pt-6 pb-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Production Line 🥣</h1>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Production Line</h1>
             <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Kitchen Workflow</p>
           </div>
           <div className="flex items-center gap-2">
@@ -183,7 +186,9 @@ export default function ProductionPage() {
         </div>
       ) : orders.length === 0 ? (
         <div className="text-center py-20 bg-card rounded-xl border border-dashed border-muted">
-          <div className="text-5xl mb-3">🎉</div>
+          <div className="flex justify-center mb-4 text-muted">
+            <CheckCircle2 className="w-16 h-16" />
+          </div>
           <p className="font-bold text-foreground/40 text-sm">Kitchen is clear!</p>
         </div>
       ) : (
@@ -192,7 +197,7 @@ export default function ProductionPage() {
           {baking.length > 0 && (
             <div className="space-y-3">
               <h2 className="text-[10px] font-black uppercase text-orange-600 tracking-[0.2em] px-2 flex items-center gap-2">
-                🔥 Currently Baking
+                <Flame className="w-4 h-4 text-orange-500" /> Currently Baking
               </h2>
               <ProductionList orders={baking} expandedId={expandedId} setExpandedId={setExpandedId} onStatusChange={handleStatusChange} onRefresh={loadOrders} />
             </div>
@@ -202,7 +207,7 @@ export default function ProductionPage() {
           {queued.length > 0 && (
             <div className="space-y-3">
               <h2 className="text-[10px] font-black uppercase text-blue-600 tracking-[0.2em] px-2 flex items-center gap-2">
-                📋 Queued
+                <Clock className="w-4 h-4 text-blue-500" /> Queued
               </h2>
               <ProductionList orders={queued} expandedId={expandedId} setExpandedId={setExpandedId} onStatusChange={handleStatusChange} onRefresh={loadOrders} />
             </div>
@@ -212,7 +217,7 @@ export default function ProductionPage() {
           {ready.length > 0 && (
             <div className="space-y-3">
               <h2 className="text-[10px] font-black uppercase text-green-600 tracking-[0.2em] px-2 flex items-center gap-2">
-                ✅ Ready for Pickup/Delivery
+                <CheckCircle2 className="w-4 h-4 text-green-500" /> Ready for Pickup/Delivery
               </h2>
               <ProductionList orders={ready} expandedId={expandedId} setExpandedId={setExpandedId} onStatusChange={handleStatusChange} onRefresh={loadOrders} />
             </div>
@@ -266,10 +271,10 @@ function ProductionRow({ order, isExpanded, onExpand, onStatusChange, onRefresh 
     }
   }, [order.id, order.status]);
 
-  const nextStatus: Record<string, { label: string; status: OrderStatus; color: string; icon: string }> = {
-    approved: { label: 'START BAKING', status: 'production', color: 'bg-orange-500', icon: '🔥' },
-    production: { label: 'MARK AS READY', status: 'ready', color: 'bg-green-600', icon: '✅' },
-    ready: { label: 'OUT FOR DELIVERY', status: 'otw', color: 'bg-blue-600', icon: '🚗' },
+  const nextStatus: Record<string, { label: string; status: OrderStatus; color: string; icon: React.ReactNode }> = {
+    approved: { label: 'START BAKING', status: 'production', color: 'bg-orange-500', icon: <Flame className="w-3 h-3" /> },
+    production: { label: 'MARK AS READY', status: 'ready', color: 'bg-green-600', icon: <CheckCircle2 className="w-3 h-3" /> },
+    ready: { label: 'OUT FOR DELIVERY', status: 'otw', color: 'bg-blue-600', icon: <Truck className="w-3 h-3" /> },
   };
 
   const next = nextStatus[order.status];
@@ -339,20 +344,23 @@ function ProductionRow({ order, isExpanded, onExpand, onStatusChange, onRefresh 
                     order.payment_status === 'paid' ? 'bg-green-50 border-green-200 text-green-600' : 'bg-orange-50 border-orange-200 text-orange-600'
                   }`}
                 >
-                  {order.payment_status === 'paid' ? '✅ PAID' : '⏳ UNPAID'}
+                  <span className="flex items-center gap-1">
+                    {order.payment_status === 'paid' ? <CheckCircle2 className="w-3 h-3" /> : <Timer className="w-3 h-3" />}
+                    {order.payment_status === 'paid' ? 'PAID' : 'UNPAID'}
+                  </span>
                 </button>
                 <a
                   href={`https://wa.me/60${order.customer_phone?.replace(/^0/, '')}?text=${encodeURIComponent(
-                    `Hi ${order.customer_name}! 👋 Your order of *${order.product_name}* (×${order.quantity}) is now ${
-                      order.status === 'production' ? 'being baked 🔥' : 'ready for delivery ✅'
-                    }. Thank you for ordering from us! 🎂`
+                    `Hi ${order.customer_name}! Your order of *${order.product_name}* (×${order.quantity}) is now ${
+                      order.status === 'production' ? 'being baked' : 'ready for delivery'
+                    }. Thank you for ordering from us!`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={e => e.stopPropagation()}
                   className="px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-green-50 text-green-700 border-2 border-green-200"
                 >
-                  💬 WHATSAPP
+                  <MessageCircle className="w-3 h-3" /> WHATSAPP
                 </a>
               </div>
             </div>
@@ -366,7 +374,7 @@ function ProductionRow({ order, isExpanded, onExpand, onStatusChange, onRefresh 
                       onClick={(e) => { e.stopPropagation(); window.location.href = '/kitchen/inventory?filter=negative'; }}
                       className="w-full h-14 rounded-xl bg-amber-500 text-white font-black text-sm shadow-xl shadow-amber-200 flex items-center justify-center gap-2"
                     >
-                      ⚠️ INSUFFICIENT STOCK
+                      <AlertTriangle className="w-4 h-4" /> INSUFFICIENT STOCK
                     </button>
                   ) : (
                     <button

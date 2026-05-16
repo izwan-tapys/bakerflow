@@ -1,20 +1,24 @@
 'use client';
 
 import Link from 'next/link';
+import { Building2, UtensilsCrossed, Truck, Settings } from 'lucide-react';
 
 export default function SettingsHub() {
   const hubs = [
-    { label: 'Office Settings', icon: '🏢', desc: 'Shop profile, pricing & invoicing', href: '/office/settings', color: 'bg-primary' },
-    { label: 'Kitchen Settings', icon: '🥣', desc: 'Capacity, timing & inventory alerts', href: '/kitchen/settings', color: 'bg-orange-500' },
-    { label: 'Delivery Settings', icon: '🚚', desc: 'Fees, zones & delivery windows', href: '/delivery/settings', color: 'bg-blue-600' },
+    { label: 'Office Settings', icon: <Building2 className="w-6 h-6 text-white" />, desc: 'Shop profile, pricing & invoicing', href: '/office/settings', color: 'bg-primary' },
+    { label: 'Kitchen Settings', icon: <UtensilsCrossed className="w-6 h-6 text-white" />, desc: 'Capacity, timing & inventory alerts', href: '/kitchen/settings', color: 'bg-orange-500' },
+    { label: 'Delivery Settings', icon: <Truck className="w-6 h-6 text-white" />, desc: 'Fees, zones & delivery windows', href: '/delivery/settings', color: 'bg-blue-600' },
   ];
 
   return (
     <div className="space-y-6 pb-20">
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
-        <div className="pt-8 pb-4">
-          <h1 className="text-2xl font-black text-foreground">Settings ⚙️</h1>
-          <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Global Configuration Hub</p>
+        <div className="pt-8 pb-4 flex items-center gap-3">
+          <Settings className="w-6 h-6 text-primary animate-spin-slow" />
+          <div>
+            <h1 className="text-2xl font-black text-foreground">Settings</h1>
+            <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Global Configuration Hub</p>
+          </div>
         </div>
       </div>
 

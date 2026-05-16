@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
-import { Package, Clock, Flame, Wind } from 'lucide-react';
+import { Package, Clock, Flame, Wind, Trash2 } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -228,7 +228,7 @@ export default function ProductsPage() {
       setIngSearch('');
       setShowAdd(false);
       await loadData();
-      alert("Produk & Resepi berjaya disimpan! ✨");
+      alert("Product & Recipe saved successfully!");
     } catch (err: any) {
       console.error("Critical Save Error:", err);
       alert("Gagal simpan: " + (err.message || "Ralat tidak diketahui"));
@@ -610,13 +610,13 @@ export default function ProductsPage() {
                             onClick={() => setEditingRecipe(product)}
                             className="flex-1 h-12 rounded-xl text-xs font-black bg-primary text-white shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
                           >
-                            📝 EDIT RECIPE
+                            EDIT RECIPE
                           </button>
                           <button
                             onClick={() => deleteProduct(product.id)}
                             className="w-12 h-12 rounded-xl flex items-center justify-center bg-red-50 text-red-400 hover:bg-red-100 transition-all"
                           >
-                            🗑️
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>

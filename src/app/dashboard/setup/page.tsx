@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { BakerSettings, DeliveryZone } from '@/lib/types';
 import { StepIndicator } from '@/components/onboarding/StepIndicator';
 import { useRouter } from 'next/navigation';
+import { Lightbulb, Lock, AlertCircle, Rocket, ArrowRight, ChevronLeft, Minus, Plus, X } from 'lucide-react';
 
 const TOTAL_STEPS = 5;
 
@@ -177,8 +178,9 @@ export default function SetupPage() {
                   className="w-full px-4 py-3 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors resize-none"
                 />
               </div>
-              <div className="bg-accent/10 rounded-xl p-4 text-sm text-foreground/70">
-                💡 <span className="font-semibold">Tip:</span> Enter your full address including postcode for accurate delivery calculations.
+              <div className="bg-accent/10 rounded-xl p-4 text-sm text-foreground/70 flex items-start gap-2">
+                <Lightbulb className="w-4 h-4 mt-0.5 text-primary flex-none" />
+                <span><span className="font-semibold">Tip:</span> Enter your full address including postcode for accurate delivery calculations.</span>
               </div>
             </div>
           )}
@@ -198,8 +200,8 @@ export default function SetupPage() {
                 <div className="flex items-center justify-center gap-6 mt-6">
                   <button
                     onClick={() => updateSettings('daily_capacity', Math.max(1, (settings.daily_capacity || 5) - 1))}
-                    className="w-14 h-14 rounded-xl bg-muted text-foreground text-2xl font-bold hover:bg-secondary transition-colors"
-                  >−</button>
+                    className="w-14 h-14 rounded-xl bg-muted text-foreground flex items-center justify-center hover:bg-secondary transition-colors"
+                  ><Minus className="w-6 h-6" /></button>
                   <div className="flex gap-1">
                     {[3, 5, 10, 15, 20].map(cap => (
                       <button
@@ -215,8 +217,8 @@ export default function SetupPage() {
                   </div>
                   <button
                     onClick={() => updateSettings('daily_capacity', Math.min(50, (settings.daily_capacity || 5) + 1))}
-                    className="w-14 h-14 rounded-xl bg-muted text-foreground text-2xl font-bold hover:bg-secondary transition-colors"
-                  >+</button>
+                    className="w-14 h-14 rounded-xl bg-muted text-foreground flex items-center justify-center hover:bg-secondary transition-colors"
+                  ><Plus className="w-6 h-6" /></button>
                 </div>
               </div>
             </div>
@@ -240,7 +242,9 @@ export default function SetupPage() {
                         className="text-sm font-bold bg-transparent text-foreground focus:outline-none"
                       />
                       {zones.length > 1 && (
-                        <button onClick={() => removeZone(index)} className="text-foreground/30 hover:text-red-400 text-lg">×</button>
+                        <button onClick={() => removeZone(index)} className="text-foreground/30 hover:text-red-400">
+                          <X className="w-5 h-5" />
+                        </button>
                       )}
                     </div>
                     <div className="grid grid-cols-3 gap-2">
@@ -292,34 +296,36 @@ export default function SetupPage() {
                   <input type="text" placeholder="e.g. WAN AHMAD BIN IBRAHIM" value={settings.bank_holder} onChange={e => updateSettings('bank_holder', e.target.value)}
                     className="w-full h-12 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors" />
                 </div>
-                <div className="bg-muted/40 rounded-xl p-4 text-sm text-foreground/60">
-                  🔒 ToyyibPay credentials can be added later in <span className="font-semibold">Settings</span>.
+                <div className="bg-muted/40 rounded-xl p-4 text-sm text-foreground/60 flex items-center gap-2">
+                  <Lock className="w-4 h-4 flex-none opacity-50" />
+                  <span>ToyyibPay credentials can be added later in <span className="font-semibold">Settings</span>.</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Error */}
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 rounded-xl text-red-600 text-sm font-medium">
-              ⚠️ {error}
+            <div className="mt-4 p-3 bg-red-50 rounded-xl text-red-600 text-sm font-medium flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" /> {error}
             </div>
-          )}
 
           {/* Navigation */}
           <div className="flex gap-3 mt-8">
             {step > 0 && (
-              <button onClick={handleBack} className="h-14 px-6 rounded-xl border-2 border-muted text-foreground/70 font-semibold hover:bg-muted transition-colors">
-                Back
+              <button onClick={handleBack} className="h-14 px-6 rounded-xl border-2 border-muted text-foreground/70 font-semibold hover:bg-muted transition-colors flex items-center gap-2">
+                <ChevronLeft className="w-5 h-5" /> Back
               </button>
             )}
             {step < TOTAL_STEPS - 1 ? (
-              <button onClick={handleNext} className="flex-1 h-14 rounded-xl bg-primary text-white font-bold text-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-                Continue →
+              <button onClick={handleNext} className="flex-1 h-14 rounded-xl bg-primary text-white font-bold text-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
+                Continue <ArrowRight className="w-5 h-5" />
               </button>
             ) : (
-              <button onClick={handleFinish} disabled={loading} className="flex-1 h-14 rounded-xl bg-primary text-white font-bold text-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-                {loading ? 'Setting up...' : '🎉 Launch My Bakery!'}
+              <button onClick={handleFinish} disabled={loading} className="flex-1 h-14 rounded-xl bg-primary text-white font-bold text-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                {loading ? 'Setting up...' : (
+                  <>
+                    <Rocket className="w-5 h-5" /> Launch My Bakery!
+                  </>
+                )}
               </button>
             )}
           </div>

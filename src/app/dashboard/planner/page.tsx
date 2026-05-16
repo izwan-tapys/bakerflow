@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Order, Product, BakerSettings } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
+import { Calendar, ChefHat, Moon, Clock } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -109,9 +110,12 @@ export default function PlannerPage() {
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
         <div className="flex items-center justify-between pt-6 pb-4">
-          <div>
-            <h1 className="text-2xl font-extrabold text-foreground">Planner 📅</h1>
-            <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Automated schedule for {formatDate(selectedDate)}</p>
+          <div className="flex items-center gap-3">
+            <Calendar className="w-6 h-6 text-primary" />
+            <div>
+              <h1 className="text-2xl font-extrabold text-foreground">Planner</h1>
+              <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Schedule for {formatDate(selectedDate)}</p>
+            </div>
           </div>
           <input
             type="date"
@@ -125,9 +129,11 @@ export default function PlannerPage() {
       {schedule.length > 0 && (
         <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl p-6 text-white shadow-lg shadow-orange-200">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl">👨‍🍳</div>
+            <div className="h-16 w-16 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+              <ChefHat className="w-10 h-10 text-white" />
+            </div>
             <div>
-              <p className="text-xs font-black uppercase opacity-70 tracking-widest">Today's Goal</p>
+              <p className="text-xs font-black uppercase opacity-70 tracking-widest">Today&apos;s Goal</p>
               <h2 className="text-xl font-black">Start Production at <span className="underline decoration-yellow-300">{schedule[0].prepStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></h2>
               <p className="text-sm opacity-80 font-bold">Total {schedule.length} orders to prepare.</p>
             </div>
@@ -164,7 +170,9 @@ export default function PlannerPage() {
         <div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-32 bg-muted rounded-xl animate-pulse" />)}</div>
       ) : schedule.length === 0 ? (
         <div className="text-center py-20 bg-muted/20 rounded-xl border-2 border-dashed border-muted">
-          <p className="text-4xl mb-4">🌙</p>
+          <div className="flex justify-center mb-4 text-muted">
+            <Moon className="w-12 h-12" />
+          </div>
           <p className="font-bold text-foreground">No orders for this date.</p>
           <p className="text-sm text-foreground/40">You can rest well tonight!</p>
         </div>

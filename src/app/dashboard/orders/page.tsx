@@ -191,7 +191,7 @@ export default function OrdersPage() {
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
         <div className="flex items-start justify-between pt-6 pb-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Orders 📝</h1>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Orders</h1>
             <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Customer Orders</p>
           </div>
           <button 
@@ -301,8 +301,8 @@ export default function OrdersPage() {
                     <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Payment</label>
                     <select value={manualForm.payment_status} onChange={e => setManualForm({...manualForm, payment_status: e.target.value as any})}
                       className="w-full h-12 px-3 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold bg-card text-primary">
-                      <option value="unpaid">🔴 UNPAID</option>
-                      <option value="paid">🟢 PAID</option>
+                      <option value="unpaid">UNPAID</option>
+                      <option value="paid">PAID</option>
                     </select>
                   </div>
                 </div>
@@ -327,7 +327,9 @@ export default function OrdersPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 bg-card rounded-xl border border-dashed border-muted">
-          <div className="text-4xl mb-3">📭</div>
+          <div className="flex justify-center mb-4 text-muted">
+            <Package className="w-12 h-12" />
+          </div>
           <p className="font-bold text-foreground/40">No {filter} orders found</p>
         </div>
       ) : (
