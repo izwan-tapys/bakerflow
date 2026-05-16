@@ -383,8 +383,8 @@ export default function ProductsPage() {
                 <div className="border-t-2 border-muted pt-6">
                   <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-3">Recipe Ingredients</p>
                   
-                  {/* Fixed Scrollable Card for Added Ingredients */}
-                  <div className="bg-muted/5 border-2 border-muted/30 rounded-xl max-h-[160px] overflow-y-auto custom-scrollbar p-3 space-y-2">
+                  {/* Card for Added Ingredients (No inner scroll) */}
+                  <div className="bg-muted/5 border-2 border-muted/30 rounded-xl p-3 space-y-2">
                     {pendingRecipes.length === 0 ? (
                       <p className="text-center text-xs text-foreground/40 font-medium py-4 italic">No ingredients added yet.</p>
                     ) : (
@@ -399,94 +399,95 @@ export default function ProductsPage() {
                       ))
                     )}
                   </div>
+
+                  {/* Search / Add Ingredient */}
+                  <div className="bg-muted/10 p-4 rounded-xl border border-muted/30 space-y-3 mt-4">
+                    <div className="relative">
+                      <label className="text-[10px] font-black text-foreground/30 uppercase mb-1.5 block">Search Ingredient</label>
+                      <input 
+                        placeholder="Type name..." 
+                        value={ingSearch} 
+                        onChange={async (e) => { 
+                          const val = e.target.value;
+                          setIngSearch(val); 
+                          setShowIngSuggestions(true);
+                          
+                          if (val.length > 1) {
+                            setSearchingCatalog(true);
+                            const { data } = await supabase.from('master_catalog').select('*').ilike('name', `%${val}%`).limit(5);
+                            setCatalogSuggestions(data || []);
+                            setSearchingCatalog(false);
+                          } else {
+                            setCatalogSuggestions([]);
+                          }
+                        }} 
+                        onFocus={() => setShowIngSuggestions(true)} 
+                        className="w-full h-11 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold text-sm" 
+                      />
+                      {showIngSuggestions && (ingSearch || catalogSuggestions.length > 0) && (
+                        <div className="absolute z-50 w-full mt-1 bg-card border-2 border-primary/20 rounded-xl shadow-2xl max-h-56 overflow-y-auto">
+                          {/* LOCAL INVENTORY SUGGESTIONS */}
+                          {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
+                            <div key={i.id} onClick={() => { 
+                              setIngSearch(i.name); 
+                              setIngForm({ ...ingForm, ingredient_id: i.id, brand: i.brand || '', unit: i.unit }); 
+                              setShowIngSuggestions(false); 
+                            }} className="px-4 py-2.5 hover:bg-primary/5 cursor-pointer border-b border-muted/30 last:border-0 font-bold text-sm">
+                              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded mr-2 uppercase">Your Stock</span>
+                              {i.name} <span className="text-[10px] opacity-30">({i.unit})</span>
+                            </div>
+                          ))}
+
+                          {/* CATALOG SUGGESTIONS */}
+                          {catalogSuggestions.map((c, i) => (
+                            <div key={`cat-${i}`} onClick={() => {
+                              setIngSearch(c.name);
+                              setIngForm({ ...ingForm, ingredient_id: '', brand: c.brand || '', unit: c.unit });
+                              setShowIngSuggestions(false);
+                            }} className="px-4 py-2.5 hover:bg-blue-50/50 cursor-pointer border-b border-muted/30 last:border-0 font-bold text-sm">
+                              <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded mr-2 uppercase">Catalog</span>
+                              {c.name} <span className="text-[10px] opacity-30">({c.unit})</span>
+                            </div>
+                          ))}
+
+                          {searchingCatalog && (
+                            <div className="px-4 py-2 text-[10px] text-foreground/30 animate-pulse italic">Searching catalog...</div>
+                          )}
+
+                          {!ingredients.some(i => i.name.toLowerCase() === ingSearch.toLowerCase()) && !catalogSuggestions.some(c => c.name.toLowerCase() === ingSearch.toLowerCase()) && ingSearch && (
+                            <div onClick={() => setShowIngSuggestions(false)} className="px-4 py-3 hover:bg-green-50 cursor-pointer transition-colors border-t border-muted/30">
+                              <div className="flex items-center gap-3 text-green-600">
+                                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center font-bold text-xs">+</div>
+                                <div>
+                                  <p className="text-sm font-bold">Add &quot;{ingSearch}&quot; as new custom</p>
+                                  <p className="text-[10px] opacity-70 font-medium">Will be created on save</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Qty</label>
+                        <input type="number" value={ingForm.quantity_needed || ''} onChange={e => setIngForm({ ...ingForm, quantity_needed: +e.target.value })} className="w-full h-10 px-3 rounded-lg border-2 border-muted font-bold" />
+                      </div>
+                      <div className="w-20">
+                        <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Unit</label>
+                        <select value={ingForm.unit} onChange={e => setIngForm({ ...ingForm, unit: e.target.value })} className="w-full h-10 px-1 rounded-lg border-2 border-muted font-bold text-xs bg-card">
+                          {['g', 'kg', 'ml', 'L', 'pcs'].map(u => <option key={u}>{u}</option>)}
+                        </select>
+                      </div>
+                      <button onClick={handleAddPendingRecipe} disabled={!ingSearch || ingForm.quantity_needed <= 0} className="h-10 mt-5 px-5 bg-primary text-white font-black text-xs rounded-lg shadow-md hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed">ADD</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Fixed Bottom Section (Search & Save) */}
-            <div className="pt-4 flex-none space-y-4 border-t-2 border-muted/30">
-              <div className="bg-muted/10 p-4 rounded-xl border border-muted/30 space-y-3">
-                <div className="relative">
-                  <label className="text-[10px] font-black text-foreground/30 uppercase mb-1.5 block">Search Ingredient</label>
-                  <input 
-                    placeholder="Type name..." 
-                    value={ingSearch} 
-                    onChange={async (e) => { 
-                      const val = e.target.value;
-                      setIngSearch(val); 
-                      setShowIngSuggestions(true);
-                      
-                      if (val.length > 1) {
-                        setSearchingCatalog(true);
-                        const { data } = await supabase.from('master_catalog').select('*').ilike('name', `%${val}%`).limit(5);
-                        setCatalogSuggestions(data || []);
-                        setSearchingCatalog(false);
-                      } else {
-                        setCatalogSuggestions([]);
-                      }
-                    }} 
-                    onFocus={() => setShowIngSuggestions(true)} 
-                    className="w-full h-11 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold text-sm" 
-                  />
-                  {showIngSuggestions && (ingSearch || catalogSuggestions.length > 0) && (
-                    <div className="absolute z-50 w-full bottom-full mb-1 bg-card border-2 border-primary/20 rounded-xl shadow-2xl max-h-56 overflow-y-auto">
-                      {/* LOCAL INVENTORY SUGGESTIONS */}
-                      {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
-                        <div key={i.id} onClick={() => { 
-                          setIngSearch(i.name); 
-                          setIngForm({ ...ingForm, ingredient_id: i.id, brand: i.brand || '', unit: i.unit }); 
-                          setShowIngSuggestions(false); 
-                        }} className="px-4 py-2.5 hover:bg-primary/5 cursor-pointer border-b border-muted/30 last:border-0 font-bold text-sm">
-                          <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded mr-2 uppercase">Your Stock</span>
-                          {i.name} <span className="text-[10px] opacity-30">({i.unit})</span>
-                        </div>
-                      ))}
-
-                      {/* CATALOG SUGGESTIONS */}
-                      {catalogSuggestions.map((c, i) => (
-                        <div key={`cat-${i}`} onClick={() => {
-                          setIngSearch(c.name);
-                          setIngForm({ ...ingForm, ingredient_id: '', brand: c.brand || '', unit: c.unit });
-                          setShowIngSuggestions(false);
-                        }} className="px-4 py-2.5 hover:bg-blue-50/50 cursor-pointer border-b border-muted/30 last:border-0 font-bold text-sm">
-                          <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded mr-2 uppercase">Catalog</span>
-                          {c.name} <span className="text-[10px] opacity-30">({c.unit})</span>
-                        </div>
-                      ))}
-
-                      {searchingCatalog && (
-                        <div className="px-4 py-2 text-[10px] text-foreground/30 animate-pulse italic">Searching catalog...</div>
-                      )}
-
-                      {!ingredients.some(i => i.name.toLowerCase() === ingSearch.toLowerCase()) && !catalogSuggestions.some(c => c.name.toLowerCase() === ingSearch.toLowerCase()) && ingSearch && (
-                        <div onClick={() => setShowIngSuggestions(false)} className="px-4 py-3 hover:bg-green-50 cursor-pointer transition-colors border-t border-muted/30">
-                          <div className="flex items-center gap-3 text-green-600">
-                            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center font-bold text-xs">+</div>
-                            <div>
-                              <p className="text-sm font-bold">Add &quot;{ingSearch}&quot; as new custom</p>
-                              <p className="text-[10px] opacity-70 font-medium">Will be created on save</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Qty</label>
-                    <input type="number" value={ingForm.quantity_needed || ''} onChange={e => setIngForm({ ...ingForm, quantity_needed: +e.target.value })} className="w-full h-10 px-3 rounded-lg border-2 border-muted font-bold" />
-                  </div>
-                  <div className="w-20">
-                    <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Unit</label>
-                    <select value={ingForm.unit} onChange={e => setIngForm({ ...ingForm, unit: e.target.value })} className="w-full h-10 px-1 rounded-lg border-2 border-muted font-bold text-xs bg-card">
-                      {['g', 'kg', 'ml', 'L', 'pcs'].map(u => <option key={u}>{u}</option>)}
-                    </select>
-                  </div>
-                  <button onClick={handleAddPendingRecipe} disabled={!ingSearch || ingForm.quantity_needed <= 0} className="h-10 mt-5 px-5 bg-primary text-white font-black text-xs rounded-lg shadow-md hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed">ADD</button>
-                </div>
-              </div>
-
+            {/* Fixed Bottom Section (Save only) */}
+            <div className="pt-4 flex-none border-t-2 border-muted/30">
               <button onClick={handleSaveProduct} disabled={!form.name || form.price <= 0 || savingProduct} className="w-full h-14 bg-primary text-white rounded-xl font-black text-sm shadow-lg shadow-primary/20 disabled:opacity-50">
                 {savingProduct ? 'SAVING...' : 'SAVE PRODUCT & RECIPE'}
               </button>
