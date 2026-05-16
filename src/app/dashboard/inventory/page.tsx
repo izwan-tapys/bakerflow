@@ -403,7 +403,6 @@ export default function InventoryPage() {
 
   return (
     <div className="pb-4">
-      <KitchenTabs />
 
       {/* Unified Sticky Header Section */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
