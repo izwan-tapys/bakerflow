@@ -84,17 +84,24 @@ export function BottomNav() {
     router.push('/login');
   };
 
-  const isInHub = (hub: string) => {
-    if (hub === 'office') return pathname.startsWith('/office');
-    if (hub === 'kitchen') return pathname.startsWith('/kitchen');
-    if (hub === 'delivery') return pathname.startsWith('/delivery');
-    return false;
-  };
+  const currentHub = activePopup || (
+    pathname.startsWith('/office') && !dismissedHubs.includes('office') ? 'office' :
+    pathname.startsWith('/kitchen') && !dismissedHubs.includes('kitchen') ? 'kitchen' :
+    pathname.startsWith('/delivery') && !dismissedHubs.includes('delivery') ? 'delivery' :
+    null
+  );
 
-  const currentHub = activePopup || 
-    (pathname.startsWith('/office') ? 'office' : 
-     pathname.startsWith('/kitchen') ? 'kitchen' : 
-     pathname.startsWith('/delivery') ? 'delivery' : null);
+  const isInHub = (hub: string) => pathname.startsWith(`/${hub}`);
+
+  const toggleHub = (hub: string) => {
+    if (activePopup === hub || currentHub === hub) {
+      if (activePopup === hub) setActivePopup(null);
+      setDismissedHubs(prev => prev.includes(hub) ? prev : [...prev, hub]);
+    } else {
+      setActivePopup(hub);
+      setDismissedHubs(prev => prev.filter(h => h !== hub));
+    }
+  };
 
   const subLinks = currentHub && hubLinks[currentHub] ? hubLinks[currentHub] : [];
 
@@ -142,7 +149,12 @@ export function BottomNav() {
       {activePopup && (
         <div
           className="fixed inset-0 z-30 md:hidden bg-black/5 backdrop-blur-[1px]"
-          onClick={() => setActivePopup(null)}
+          onClick={() => {
+            if (isInHub(activePopup)) {
+              setDismissedHubs(prev => [...prev, activePopup]);
+            }
+            setActivePopup(null);
+          }}
         />
       )}
 
@@ -162,12 +174,12 @@ export function BottomNav() {
                   if (item.href) {
                     router.push(item.href);
                     setActivePopup(null);
+                    setDismissedHubs([]); // Clear dismissed when hard navigating
                   } else if (item.id === 'more') {
                     setShowMore(true);
                     setActivePopup(null);
                   } else if (item.id) {
-                    // Toggle sub-bar
-                    setActivePopup(prev => prev === item.id ? null : item.id!);
+                    toggleHub(item.id);
                   }
                 }}
                 className={`flex flex-col items-center gap-0.5 py-1 rounded-xl transition-all flex-1 ${
