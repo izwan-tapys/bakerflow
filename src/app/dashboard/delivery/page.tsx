@@ -64,7 +64,7 @@ export default function DeliveryPage() {
             {readyOrders.map(order => (
               <div key={order.id} className="bg-white rounded-2xl p-5 border border-muted/50 shadow-sm flex items-center justify-between">
                 <div>
-                  <p className="font-black text-foreground">#{order.order_number || order.id.slice(0,8)}</p>
+                  <p className="font-black text-foreground">#{order.order_number || (order.id ?? '').slice(0,8)}</p>
                   <p className="text-xs font-bold text-foreground/40">{order.customer_name}</p>
                   <div className="mt-2 flex items-center gap-2">
                     <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-black uppercase">
