@@ -273,9 +273,22 @@ export default function ProductsPage() {
   };
 
   const deleteProduct = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-    await supabase.from('products').delete().eq('id', id);
-    loadData();
+    if (!confirm('Adakah anda pasti nak padam produk ini? Semua rekod resipi berkaitan juga akan dipadam.')) return;
+    
+    // First, try to delete recipes (cascade-like behavior in app logic if DB doesn't have it)
+    await supabase.from('recipes').delete().eq('product_id', id);
+    
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    
+    if (error) {
+      if (error.code === '23503') {
+        alert('Gagal Padam: Produk ini sudah ada dalam rekod Order. Sila tukar status kepada "Hidden" jika tidak mahu menjualnya lagi.');
+      } else {
+        alert('Gagal Padam: ' + error.message);
+      }
+    } else {
+      loadData();
+    }
   };
 
   const startInlineEdit = (product: Product, field: 'price' | 'time' | 'info') => {
