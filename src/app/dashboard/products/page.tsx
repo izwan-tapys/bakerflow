@@ -389,25 +389,8 @@ export default function ProductsPage() {
                   <div className="border-t-2 border-transparent">
                     <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-3">Bill of Materials (BOM)</p>
                     
-                    {/* Card for Added Ingredients (No inner scroll) */}
-                  <div className="bg-muted/5 border-2 border-muted/30 rounded-xl p-3 space-y-2">
-                    {pendingRecipes.length === 0 ? (
-                      <p className="text-center text-xs text-foreground/40 font-medium py-4 italic">No ingredients added yet.</p>
-                    ) : (
-                      pendingRecipes.map((r, idx) => (
-                        <div key={idx} className="flex justify-between items-center bg-card px-4 py-3 rounded-lg border border-muted shadow-sm">
-                          <div>
-                            <p className="font-bold text-sm text-foreground">{r.display_name}</p>
-                            <p className="text-[10px] font-black text-primary uppercase mt-0.5">{r.quantity_needed}{r.unit}</p>
-                          </div>
-                          <button onClick={() => removePendingRecipe(idx)} className="text-red-400 hover:text-red-600 transition-colors text-2xl font-black px-2">&times;</button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
                   {/* Search / Add Ingredient */}
-                  <div className="bg-muted/10 p-4 rounded-xl border border-muted/30 space-y-3 mt-4">
+                  <div className="bg-muted/10 p-4 rounded-xl border border-muted/30 space-y-3 mb-4">
                     <div className="relative">
                       <label className="text-[10px] font-black text-foreground/30 uppercase mb-1.5 block">Search Ingredient</label>
                       <input 
@@ -488,6 +471,23 @@ export default function ProductsPage() {
                       <button onClick={handleAddPendingRecipe} disabled={!ingSearch || ingForm.quantity_needed <= 0} className="h-10 mt-5 px-5 bg-primary text-white font-black text-xs rounded-lg shadow-md hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed">ADD</button>
                     </div>
                   </div>
+
+                  {/* Card for Added Ingredients (No inner scroll) */}
+                  <div className="bg-muted/5 border-2 border-muted/30 rounded-xl p-3 space-y-2">
+                    {pendingRecipes.length === 0 ? (
+                      <p className="text-center text-xs text-foreground/40 font-medium py-4 italic">No ingredients added yet.</p>
+                    ) : (
+                      pendingRecipes.map((r, idx) => (
+                        <div key={idx} className="flex justify-between items-center bg-card px-4 py-3 rounded-lg border border-muted shadow-sm">
+                          <div>
+                            <p className="font-bold text-sm text-foreground">{r.display_name}</p>
+                            <p className="text-[10px] font-black text-primary uppercase mt-0.5">{r.quantity_needed}{r.unit}</p>
+                          </div>
+                          <button onClick={() => removePendingRecipe(idx)} className="text-red-400 hover:text-red-600 transition-colors text-2xl font-black px-2">&times;</button>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
               )}
@@ -508,7 +508,7 @@ export default function ProductsPage() {
                   } else {
                     setShowAddError(true);
                   }
-                }} className="flex-1 h-14 bg-foreground text-white rounded-xl font-black text-sm shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
+                }} className="flex-1 h-14 bg-primary text-white rounded-xl font-black text-sm shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
                   NEXT STEP
                 </button>
               ) : (
