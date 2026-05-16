@@ -8,6 +8,7 @@ import { SmartTimeline } from '@/components/dashboard/SmartTimeline';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { updateOrderStatus } from '@/lib/services/baker.service';
 import { formatDate } from '@/lib/utils';
+import { OfficeTabs } from '@/components/dashboard/OfficeTabs';
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -122,11 +123,19 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6 pb-20">
-      {/* Morning Briefing Header */}
+      {/* Unified Sticky Header Section */}
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
+        <div className="pt-4">
+          <OfficeTabs />
+        </div>
+        <div className="pt-2 pb-4">
+          <p className="text-foreground/30 font-black text-[10px] uppercase tracking-[0.2em] mb-1">Morning Briefing ☀️</p>
+          <h1 className="text-2xl font-black text-foreground italic">Good Morning, {shopName}!</h1>
+        </div>
+      </div>
+
+      {/* Morning Briefing Card */}
       <div className="bg-gradient-to-br from-primary to-primary-dark rounded-3xl p-6 text-white shadow-xl shadow-primary/20">
-        <p className="text-primary-foreground/70 font-bold text-xs uppercase tracking-widest mb-1">Morning Briefing ☀️</p>
-        <h1 className="text-2xl font-black mb-4 italic">Good Morning, {shopName}!</h1>
-        
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white/10 rounded-2xl p-3 backdrop-blur-sm border border-white/10">
             <p className="text-[10px] font-bold uppercase opacity-60">Today&apos;s Orders</p>

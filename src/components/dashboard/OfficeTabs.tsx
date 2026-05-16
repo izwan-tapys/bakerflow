@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export function KitchenTabs() {
+export function OfficeTabs() {
   const pathname = usePathname();
   const tabs = [
-    { label: 'Tasks 🍳', href: '/dashboard/production' },
-    { label: 'Planner 📅', href: '/dashboard/planner' },
-    { label: 'Inventory 📦', href: '/dashboard/inventory' },
-    { label: 'Products 🧁', href: '/dashboard/products' },
+    { label: 'Overview 🏢', href: '/dashboard' },
+    { label: 'Orders 📋', href: '/dashboard/orders' },
+    { label: 'Analytics 📊', href: '/dashboard/analytics' },
+    { label: 'Directory 📇', href: '/dashboard/directory' },
   ];
 
   return (
@@ -20,7 +20,7 @@ export function KitchenTabs() {
           <Link
             key={tab.href}
             href={tab.href}
-            className={`flex-1 min-w-[90px] text-center py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+            className={`flex-1 min-w-[100px] text-center py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
               active ? 'bg-white text-primary shadow-sm border border-muted/20' : 'text-foreground/40 hover:text-foreground/60'
             }`}
           >
