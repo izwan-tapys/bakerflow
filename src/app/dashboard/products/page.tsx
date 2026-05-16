@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface Product {
@@ -61,6 +61,7 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [inlineEdit, setInlineEdit] = useState<{ productId: string; field: 'price' | 'time' | 'info' } | null>(null);
   const [inlineVal, setInlineVal] = useState({ name: '', description: '', price: 0, prep: 0, bake: 0, cool: 0 });
 
@@ -475,174 +476,120 @@ export default function ProductsPage() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Product List */}
+          {/* Product List - Table Style */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{[1,2,3,4].map(i => <div key={i} className="h-40 bg-muted rounded-2xl animate-pulse" />)}</div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-2xl animate-pulse" />)}
+        </div>
       ) : products.filter(p => activeTab === 'active' ? p.is_active : !p.is_active).length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-muted mt-4">
+        <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-muted mt-4">
           <div className="text-5xl mb-3">{activeTab === 'active' ? '🍩' : '📦'}</div>
           <p className="font-bold text-foreground">
             {activeTab === 'active' ? 'Your active menu is empty' : 'No archived products'}
           </p>
-          <p className="text-foreground/50 text-sm mt-1 mb-4">
-            {activeTab === 'active' ? 'Add your first product to start taking orders.' : 'Products hidden from your active menu will appear here.'}
-          </p>
           {activeTab === 'active' && (
-            <button onClick={() => setShowAdd(true)} className="h-10 px-6 bg-primary/10 text-primary rounded-xl font-bold text-sm hover:bg-primary/20 transition-all">
-              Add Product
-            </button>
+            <button onClick={() => setShowAdd(true)} className="text-primary font-black text-sm uppercase tracking-widest mt-2">+ Add First Product</button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {products.filter(p => activeTab === 'active' ? p.is_active : !p.is_active).map(product => (
-            <div key={product.id} className={`bg-white rounded-3xl p-5 border-2 transition-all flex flex-col gap-4 ${product.is_active ? 'border-muted/50 hover:border-primary/30' : 'border-muted/20 opacity-60'}`}>
-              
-              {/* Clickable Info Area - Inline Editable */}
-              {inlineEdit?.productId === product.id && inlineEdit.field === 'info' ? (
-                <div className="space-y-2 bg-primary/5 p-3 rounded-2xl border-2 border-primary">
-                  <div>
-                    <label className="text-[9px] font-black text-primary uppercase tracking-widest">Name</label>
-                    <input
-                      autoFocus
-                      value={inlineVal.name}
-                      onChange={e => setInlineVal(v => ({ ...v, name: e.target.value }))}
-                      className="w-full bg-transparent font-black text-lg text-foreground outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[9px] font-black text-primary uppercase tracking-widest">Description</label>
-                    <textarea
-                      value={inlineVal.description}
-                      onChange={e => setInlineVal(v => ({ ...v, description: e.target.value }))}
-                      onBlur={() => saveInlineEdit(product.id, 'info')}
-                      rows={2}
-                      className="w-full bg-transparent text-xs text-foreground/70 outline-none resize-none"
-                    />
-                    <p className="text-[9px] text-primary/50 text-right italic">Click away to save</p>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  onClick={() => startInlineEdit(product, 'info')}
-                  className="cursor-pointer active:scale-[0.99] transition-all hover:bg-muted/30 p-2 rounded-2xl"
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-black text-lg text-foreground leading-tight">{product.name}</h3>
-                    {!product.is_active && (
-                      <span className="text-[10px] uppercase font-black bg-muted text-foreground/50 px-2 py-0.5 rounded-md">Draft</span>
+        <div className="bg-white rounded-[24px] border border-muted/50 overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-muted/30 border-b border-muted/50">
+                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Product</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Price</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">Status</th>
+                  <th className="px-6 py-4 w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.filter(p => activeTab === 'active' ? p.is_active : !p.is_active).map(product => (
+                  <React.Fragment key={product.id}>
+                    <tr 
+                      onClick={() => setExpandedId(expandedId === product.id ? null : product.id)}
+                      className={`group cursor-pointer transition-colors hover:bg-muted/10 border-b border-muted/20 ${expandedId === product.id ? 'bg-primary/5' : ''}`}
+                    >
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <span className={`transition-transform duration-300 ${expandedId === product.id ? 'rotate-90' : ''}`}>▶</span>
+                          <div>
+                            <p className="font-black text-foreground text-sm leading-tight">{product.name}</p>
+                            <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-tighter">
+                              🥣{product.prep_time}m • 🔥{product.bake_time}m
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-right font-black text-primary text-sm">
+                        RM {product.price.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-5 text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-3">
+                          <span className={`text-[9px] font-black uppercase tracking-tighter ${product.is_active ? 'text-green-600' : 'text-foreground/30'}`}>
+                            {product.is_active ? 'ON' : 'OFF'}
+                          </span>
+                          <button
+                            onClick={() => toggleActive(product)}
+                            className={`relative w-10 h-5 rounded-full transition-all duration-300 ${product.is_active ? 'bg-green-500' : 'bg-muted-foreground/20'}`}
+                          >
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-300 ${product.is_active ? 'translate-x-5 shadow-sm' : 'translate-x-0.5'}`} />
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-foreground/20 group-hover:text-primary transition-colors">
+                      </td>
+                    </tr>
+                    
+                    {/* Expanded Section */}
+                    {expandedId === product.id && (
+                      <tr className="bg-muted/5">
+                        <td colSpan={4} className="px-12 py-8 border-b border-muted/20">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                              <div>
+                                <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-2">Description</p>
+                                <p className="text-sm text-foreground/70 font-medium leading-relaxed">{product.description || 'No description provided.'}</p>
+                              </div>
+                              <div className="flex gap-8">
+                                <div>
+                                  <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-1">COGS (Cost)</p>
+                                  <p className="text-sm font-bold text-foreground/70">RM {product.cogs?.toFixed(2) || '0.00'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-1">Margin</p>
+                                  <p className={`text-sm font-black ${((product.price - (product.cogs || 0)) / product.price) > 0.4 ? 'text-green-500' : 'text-orange-500'}`}>
+                                    {product.price > 0 ? `${(((product.price - (product.cogs || 0)) / product.price) * 100).toFixed(0)}%` : '-'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-col gap-3 justify-end items-end">
+                              <div className="flex gap-2 w-full max-w-[280px]">
+                                <button
+                                  onClick={() => setEditingRecipe(product)}
+                                  className="flex-1 h-12 rounded-xl text-xs font-black bg-primary text-white shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
+                                >
+                                  📝 EDIT RECIPE
+                                </button>
+                                <button
+                                  onClick={() => deleteProduct(product.id)}
+                                  className="w-12 h-12 rounded-xl flex items-center justify-center bg-red-50 text-red-400 hover:bg-red-100 transition-all"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
                     )}
-                  </div>
-                  <p className="text-xs text-foreground/50 line-clamp-2">{product.description || 'No description provided.'}</p>
-                </div>
-              )}
-
-              {/* Stats - Inline Editable */}
-              <div className="grid grid-cols-2 gap-3">
-                {/* Price Box */}
-                {inlineEdit?.productId === product.id && inlineEdit.field === 'price' ? (
-                  <div className="bg-primary/5 rounded-2xl p-3 border-2 border-primary">
-                    <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">Price (RM)</p>
-                    <input
-                      type="number"
-                      autoFocus
-                      value={inlineVal.price || ''}
-                      onChange={e => setInlineVal(v => ({ ...v, price: +e.target.value }))}
-                      onBlur={() => saveInlineEdit(product.id, 'price')}
-                      onKeyDown={e => e.key === 'Enter' && saveInlineEdit(product.id, 'price')}
-                      className="w-full bg-transparent font-black text-primary text-lg outline-none border-none"
-                    />
-                  </div>
-                ) : (
-                  <div
-                    onClick={() => startInlineEdit(product, 'price')}
-                    className="bg-primary/5 rounded-2xl p-3 border border-primary/10 cursor-pointer hover:border-primary/40 hover:bg-primary/10 transition-all"
-                  >
-                    <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-0.5">Price</p>
-                    <p className="font-black text-primary text-lg">RM {product.price.toFixed(2)}</p>
-                  </div>
-                )}
-
-                {/* Time DNA Box */}
-                {inlineEdit?.productId === product.id && inlineEdit.field === 'time' ? (
-                  <div className="bg-muted/30 rounded-2xl p-3 border-2 border-primary/50 space-y-1">
-                    <p className="text-[9px] font-black text-foreground/40 uppercase tracking-widest">Time DNA (min)</p>
-                    <div className="flex gap-1">
-                      <input autoFocus type="number" placeholder="Prep" value={inlineVal.prep || ''}
-                        onChange={e => setInlineVal(v => ({ ...v, prep: +e.target.value }))}
-                        className="w-full bg-white rounded-lg px-1.5 py-1 text-[11px] font-bold outline-none border border-muted text-center"
-                      />
-                      <input type="number" placeholder="Bake" value={inlineVal.bake || ''}
-                        onChange={e => setInlineVal(v => ({ ...v, bake: +e.target.value }))}
-                        className="w-full bg-white rounded-lg px-1.5 py-1 text-[11px] font-bold outline-none border border-muted text-center"
-                      />
-                      <input type="number" placeholder="Cool" value={inlineVal.cool || ''}
-                        onChange={e => setInlineVal(v => ({ ...v, cool: +e.target.value }))}
-                        onBlur={() => saveInlineEdit(product.id, 'time')}
-                        onKeyDown={e => e.key === 'Enter' && saveInlineEdit(product.id, 'time')}
-                        className="w-full bg-white rounded-lg px-1.5 py-1 text-[11px] font-bold outline-none border border-muted text-center"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    onClick={() => startInlineEdit(product, 'time')}
-                    className="bg-muted/30 rounded-2xl p-3 border border-muted/50 cursor-pointer hover:border-primary/40 hover:bg-muted/60 transition-all"
-                  >
-                    <p className="text-[9px] font-black text-foreground/30 uppercase tracking-widest mb-0.5">Time DNA</p>
-                    <p className="font-bold text-foreground/70 text-xs">🥣{product.prep_time}m 🔥{product.bake_time}m ❄️{product.cool_time}m</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Profitability DNA */}
-              <div className="bg-muted/20 rounded-2xl p-3 flex justify-between items-center border border-muted/50">
-                <div>
-                  <p className="text-[9px] font-black text-foreground/30 uppercase tracking-widest">COGS (Cost)</p>
-                  <p className="text-xs font-bold text-foreground/70">RM {product.cogs?.toFixed(2) || '0.00'}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[9px] font-black text-foreground/30 uppercase tracking-widest">Margin</p>
-                  {product.price > 0 ? (
-                    <p className={`text-xs font-black ${((product.price - (product.cogs || 0)) / product.price) > 0.4 ? 'text-green-500' : 'text-orange-500'}`}>
-                      {(((product.price - (product.cogs || 0)) / product.price) * 100).toFixed(0)}%
-                    </p>
-                  ) : (
-                    <p className="text-xs font-black text-foreground/30">-</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setEditingRecipe(product)}
-                  className="flex-1 h-10 rounded-xl text-xs font-bold bg-primary text-white hover:bg-primary/90 transition-all"
-                >
-                  📝 Recipe
-                </button>
-                <div className="flex items-center gap-3 bg-muted/30 px-3 rounded-xl">
-                  <span className={`text-[10px] font-black uppercase tracking-tighter ${product.is_active ? 'text-green-600' : 'text-foreground/30'}`}>
-                    {product.is_active ? 'ON' : 'OFF'}
-                  </span>
-                  <button
-                    onClick={() => toggleActive(product)}
-                    className={`relative w-12 h-6 rounded-full transition-all duration-300 ${product.is_active ? 'bg-green-500' : 'bg-muted-foreground/20'}`}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-300 ${product.is_active ? 'left-7 shadow-sm' : 'left-1'}`} />
-                  </button>
-                </div>
-                <button
-                  onClick={() => deleteProduct(product.id)}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-red-400 hover:bg-red-50 transition-all"
-                >
-                  🗑️
-                </button>
-              </div>
-            </div>
-          ))}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
