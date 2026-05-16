@@ -306,7 +306,7 @@ export default function ProductsPage() {
   return (
     <div className="space-y-5 pb-4">
       {/* Sticky Top Header Section */}
-      <div className="sticky top-0 z-30 bg-[#fafafa]/80 backdrop-blur-md -mx-4 px-4 pt-1 pb-4 space-y-5 border-b border-muted/20">
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-4 space-y-5 border-b border-muted/20 -mt-2">
         <div className="flex items-start justify-between pt-4">
           <div>
             <h1 className="text-2xl font-extrabold text-foreground">Menu 🧁</h1>
@@ -499,12 +499,12 @@ export default function ProductsPage() {
       ) : (
         <div className="bg-white rounded-xl border border-muted/50 overflow-hidden shadow-sm">
           <div>
-            <table className="w-full text-left border-collapse table-fixed">
+            <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-muted/50">
-                  <th className="sticky top-[148px] z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Product</th>
-                  <th className="sticky top-[148px] z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Price (RM)</th>
-                  <th className="sticky top-[148px] z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">Status</th>
+                  <th className="sticky top-[140px] z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest min-w-[200px]">Product</th>
+                  <th className="sticky top-[140px] z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right w-32">Price (RM)</th>
+                  <th className="sticky top-[140px] z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-24">Status</th>
                 </tr>
               </thead>
               <tbody>
