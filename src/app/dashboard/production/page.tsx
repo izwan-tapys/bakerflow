@@ -19,11 +19,11 @@ function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; on
       setStockStatus({ isOk: true, checked: true });
     }
   }, [order.id, order.status]);
-
+  const nextStatus: Record<string, { label: string; status: OrderStatus; color: string; icon: React.ReactNode }> = {
     approved: { label: 'START BAKING', status: 'production', color: 'bg-orange-500', icon: <Flame className="w-3 h-3" /> },
     production: { label: 'MARK AS READY', status: 'ready', color: 'bg-green-600', icon: <CheckCircle2 className="w-3 h-3" /> },
     ready: { label: 'OUT FOR DELIVERY', status: 'otw', color: 'bg-blue-600', icon: <Truck className="w-3 h-3" /> },
-
+  };
   const next = nextStatus[order.status];
 
   return (
