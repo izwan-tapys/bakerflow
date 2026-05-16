@@ -46,6 +46,8 @@ export default function ProductsPage() {
   
   // Add Product State
   const [showAdd, setShowAdd] = useState(false);
+  const [addStep, setAddStep] = useState<1 | 2>(1);
+  const [showAddError, setShowAddError] = useState(false);
   const [savingProduct, setSavingProduct] = useState(false);
   const [form, setForm] = useState({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 });
   const [pendingRecipes, setPendingRecipes] = useState<PendingRecipe[]>([]);
@@ -313,7 +315,7 @@ export default function ProductsPage() {
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Menu 🧁</h1>
             <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Bakery Catalog</p>
           </div>
-          <button onClick={() => setShowAdd(!showAdd)} className="h-10 px-4 bg-primary text-white rounded-xl font-black text-xs shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+          <button onClick={() => { setShowAdd(true); setAddStep(1); setShowAddError(false); setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 }); setPendingRecipes([]); }} className="h-10 px-4 bg-primary text-white rounded-xl font-black text-xs shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
             + Add Product
           </button>
         </div>
@@ -348,43 +350,46 @@ export default function ProductsPage() {
             </div>
             
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Product Name</label>
-                  <input placeholder="e.g. Chocolate Moist Cake" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                    className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
-                </div>
-                <div>
-                  <label className="text-xs font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Description</label>
-                  <textarea placeholder="e.g. Rich chocolate cake..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2}
-                    className="w-full py-3 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-medium resize-none" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <label className="text-xs font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Price (RM)</label>
-                    <input type="number" value={form.price || ''} onChange={e => setForm({ ...form, price: +e.target.value })}
-                      className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-black text-lg text-primary" />
+              {addStep === 1 ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Product Name <span className="text-red-500">*</span></label>
+                    <input placeholder="e.g. Chocolate Moist Cake" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setShowAddError(false); }}
+                      className={`w-full h-12 px-4 rounded-xl border-2 ${showAddError && !form.name ? 'border-red-400 bg-red-50' : 'border-muted focus:border-primary'} outline-none font-bold`} />
                   </div>
-                  <div className="col-span-2 grid grid-cols-3 gap-2 mt-2">
-                    <div>
-                      <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Prep (Min)</label>
-                      <input type="number" value={form.prep_time} onChange={e => setForm({...form, prep_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold" />
+                  <div>
+                    <label className="text-xs font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Description</label>
+                    <textarea placeholder="e.g. Rich chocolate cake..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2}
+                      className="w-full py-3 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-medium resize-none" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                      <label className="text-xs font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Price (RM) <span className="text-red-500">*</span></label>
+                      <input type="number" value={form.price || ''} onChange={e => { setForm({ ...form, price: +e.target.value }); setShowAddError(false); }}
+                        className={`w-full h-12 px-4 rounded-xl border-2 ${showAddError && form.price <= 0 ? 'border-red-400 bg-red-50' : 'border-muted focus:border-primary'} outline-none font-black text-lg text-primary`} />
                     </div>
-                    <div>
-                      <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Bake (Min)</label>
-                      <input type="number" value={form.bake_time} onChange={e => setForm({...form, bake_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold" />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Cool (Min)</label>
-                      <input type="number" value={form.cool_time} onChange={e => setForm({...form, cool_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold" />
+                    <div className="col-span-2 grid grid-cols-3 gap-2 mt-2">
+                      <div>
+                        <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Prep (Min)</label>
+                        <input type="number" value={form.prep_time} onChange={e => setForm({...form, prep_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Bake (Min)</label>
+                        <input type="number" value={form.bake_time} onChange={e => setForm({...form, bake_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Cool (Min)</label>
+                        <input type="number" value={form.cool_time} onChange={e => setForm({...form, cool_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold" />
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                <div className="border-t-2 border-muted pt-6">
-                  <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-3">Recipe Ingredients</p>
-                  
-                  {/* Card for Added Ingredients (No inner scroll) */}
+              ) : (
+                <div className="space-y-4">
+                  <div className="border-t-2 border-transparent">
+                    <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-3">Bill of Materials (BOM)</p>
+                    
+                    {/* Card for Added Ingredients (No inner scroll) */}
                   <div className="bg-muted/5 border-2 border-muted/30 rounded-xl p-3 space-y-2">
                     {pendingRecipes.length === 0 ? (
                       <p className="text-center text-xs text-foreground/40 font-medium py-4 italic">No ingredients added yet.</p>
@@ -484,14 +489,32 @@ export default function ProductsPage() {
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* Fixed Bottom Section (Save only) */}
-            <div className="pt-4 flex-none border-t-2 border-muted/30">
-              <button onClick={handleSaveProduct} disabled={!form.name || form.price <= 0 || savingProduct} className="w-full h-14 bg-primary text-white rounded-xl font-black text-sm shadow-lg shadow-primary/20 disabled:opacity-50">
-                {savingProduct ? 'SAVING...' : 'SAVE PRODUCT & RECIPE'}
-              </button>
+            {/* Fixed Bottom Section */}
+            <div className="pt-4 flex-none border-t-2 border-muted/30 flex gap-3">
+              {addStep === 2 && (
+                <button onClick={() => setAddStep(1)} className="flex-none w-14 h-14 bg-muted text-foreground/50 rounded-xl font-black text-lg flex items-center justify-center hover:bg-muted/80 transition-all">
+                  ←
+                </button>
+              )}
+              {addStep === 1 ? (
+                <button onClick={() => {
+                  if (form.name && form.price > 0) {
+                    setShowAddError(false);
+                    setAddStep(2);
+                  } else {
+                    setShowAddError(true);
+                  }
+                }} className="flex-1 h-14 bg-foreground text-white rounded-xl font-black text-sm shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
+                  NEXT STEP
+                </button>
+              ) : (
+                <button onClick={handleSaveProduct} disabled={savingProduct} className="flex-1 h-14 bg-primary text-white rounded-xl font-black text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
+                  {savingProduct ? 'SAVING...' : 'SAVE PRODUCT & RECIPE'}
+                </button>
+              )}
             </div>
           </div>
         </div>,
