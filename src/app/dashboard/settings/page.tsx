@@ -1,141 +1,51 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
-import { BakerSettings } from '@/lib/types';
+import Link from 'next/link';
 
-export default function SettingsPage() {
-  const [settings, setSettings] = useState<Partial<BakerSettings>>({});
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [userId, setUserId] = useState('');
+export default function SettingsHub() {
+  const hubs = [
+    { label: 'Office Settings', icon: '🏢', desc: 'Shop profile, pricing & invoicing', href: '/office/settings', color: 'bg-primary' },
+    { label: 'Kitchen Settings', icon: '🥣', desc: 'Capacity, timing & inventory alerts', href: '/kitchen/settings', color: 'bg-orange-500' },
+    { label: 'Delivery Settings', icon: '🚚', desc: 'Fees, zones & delivery windows', href: '/delivery/settings', color: 'bg-blue-600' },
+  ];
 
-  const loadSettings = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    setUserId(user.id);
-    const { data } = await supabase.from('baker_settings').select('*').eq('baker_id', user.id).limit(1).single();
-    if (data) setSettings(data);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { loadSettings(); }, [loadSettings]);
-
-  const handleSave = async () => {
-    setSaving(true);
-    await supabase.from('baker_settings').upsert({ ...settings, baker_id: userId });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-    setSaving(false);
-  };
-
-  const updateField = (field: keyof BakerSettings, value: string | number | boolean | null) => {
-    setSettings(prev => ({ ...prev, [field]: value }));
-  };
-
-  const shopSlug = settings.shop_name ? settings.shop_name.toLowerCase().replace(/\s+/g, '-') : '';
-  const shopUrl = typeof window !== 'undefined' ? `${window.location.origin}/${shopSlug}` : '';
   return (
-    <div className="space-y-6 pb-4">
-      <div>
-        <h1 className="text-2xl font-extrabold text-foreground">Settings ⚙️</h1>
-        <p className="text-foreground/50 text-sm">Manage your bakery profile</p>
-      </div>
-
-      {/* Shop Link Card */}
-      <div className="bg-gradient-to-r from-primary to-accent rounded-2xl p-5 text-white space-y-2">
-        <p className="font-bold text-sm opacity-90">📎 Your Customer Order Link</p>
-        <p className="text-xs opacity-70 break-all bg-white/10 rounded-lg px-3 py-2 font-mono">{shopUrl}</p>
-        <button
-          onClick={() => navigator.clipboard.writeText(shopUrl)}
-          className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
-        >
-          Copy Link 📋
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-14 bg-muted rounded-2xl animate-pulse" />)}</div>
-      ) : (
-        <div className="space-y-6">
-          {/* Production & Delivery Schedule */}
-          <section className="bg-white rounded-2xl border border-muted p-5 space-y-4">
-            <h2 className="font-bold text-foreground">🕒 Production & Delivery Schedule</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-semibold text-foreground/70 block mb-2">Delivery Starts</label>
-                <input type="time" value={settings.delivery_start_time || '15:00'} onChange={e => updateField('delivery_start_time', e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm" />
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-foreground/70 block mb-2">Delivery Ends</label>
-                <input type="time" value={settings.delivery_end_time || '18:00'} onChange={e => updateField('delivery_end_time', e.target.value)}
-                  className="w-full h-11 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm" />
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-semibold text-foreground/70 block mb-2">Daily Order Capacity (Slots)</label>
-              <input type="number" value={settings.daily_capacity || 5} onChange={e => updateField('daily_capacity', +e.target.value)}
-                className="w-full h-11 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm" />
-              <p className="text-[10px] text-foreground/40 mt-1 font-medium">Sistem akan beri amaran jika order melebihi kapasiti ini.</p>
-            </div>
-          </section>
-
-          {/* Shop Info */}
-          <section className="bg-white rounded-2xl border border-muted p-5 space-y-4">
-            <h2 className="font-bold text-foreground">🏪 Shop Information</h2>
-            <SettingField label="Bakery Name" value={settings.shop_name || ''} onChange={v => updateField('shop_name', v)} />
-            <SettingField label="WhatsApp Number" value={settings.whatsapp_number || ''} onChange={v => updateField('whatsapp_number', v)} type="tel" />
-            <div>
-              <label className="text-sm font-semibold text-foreground/70 block mb-2">Home Address</label>
-              <textarea rows={2} value={settings.home_address || ''} onChange={e => updateField('home_address', e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm resize-none" />
-            </div>
-          </section>
-
-          {/* Bank Info */}
-          <section className="bg-white rounded-2xl border border-muted p-5 space-y-4">
-            <h2 className="font-bold text-foreground">🏦 Bank Details</h2>
-            <SettingField label="Bank Name" value={settings.bank_name || ''} onChange={v => updateField('bank_name', v)} placeholder="e.g. Maybank" />
-            <SettingField label="Account Number" value={settings.bank_account || ''} onChange={v => updateField('bank_account', v)} />
-            <SettingField label="Account Holder" value={settings.bank_holder || ''} onChange={v => updateField('bank_holder', v)} />
-          </section>
-
-          {/* ToyyibPay */}
-          <section className="bg-white rounded-2xl border border-muted p-5 space-y-4">
-            <h2 className="font-bold text-foreground">💳 ToyyibPay Integration</h2>
-            <SettingField label="Secret Key" value={settings.toyyibpay_secret_key || ''} onChange={v => updateField('toyyibpay_secret_key', v)} placeholder="Your ToyyibPay secret key" type="password" />
-            <SettingField label="Category ID" value={settings.toyyibpay_category_id || ''} onChange={v => updateField('toyyibpay_category_id', v)} placeholder="Your ToyyibPay category ID" />
-          </section>
-
-          {/* Save Button */}
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full h-14 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60"
-          >
-            {saving ? 'Saving...' : saved ? '✅ Saved!' : 'Save Changes'}
-          </button>
+    <div className="space-y-6 pb-20">
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
+        <div className="pt-8 pb-4">
+          <h1 className="text-2xl font-black text-foreground">Settings ⚙️</h1>
+          <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Global Configuration Hub</p>
         </div>
-      )}
-    </div>
-  );
-}
+      </div>
 
-function SettingField({ label, value, onChange, type = 'text', placeholder }: {
-  label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string;
-}) {
-  return (
-    <div>
-      <label className="text-sm font-semibold text-foreground/70 block mb-2">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full h-11 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm transition-colors"
-      />
+      <div className="space-y-4">
+        {hubs.map((hub) => (
+          <Link 
+            key={hub.label}
+            href={hub.href}
+            className="flex items-center gap-4 bg-white p-5 rounded-[32px] border border-muted/50 shadow-sm active:scale-95 transition-all group hover:border-primary/20"
+          >
+            <div className={`w-14 h-14 ${hub.color} rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-black/5`}>
+              {hub.icon}
+            </div>
+            <div className="flex-1">
+              <h2 className="font-black text-foreground group-hover:text-primary transition-colors">{hub.label}</h2>
+              <p className="text-xs font-medium text-foreground/40">{hub.desc}</p>
+            </div>
+            <div className="text-muted group-hover:text-primary transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </Link>
+        ))}
+
+        <div className="pt-6">
+          <p className="text-center text-[10px] font-black uppercase text-foreground/20 tracking-[0.3em]">
+            BakerFlow v2.0.0
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

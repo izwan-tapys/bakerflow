@@ -20,15 +20,18 @@ const hubLinks: Record<string, { href: string; label: string; icon: string }[]> 
     { href: '/office/orders', label: 'Orders', icon: '📋' },
     { href: '/office/analytics', label: 'Analytics', icon: '📊' },
     { href: '/office/directory', label: 'Directory', icon: '📇' },
+    { href: '/office/settings', label: 'Settings', icon: '⚙️' },
   ],
   kitchen: [
     { href: '/kitchen/production', label: 'Tasks', icon: '🍳' },
     { href: '/kitchen/planner', label: 'Planner', icon: '📅' },
     { href: '/kitchen/inventory', label: 'Inventory', icon: '📦' },
     { href: '/kitchen/products', label: 'Products', icon: '🧁' },
+    { href: '/kitchen/settings', label: 'Settings', icon: '⚙️' },
   ],
   delivery: [
     { href: '/delivery', label: 'Delivery', icon: '🚚' },
+    { href: '/delivery/settings', label: 'Settings', icon: '⚙️' },
   ],
 };
 
