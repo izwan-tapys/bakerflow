@@ -49,6 +49,22 @@ export default function RootLayout({
     >
       <head>
         <link rel="apple-touch-icon" href="/icon-192.png" />
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            try {
+              var theme = localStorage.getItem('theme');
+              var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+              if (!theme && supportDarkMode) theme = 'dark';
+              if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+              } else if (theme === 'light') {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+              }
+            } catch (e) {}
+          })();
+        ` }} />
       </head>
       <body className="min-h-full flex flex-col">
         {children}

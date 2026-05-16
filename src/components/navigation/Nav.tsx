@@ -84,7 +84,13 @@ export function BottomNav() {
       (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     
     setTheme(savedTheme);
-    if (savedTheme === 'dark') document.documentElement.classList.add('dark');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    }
   }, []);
 
   const toggleTheme = () => {
