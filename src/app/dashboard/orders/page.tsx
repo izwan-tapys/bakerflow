@@ -255,15 +255,17 @@ export default function OrdersPage() {
             
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
               <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Customer Name</label>
-                  <input value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})}
-                    className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Phone</label>
-                  <input value={manualForm.customer_phone} onChange={e => setManualForm({...manualForm, customer_phone: e.target.value})} placeholder="0123456789"
-                    className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Customer Name</label>
+                    <input value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})}
+                      className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Phone</label>
+                    <input value={manualForm.customer_phone} onChange={e => setManualForm({...manualForm, customer_phone: e.target.value})} placeholder="0123456789"
+                      className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
+                  </div>
                 </div>
 
                 <div>
@@ -272,7 +274,7 @@ export default function OrdersPage() {
                     className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Product</label>
                     <select value={manualForm.product_id} onChange={e => setManualForm({...manualForm, product_id: e.target.value})}
@@ -288,7 +290,7 @@ export default function OrdersPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Delivery Date</label>
                     <input type="date" value={manualForm.delivery_date} onChange={e => setManualForm({...manualForm, delivery_date: e.target.value})}
