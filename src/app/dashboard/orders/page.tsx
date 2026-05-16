@@ -5,14 +5,15 @@ import { supabase } from '@/lib/supabase';
 import { Order, OrderStatus, Product, PaymentStatus } from '@/lib/types';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { updateOrderStatus } from '@/lib/services/baker.service';
+import { Search, Clock, CheckCircle2, Flame, Package, Truck, CheckCheck, X } from 'lucide-react';
 
-const STATUS_FILTERS: { label: string; value: OrderStatus }[] = [
-  { label: '⏳ Pending', value: 'pending' },
-  { label: '✅ Approved', value: 'approved' },
-  { label: '🔥 Baking', value: 'production' },
-  { label: '📦 Ready', value: 'ready' },
-  { label: '🚗 On Way', value: 'otw' },
-  { label: '✓ Done', value: 'completed' },
+const STATUS_FILTERS: { label: string; value: OrderStatus; icon: any }[] = [
+  { label: 'Pending', value: 'pending', icon: Clock },
+  { label: 'Approved', value: 'approved', icon: CheckCircle2 },
+  { label: 'Baking', value: 'production', icon: Flame },
+  { label: 'Ready', value: 'ready', icon: Package },
+  { label: 'On Way', value: 'otw', icon: Truck },
+  { label: 'Done', value: 'completed', icon: CheckCheck },
 ];
 
 export default function OrdersPage() {
@@ -204,7 +205,7 @@ export default function OrdersPage() {
         <div className="space-y-3 pb-3">
           {/* Search Row */}
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs">🔍</span>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/30 w-3.5 h-3.5 pointer-events-none" />
             <input
               type="search"
               placeholder="Search by customer or order number..."
@@ -220,12 +221,13 @@ export default function OrdersPage() {
               <button
                 key={f.value}
                 onClick={() => setFilter(f.value)}
-                className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border flex items-center gap-1.5 ${
                   filter === f.value
                     ? 'bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105'
                     : 'bg-card text-foreground/40 border-muted hover:border-primary'
                 }`}
               >
+                <f.icon className={`w-3 h-3 ${filter === f.value ? 'text-white' : 'text-primary/70'}`} />
                 {f.label}
               </button>
             ))}
@@ -242,11 +244,13 @@ export default function OrdersPage() {
 
       {/* Manual Order Modal (Same as before but with modernized classes) */}
       {showManual && (
-        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[5%] pb-[90px] md:pb-[5%]">
-          <div className="bg-card w-full max-w-xl h-fit max-h-[90vh] rounded-[32px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+        <div className="fixed inset-0 z-[100] bg-background/40 backdrop-blur-md flex items-center justify-center p-[5%] pb-[90px] md:pb-[5%]">
+          <div className="bg-card w-full max-w-xl h-fit max-h-[90vh] rounded-[32px] p-8 shadow-2xl flex flex-col overflow-hidden border border-primary/10">
             <div className="flex justify-between items-center mb-6 flex-none">
-              <p className="text-xl font-black text-primary">{editingOrder ? 'Edit Order' : 'Add Manual Order'}</p>
-              <button onClick={() => { setShowManual(false); setEditingOrder(null); }} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
+              <p className="text-xl font-black text-foreground tracking-tight">{editingOrder ? 'Edit Order' : 'Add Manual Order'}</p>
+              <button onClick={() => { setShowManual(false); setEditingOrder(null); }} className="w-10 h-10 flex items-center justify-center bg-primary/5 hover:bg-primary/10 transition-colors rounded-xl text-foreground/40">
+                <X className="w-5 h-5" />
+              </button>
             </div>
             
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
