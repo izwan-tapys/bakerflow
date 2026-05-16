@@ -832,26 +832,6 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-5 pr-1 custom-scrollbar">
-          {/* Ingredient List */}
-          <div className="space-y-3">
-            <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">🥣 Ingredients List</p>
-            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
-              {loading ? (
-                <p className="text-sm text-foreground/40 text-center py-4">Loading...</p>
-              ) : grouped.length === 0 ? (
-                <p className="text-sm text-foreground/40 italic text-center py-4">No ingredients added yet.</p>
-              ) : grouped.map(r => (
-                <div key={r.key} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
-                  <div>
-                    <p className="font-bold text-sm text-foreground">{r.display_name}</p>
-                    <p className="text-xs text-foreground/50">{r.quantity_needed} {r.unit}</p>
-                  </div>
-                  <button onClick={() => handleRemove(r)} className="text-red-400 hover:text-red-600 text-lg px-2">×</button>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Add New Item */}
           <div className="bg-muted/10 p-4 rounded-xl border-2 border-muted/30 space-y-4">
             <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">+ Add Ingredient</p>
@@ -953,6 +933,26 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
                 className="h-10 px-4 bg-foreground text-white font-bold text-xs rounded-xl disabled:opacity-50 hover:bg-black transition-colors">
                 + Add
               </button>
+            </div>
+          </div>
+
+          {/* Ingredient List */}
+          <div className="space-y-3">
+            <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">🥣 Ingredients List</p>
+            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
+              {loading ? (
+                <p className="text-sm text-foreground/40 text-center py-4">Loading...</p>
+              ) : grouped.length === 0 ? (
+                <p className="text-sm text-foreground/40 italic text-center py-4">No ingredients added yet.</p>
+              ) : grouped.map(r => (
+                <div key={r.key} className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-muted/50">
+                  <div>
+                    <p className="font-bold text-sm text-foreground">{r.display_name}</p>
+                    <p className="text-xs text-foreground/50">{r.quantity_needed} {r.unit}</p>
+                  </div>
+                  <button onClick={() => handleRemove(r)} className="text-red-400 hover:text-red-600 text-lg px-2">×</button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
