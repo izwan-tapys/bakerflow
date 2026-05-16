@@ -30,6 +30,15 @@
   --primary: #d4a373 !important;
 }
 
+.light {
+  --background: #ffffff !important;
+  --foreground: #0f172a !important;
+  --card: #ffffff !important;
+  --muted: #f1f5f9 !important;
+  --border-color: #e2e8f0 !important;
+  --primary: #8B5E3C !important;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
     --background: #0a0a0a;
