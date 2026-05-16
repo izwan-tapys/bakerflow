@@ -60,7 +60,7 @@ export default function ProductsPage() {
   const [editingRecipe, setEditingRecipe] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  // Inline Edit State
+  const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
   const [inlineEdit, setInlineEdit] = useState<{ productId: string; field: 'price' | 'time' | 'info' } | null>(null);
   const [inlineVal, setInlineVal] = useState({ name: '', description: '', price: 0, prep: 0, bake: 0, cool: 0 });
 
@@ -237,18 +237,6 @@ export default function ProductsPage() {
     loadData();
   };
 
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setForm({
-      name: product.name,
-      description: product.description || '',
-      price: product.price,
-      prep_time: product.prep_time || 30,
-      bake_time: product.bake_time || 45,
-      cool_time: product.cool_time || 60
-    });
-  };
-
   const handleUpdateProduct = async () => {
     if (!editingProduct || !form.name || form.price <= 0) return;
     setSavingProduct(true);
@@ -323,6 +311,16 @@ export default function ProductsPage() {
         </div>
         <button onClick={() => setShowAdd(!showAdd)} className="h-10 px-4 bg-primary text-white rounded-xl font-bold text-sm shadow-md shadow-primary/20 hover:scale-105 transition-all">
           + Add Product
+        </button>
+      </div>
+
+      {/* Tab Switcher */}
+      <div className="flex bg-muted/30 p-1 rounded-xl border border-muted/50 w-full sm:w-64">
+        <button onClick={() => setActiveTab('active')} className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'active' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>
+          Active Menu
+        </button>
+        <button onClick={() => setActiveTab('archived')} className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'archived' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>
+          Archived
         </button>
       </div>
 
@@ -482,18 +480,24 @@ export default function ProductsPage() {
       {/* Product List */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{[1,2,3,4].map(i => <div key={i} className="h-40 bg-muted rounded-2xl animate-pulse" />)}</div>
-      ) : products.length === 0 ? (
+      ) : products.filter(p => activeTab === 'active' ? p.is_active : !p.is_active).length === 0 ? (
         <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-muted mt-4">
-          <div className="text-5xl mb-3">🍩</div>
-          <p className="font-bold text-foreground">Your menu is empty</p>
-          <p className="text-foreground/50 text-sm mt-1 mb-4">Add your first product to start taking orders.</p>
-          <button onClick={() => setShowAdd(true)} className="h-10 px-6 bg-primary/10 text-primary rounded-xl font-bold text-sm hover:bg-primary/20 transition-all">
-            Add Product
-          </button>
+          <div className="text-5xl mb-3">{activeTab === 'active' ? '🍩' : '📦'}</div>
+          <p className="font-bold text-foreground">
+            {activeTab === 'active' ? 'Your active menu is empty' : 'No archived products'}
+          </p>
+          <p className="text-foreground/50 text-sm mt-1 mb-4">
+            {activeTab === 'active' ? 'Add your first product to start taking orders.' : 'Products hidden from your active menu will appear here.'}
+          </p>
+          {activeTab === 'active' && (
+            <button onClick={() => setShowAdd(true)} className="h-10 px-6 bg-primary/10 text-primary rounded-xl font-bold text-sm hover:bg-primary/20 transition-all">
+              Add Product
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {products.map(product => (
+          {products.filter(p => activeTab === 'active' ? p.is_active : !p.is_active).map(product => (
             <div key={product.id} className={`bg-white rounded-3xl p-5 border-2 transition-all flex flex-col gap-4 ${product.is_active ? 'border-muted/50 hover:border-primary/30' : 'border-muted/20 opacity-60'}`}>
               
               {/* Clickable Info Area - Inline Editable */}
@@ -619,12 +623,17 @@ export default function ProductsPage() {
                 >
                   📝 Recipe
                 </button>
-                <button
-                  onClick={() => toggleActive(product)}
-                  className={`flex-1 h-10 rounded-xl text-xs font-bold transition-all ${product.is_active ? 'bg-green-50 text-green-600 hover:bg-green-100' : 'bg-muted text-foreground/40'}`}
-                >
-                  {product.is_active ? '✅ Active' : '❌ Hidden'}
-                </button>
+                <div className="flex items-center gap-3 bg-muted/30 px-3 rounded-xl">
+                  <span className={`text-[10px] font-black uppercase tracking-tighter ${product.is_active ? 'text-green-600' : 'text-foreground/30'}`}>
+                    {product.is_active ? 'ON' : 'OFF'}
+                  </span>
+                  <button
+                    onClick={() => toggleActive(product)}
+                    className={`relative w-12 h-6 rounded-full transition-all duration-300 ${product.is_active ? 'bg-green-500' : 'bg-muted-foreground/20'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-300 ${product.is_active ? 'left-7 shadow-sm' : 'left-1'}`} />
+                  </button>
+                </div>
                 <button
                   onClick={() => deleteProduct(product.id)}
                   className="w-10 h-10 rounded-xl flex items-center justify-center text-red-400 hover:bg-red-50 transition-all"
