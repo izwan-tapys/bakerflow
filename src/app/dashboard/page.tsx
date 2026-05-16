@@ -8,6 +8,18 @@ import { SmartTimeline } from '@/components/dashboard/SmartTimeline';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { updateOrderStatus } from '@/lib/services/baker.service';
 import { formatDate } from '@/lib/utils';
+import { 
+  Sun, 
+  CloudSun, 
+  Moon, 
+  Share2, 
+  Calendar, 
+  Clock, 
+  AlertCircle, 
+  CheckCircle2,
+  TrendingUp,
+  Receipt
+} from 'lucide-react';
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -108,6 +120,13 @@ export default function AdminDashboardPage() {
 
   const nextTask = (schedule as any[]).find(s => s.startPrep > new Date());
 
+  const GreetingIcon = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return <Sun className="w-3 h-3 text-orange-400" />;
+    if (hour < 17) return <CloudSun className="w-3 h-3 text-orange-400" />;
+    return <Moon className="w-3 h-3 text-indigo-400" />;
+  };
+
   if (loading) {
     return (
       <div className="space-y-4 animate-pulse">
@@ -126,7 +145,10 @@ export default function AdminDashboardPage() {
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
         <div className="pt-6 pb-4 flex items-center justify-between">
           <div>
-            <p className="text-foreground/30 font-black text-[10px] uppercase tracking-[0.2em] mb-1">{getGreeting()} ☀️</p>
+            <div className="flex items-center gap-1.5 mb-1">
+              <GreetingIcon />
+              <p className="text-foreground/30 font-black text-[10px] uppercase tracking-[0.2em]">{getGreeting()}</p>
+            </div>
             <h1 className="text-2xl font-black text-foreground">{shopName}</h1>
           </div>
           <button 
@@ -138,7 +160,7 @@ export default function AdminDashboardPage() {
             }}
             className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-primary hover:text-white transition-all shadow-sm active:scale-95"
           >
-            <span>🔗</span> Share Link
+            <Share2 className="w-3 h-3" /> Share Link
           </button>
         </div>
       </div>
@@ -156,7 +178,9 @@ export default function AdminDashboardPage() {
 
         {nextTask && (
           <div className="mt-5 pt-5 border-t border-white/10 flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center text-xl animate-bounce">⏰</div>
+            <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center text-xl">
+              <Clock className="w-6 h-6 animate-pulse" />
+            </div>
             <div>
               <p className="text-[10px] font-bold uppercase opacity-60">Next Action</p>
               <p className="font-black text-sm">Prep {nextTask.product.name} at {nextTask.startPrep.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
@@ -169,11 +193,14 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-card rounded-3xl p-5 border border-muted/50 shadow-sm">
           <p className="text-[10px] font-black text-foreground/30 uppercase tracking-widest mb-1">Monthly Sales</p>
-          <p className="text-2xl font-black text-primary">RM {monthlyRevenue.toLocaleString()}</p>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-green-500" />
+            <p className="text-2xl font-black text-primary">RM {monthlyRevenue.toLocaleString()}</p>
+          </div>
         </div>
         <div className="bg-card rounded-3xl p-5 border border-muted/50 shadow-sm flex flex-col justify-center items-center gap-1">
-          <Link href="/dashboard/planner" className="text-xs font-bold text-primary bg-primary/5 px-4 py-2 rounded-xl hover:bg-primary/10 transition-all">
-            View Full Schedule 📅
+          <Link href="/dashboard/planner" className="text-xs font-bold text-primary bg-primary/5 px-4 py-2 rounded-xl hover:bg-primary/10 transition-all flex items-center gap-2">
+            <Calendar className="w-4 h-4" /> Full Schedule
           </Link>
         </div>
       </div>
@@ -189,6 +216,7 @@ export default function AdminDashboardPage() {
 
         {schedule.length === 0 ? (
           <div className="text-center py-10 bg-muted/5 rounded-2xl border-2 border-dashed border-muted">
+            <CheckCircle2 className="w-8 h-8 text-muted mx-auto mb-2 opacity-20" />
             <p className="text-sm font-bold text-foreground/40 italic">Nothing scheduled for today yet.</p>
           </div>
         ) : (
@@ -224,7 +252,7 @@ export default function AdminDashboardPage() {
       {pendingOrders.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-lg font-black text-foreground flex items-center gap-2">
-            🚨 Needs Attention
+            <AlertCircle className="w-5 h-5 text-red-500" /> Needs Attention
             <span className="bg-red-100 text-red-600 text-xs font-black px-2 py-0.5 rounded-full tracking-tighter">{pendingOrders.length}</span>
           </h2>
           {pendingOrders.map(order => (
@@ -236,7 +264,7 @@ export default function AdminDashboardPage() {
       {/* Empty State */}
       {pendingOrders.length === 0 && productionOrders.length === 0 && schedule.length === 0 && (
         <div className="text-center py-12 space-y-3">
-          <div className="text-5xl">🎉</div>
+          <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto opacity-20" />
           <p className="text-foreground/60 font-medium">All clear! No pending tasks.</p>
         </div>
       )}

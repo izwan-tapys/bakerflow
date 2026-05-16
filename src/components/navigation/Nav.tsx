@@ -1,85 +1,104 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Building2, 
+  ChefHat, 
+  Truck, 
+  MoreHorizontal, 
+  LayoutDashboard, 
+  Package, 
+  Calendar, 
+  Box, 
+  Settings, 
+  BarChart3, 
+  Users,
+  Moon,
+  Sun,
+  ClipboardList,
+  LogOut,
+  ExternalLink
+} from 'lucide-react';
 
 // Main bottom nav items
-const navItems: { href?: string; id?: string; label: string; icon: string }[] = [
-  { href: '/dashboard', label: 'Home', icon: '🏠' },
-  { id: 'office', label: 'Office', icon: '🏢' },
-  { id: 'kitchen', label: 'Kitchen', icon: '🥣' },
-  { id: 'delivery', label: 'Delivery', icon: '🚚' },
-  { id: 'more', label: 'More', icon: '⋮' },
+const navItems = [
+  { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
+  { id: 'office', label: 'Office', icon: Building2 },
+  { id: 'kitchen', label: 'Kitchen', icon: ChefHat },
+  { id: 'delivery', label: 'Delivery', icon: Truck },
+  { id: 'more', label: 'More', icon: MoreHorizontal },
 ];
 
-// Sub-links for each hub
-const hubLinks: Record<string, { href: string; label: string; icon: string }[]> = {
+const hubLinks: Record<string, { href: string; label: string; icon: any }[]> = {
   office: [
-    { href: '/office/orders', label: 'Orders', icon: '📋' },
-    { href: '/office/analytics', label: 'Analytics', icon: '📊' },
-    { href: '/office/directory', label: 'Directory', icon: '📇' },
-    { href: '/office/settings', label: 'Settings', icon: '⚙️' },
+    { href: '/office/orders', label: 'Orders', icon: ClipboardList },
+    { href: '/office/analytics', label: 'Analytics', icon: BarChart3 },
+    { href: '/office/directory', label: 'Directory', icon: Users },
+    { href: '/office/settings', label: 'Settings', icon: Settings },
   ],
   kitchen: [
-    { href: '/kitchen/production', label: 'Tasks', icon: '🍳' },
-    { href: '/kitchen/planner', label: 'Planner', icon: '📅' },
-    { href: '/kitchen/inventory', label: 'Inventory', icon: '📦' },
-    { href: '/kitchen/products', label: 'Products', icon: '🧁' },
-    { href: '/kitchen/settings', label: 'Settings', icon: '⚙️' },
+    { href: '/kitchen/production', label: 'Tasks', icon: ChefHat },
+    { href: '/kitchen/planner', label: 'Planner', icon: Calendar },
+    { href: '/kitchen/inventory', label: 'Inventory', icon: Box },
+    { href: '/kitchen/products', label: 'Products', icon: Package },
+    { href: '/kitchen/settings', label: 'Settings', icon: Settings },
   ],
   delivery: [
-    { href: '/delivery', label: 'Delivery', icon: '🚚' },
-    { href: '/delivery/settings', label: 'Settings', icon: '⚙️' },
-  ],
+    { href: '/delivery', label: 'Delivery', icon: Truck },
+    { href: '/delivery/settings', label: 'Settings', icon: Settings },
+  ]
 };
 
-// Desktop sidebar nav with children
-const sideNavItems: { href?: string; id: string; label: string; icon: string; children?: { href: string; label: string; icon: string }[] }[] = [
-  { href: '/dashboard', id: 'home', label: 'Home', icon: '🏠' },
+const sideNavItems = [
+  { href: '/dashboard', id: 'home', label: 'Home', icon: LayoutDashboard },
   { 
     id: 'office', 
     label: 'Office', 
-    icon: '🏢',
-    children: hubLinks.office
+    icon: Building2,
+    children: [
+      { href: '/office/orders', label: 'Orders' },
+      { href: '/office/analytics', label: 'Analytics' },
+      { href: '/office/directory', label: 'Directory' },
+      { href: '/office/settings', label: 'Settings' }
+    ]
   },
   { 
     id: 'kitchen', 
     label: 'Kitchen', 
-    icon: '🥣',
-    children: hubLinks.kitchen
+    icon: ChefHat,
+    children: [
+      { href: '/kitchen/production', label: 'Production' },
+      { href: '/kitchen/planner', label: 'Planner' },
+      { href: '/kitchen/inventory', label: 'Inventory' },
+      { href: '/kitchen/products', label: 'Products' },
+      { href: '/kitchen/settings', label: 'Settings' }
+    ]
   },
-  { href: '/delivery', id: 'delivery', label: 'Delivery', icon: '🚚' },
-  { href: '/dashboard/settings', id: 'settings', label: 'Settings', icon: '⚙️' },
+  { 
+    id: 'delivery', 
+    label: 'Delivery', 
+    icon: Truck,
+    children: [
+      { href: '/delivery', label: 'Delivery' },
+      { href: '/delivery/settings', label: 'Settings' }
+    ]
+  }
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const [activePopup, setActivePopup] = useState<string | null>(null);
+  const [activePopup, setActivePopup] = useState<'office' | 'kitchen' | 'delivery' | null>(null);
   const [showMore, setShowMore] = useState(false);
-  const [userData, setUserData] = useState<{ name: string; plan: string } | null>(null);
   const [dismissedHubs, setDismissedHubs] = useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserData({
-          name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Baker',
-          plan: 'Premium Plan 👑',
-        });
-      }
-    };
-    fetchUser();
-  }, []);
-
+  const [userData, setUserData] = useState<{ name: string; plan: string } | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
-    // Initial theme check
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' || 
       (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     
@@ -107,7 +126,16 @@ export function BottomNav() {
     }
   };
 
-  // Auto-detect active hub from pathname
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserData({ name: user.user_metadata?.shop_name || 'Baker', plan: 'Pro Baker' });
+      }
+    };
+    fetchUser();
+  }, []);
+
   useEffect(() => {
     setActivePopup(null);
   }, [pathname]);
@@ -117,206 +145,114 @@ export function BottomNav() {
     router.push('/login');
   };
 
-  const currentHub = activePopup || (
-    pathname.startsWith('/office') && !dismissedHubs.includes('office') ? 'office' :
-    pathname.startsWith('/kitchen') && !dismissedHubs.includes('kitchen') ? 'kitchen' :
-    pathname.startsWith('/delivery') && !dismissedHubs.includes('delivery') ? 'delivery' :
-    null
-  );
-
   const isInHub = (hub: string) => pathname.startsWith(`/${hub}`);
-
-  const toggleHub = (hub: string) => {
-    if (activePopup === hub || currentHub === hub) {
-      if (activePopup === hub) setActivePopup(null);
-      setDismissedHubs(prev => prev.includes(hub) ? prev : [...prev, hub]);
+  const toggleHub = (hub: any) => {
+    if (activePopup === hub) {
+      setActivePopup(null);
+      setDismissedHubs(prev => [...prev, hub]);
     } else {
       setActivePopup(hub);
       setDismissedHubs(prev => prev.filter(h => h !== hub));
     }
   };
 
-  const subLinks = currentHub && hubLinks[currentHub] ? hubLinks[currentHub] : [];
-
   return (
     <>
-      {/* Second sub-nav bar — appears above main nav when in a hub or popup is open */}
       <AnimatePresence>
-        {subLinks.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-16 left-0 right-0 z-40 bg-white border-t-2 border-primary/20 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)] md:hidden"
+        {activePopup && hubLinks[activePopup] && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 20, opacity: 0 }}
+            className="fixed bottom-20 left-4 right-4 z-[70] md:hidden"
           >
-            <div className="flex items-center justify-around max-w-lg mx-auto px-4 py-1.5 gap-2">
-            {subLinks.map(link => {
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setActivePopup(null)}
-                  className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl transition-all ${
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-foreground/40 hover:text-foreground/70'
-                  }`}
-                >
-                  <span className="text-base">{link.icon}</span>
-                  <span className={`text-[9px] font-black uppercase tracking-wider ${isActive ? 'text-primary' : ''}`}>
-                    {link.label}
-                  </span>
-                  {isActive && <div className="w-1 h-1 rounded-full bg-primary" />}
-                </Link>
-              );
-            })}
-            {/* Dismiss button when popup is open but not in that hub */}
-            {activePopup && !isInHub(activePopup) && (
-              <button
-                onClick={() => setActivePopup(null)}
-                className="w-8 h-8 flex items-center justify-center text-foreground/20 hover:text-foreground/40 transition-all"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        </motion.div>
-      )}
+            <div className="bg-card rounded-[2.5rem] p-6 shadow-2xl border border-muted/50 backdrop-blur-xl">
+              <div className="flex items-center justify-between mb-4 px-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{activePopup} Hub</span>
+                <button onClick={() => setActivePopup(null)} className="text-foreground/20 text-xs">Close</button>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {hubLinks[activePopup].map((link) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setActivePopup(null)}
+                    className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-2xl border border-muted/50 hover:bg-primary/5 transition-all group"
+                  >
+                    <link.icon className="w-6 h-6 mb-1 text-primary group-hover:scale-110 transition-transform" />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-foreground/60">{link.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
-      {/* Backdrop for dismissing popup — active whenever a popup is shown */}
       {activePopup && (
-        <div
-          className="fixed inset-0 z-30 md:hidden bg-black/5 backdrop-blur-[1px]"
-          onClick={() => {
-            if (isInHub(activePopup)) {
-              setDismissedHubs(prev => [...prev, activePopup]);
-            }
-            setActivePopup(null);
-          }}
-        />
+        <div className="fixed inset-0 z-[60] bg-black/5 backdrop-blur-[1px]" onClick={() => setActivePopup(null)} />
       )}
 
-      {/* Main bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-muted safe-area-pb md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-muted/50 safe-area-pb md:hidden">
         <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
           {navItems.map(item => {
-            const isActive = item.href
-              ? pathname === item.href
-              : item.id ? isInHub(item.id) || activePopup === item.id
-              : false;
-
+            const isActive = item.href ? pathname === item.href : activePopup === item.id;
             return (
-              <motion.button
+              <button
                 key={item.label}
-                whileTap={{ scale: 0.9 }}
                 onClick={() => {
-                  if (item.href) {
-                    router.push(item.href);
-                    setActivePopup(null);
-                    setDismissedHubs([]); // Clear dismissed when hard navigating
-                  } else if (item.id === 'more') {
-                    setShowMore(true);
-                    setActivePopup(null);
-                  } else if (item.id) {
-                    toggleHub(item.id);
-                  }
+                  if (item.href) router.push(item.href);
+                  else if (item.id === 'more') setShowMore(true);
+                  else toggleHub(item.id);
                 }}
-                className={`flex flex-col items-center gap-0.5 py-1 rounded-xl transition-all flex-1 ${
-                  isActive ? 'text-primary' : 'text-foreground/40'
-                }`}
+                className={`flex flex-col items-center gap-0.5 py-1 flex-1 transition-all ${isActive ? 'text-primary' : 'text-foreground/40'}`}
               >
-                <span className={`text-xl transition-transform ${isActive ? 'scale-110' : ''}`}>
-                  {item.icon}
-                </span>
-                <span className={`text-[10px] font-black uppercase tracking-wider ${isActive ? 'text-primary' : ''}`}>
-                  {item.label}
-                </span>
-                {isActive && (
-                  <motion.div 
-                    layoutId="activeDot"
-                    className="w-1.5 h-1.5 rounded-full bg-primary shadow-sm shadow-primary/40" 
-                  />
-                )}
-              </motion.button>
+                <item.icon className={`w-6 h-6 mb-0.5 ${isActive ? 'scale-110' : ''}`} />
+                <span className="text-[9px] font-black uppercase tracking-tighter">{item.label}</span>
+                {isActive && <motion.div layoutId="activeDot" className="w-1.5 h-1.5 rounded-full bg-primary shadow-sm" />}
+              </button>
             );
           })}
         </div>
       </nav>
 
-      {/* More Menu Bottom Sheet */}
-      {showMore && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center px-4 pb-20 md:hidden animate-in fade-in duration-200">
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px]" onClick={() => setShowMore(false)} />
-
-          <div className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl border border-muted/50 overflow-hidden animate-in slide-in-from-bottom-full duration-300">
-            <div className="pt-3 pb-2 flex justify-center">
-              <div className="w-12 h-1.5 bg-muted rounded-full" />
-            </div>
-
-            <div className="p-6 space-y-6">
+      <AnimatePresence>
+        {showMore && (
+          <div className="fixed inset-0 z-[80] flex items-end justify-center px-4 pb-24 md:hidden">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowMore(false)} className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+            <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} className="relative w-full max-w-md bg-card rounded-[2.5rem] border border-muted/50 p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { label: 'Settings', icon: '⚙️', href: '/dashboard/settings' },
-                  { label: 'Analytics', icon: '📊', href: '/office/analytics' },
-                  { label: 'Directory', icon: '📇', href: '/office/directory' },
-                  { 
-                    label: theme === 'light' ? 'Dark Mode' : 'Light Mode', 
-                    icon: theme === 'light' ? '🌙' : '☀️', 
-                    onClick: toggleTheme 
-                  },
+                  { label: 'Settings', icon: Settings, href: '/dashboard/settings' },
+                  { label: 'Analytics', icon: BarChart3, href: '/office/analytics' },
+                  { label: 'Directory', icon: Users, href: '/office/directory' },
+                  { label: theme === 'light' ? 'Dark Mode' : 'Light Mode', icon: theme === 'light' ? Moon : Sun, onClick: toggleTheme },
                 ].map(link => (
                   link.href ? (
-                    <Link
-                      key={link.label}
-                      href={link.href}
-                      onClick={() => setShowMore(false)}
-                      className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-2xl border border-muted/50 hover:bg-primary/5 hover:border-primary/20 transition-all active:scale-95"
-                    >
-                      <span className="text-2xl mb-1">{link.icon}</span>
+                    <Link key={link.label} href={link.href} onClick={() => setShowMore(false)} className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-2xl border border-muted/50 group">
+                      <link.icon className="w-8 h-8 mb-2 text-primary group-hover:scale-110 transition-transform" />
                       <span className="text-[10px] font-black uppercase tracking-widest text-foreground/60">{link.label}</span>
                     </Link>
                   ) : (
-                    <button
-                      key={link.label}
-                      onClick={() => { link.onClick?.(); setShowMore(false); }}
-                      className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-2xl border border-muted/50 hover:bg-primary/5 hover:border-primary/20 transition-all active:scale-95"
-                    >
-                      <span className="text-2xl mb-1">{link.icon}</span>
+                    <button key={link.label} onClick={() => { link.onClick?.(); setShowMore(false); }} className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-2xl border border-muted/50 group">
+                      <link.icon className="w-8 h-8 mb-2 text-primary group-hover:scale-110 transition-transform" />
                       <span className="text-[10px] font-black uppercase tracking-widest text-foreground/60">{link.label}</span>
                     </button>
                   )
                 ))}
               </div>
-
-              {/* User Card */}
               <div className="bg-primary/5 rounded-3xl p-5 border border-primary/10 flex items-center gap-4">
-                <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white text-lg font-black shadow-lg shadow-primary/20">
-                  {userData?.name?.[0]?.toUpperCase() ?? 'B'}
-                </div>
+                <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white font-black">{userData?.name?.[0]}</div>
                 <div className="flex-1 min-w-0">
                   <p className="font-black text-foreground truncate">{userData?.name}</p>
-                  <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">{userData?.plan}</p>
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest">{userData?.plan}</p>
                 </div>
-                <button
-                  onClick={() => { handleLogout(); setShowMore(false); }}
-                  className="w-10 h-10 bg-white border border-muted rounded-xl flex items-center justify-center text-red-500 hover:bg-red-50 transition-all shadow-sm"
-                >
-                  🚪
-                </button>
+                <button onClick={handleLogout} className="w-10 h-10 bg-card border border-muted/50 rounded-xl flex items-center justify-center text-red-500 shadow-sm"><LogOut className="w-5 h-5" /></button>
               </div>
-
-              <button
-                onClick={() => setShowMore(false)}
-                className="w-full py-4 text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30 hover:text-foreground transition-all"
-              >
-                Close
-              </button>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   );
 }
@@ -331,7 +267,7 @@ export function SideNav() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-white border-r border-muted p-6 space-y-8 min-h-screen sticky top-0 h-screen overflow-y-auto">
+    <aside className="hidden md:flex flex-col w-64 bg-card border-r border-muted/50 p-6 space-y-8 min-h-screen sticky top-0 h-screen">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white font-black text-[10px] text-center leading-tight">BA<br />KE</div>
         <span className="text-xl font-black text-foreground">BakerFlow</span>
@@ -339,43 +275,21 @@ export function SideNav() {
       
       <nav className="flex-1 space-y-1">
         {sideNavItems.map(item => {
-          const isHubActive = item.href 
-            ? pathname === item.href 
-            : pathname.startsWith(`/${item.id}`);
-          
+          const isHubActive = item.href ? pathname === item.href : pathname.startsWith(`/${item.id}`);
+          const Icon = item.icon;
           return (
             <div key={item.id} className="space-y-1">
-              <Link
-                href={item.href || item.children?.[0]?.href || '#'}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${
-                  isHubActive
-                    ? 'bg-primary/5 text-primary'
-                    : 'text-foreground/60 hover:bg-muted hover:text-foreground'
-                }`}
-              >
-                <span className="text-lg">{item.icon}</span>
+              <Link href={item.href || item.children?.[0]?.href || '#'} className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isHubActive ? 'bg-primary/5 text-primary' : 'text-foreground/60 hover:bg-muted hover:text-foreground'}`}>
+                <Icon className="w-5 h-5" />
                 {item.label}
               </Link>
-
-              {/* Render Children if Hub is active */}
               {item.children && isHubActive && (
-                <div className="ml-9 space-y-1 animate-in slide-in-from-top-1 duration-200">
-                  {item.children.map(child => {
-                    const isChildActive = pathname === child.href;
-                    return (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
-                          isChildActive
-                            ? 'text-primary border-r-2 border-primary'
-                            : 'text-foreground/40 hover:text-foreground/70'
-                        }`}
-                      >
-                        {child.label}
-                      </Link>
-                    );
-                  })}
+                <div className="ml-9 space-y-1">
+                  {item.children.map(child => (
+                    <Link key={child.href} href={child.href} className={`flex items-center px-3 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${pathname === child.href ? 'text-primary' : 'text-foreground/40 hover:text-foreground/70'}`}>
+                      {child.label}
+                    </Link>
+                  ))}
                 </div>
               )}
             </div>
@@ -383,11 +297,9 @@ export function SideNav() {
         })}
       </nav>
 
-      <button
-        onClick={handleLogout}
-        className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/40 hover:text-red-500 hover:bg-red-50 transition-all text-sm font-medium border-t border-muted/50 pt-6"
-      >
-        🚪 Log Out
+      <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/40 hover:text-red-500 transition-all text-sm font-medium border-t border-muted/20 pt-6">
+        <LogOut className="w-5 h-5" />
+        Log Out
       </button>
     </aside>
   );
