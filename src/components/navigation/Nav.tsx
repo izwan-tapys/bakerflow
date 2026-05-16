@@ -90,7 +90,7 @@ export function BottomNav() {
       {/* Second sub-nav bar — appears above main nav when in a hub or popup is open */}
       {subLinks.length > 0 && (
         <div className="fixed bottom-16 left-0 right-0 z-40 bg-white border-t-2 border-primary/20 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)] md:hidden animate-in slide-in-from-bottom-2 duration-300">
-          <div className="flex items-center justify-around max-w-lg mx-auto px-4 py-3 gap-2">
+          <div className="flex items-center justify-around max-w-lg mx-auto px-4 py-1.5 gap-2">
             {subLinks.map(link => {
               const isActive = pathname === link.href;
               return (
