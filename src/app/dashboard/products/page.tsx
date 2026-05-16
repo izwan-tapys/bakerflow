@@ -305,26 +305,35 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-5 pb-4">
-      {/* Sticky Top Header Section */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-4 space-y-5 border-b border-muted/20 -mt-2">
-        <div className="flex items-start justify-between pt-4">
+      {/* Unified Sticky Header Section */}
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
+        <div className="flex items-start justify-between pt-6 pb-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-foreground">Menu 🧁</h1>
-            <p className="text-foreground/50 text-sm">Manage your bakery catalog</p>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Menu 🧁</h1>
+            <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Bakery Catalog</p>
           </div>
-          <button onClick={() => setShowAdd(!showAdd)} className="h-10 px-4 bg-primary text-white rounded-xl font-bold text-sm shadow-md shadow-primary/20 hover:scale-105 transition-all">
+          <button onClick={() => setShowAdd(!showAdd)} className="h-10 px-4 bg-primary text-white rounded-xl font-black text-xs shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
             + Add Product
           </button>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex bg-muted/30 p-1 rounded-xl border border-muted/50 w-full sm:w-64">
-          <button onClick={() => setActiveTab('active')} className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'active' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>
-            Active Menu
-          </button>
-          <button onClick={() => setActiveTab('archived')} className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'archived' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>
-            Archived
-          </button>
+        {/* Tab Switcher & Table Header Combo */}
+        <div className="space-y-4 pb-3">
+          <div className="flex bg-muted/30 p-1 rounded-xl border border-muted/50 w-full sm:w-64">
+            <button onClick={() => setActiveTab('active')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'active' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>
+              Active Menu
+            </button>
+            <button onClick={() => setActiveTab('archived')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'archived' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>
+              Archived
+            </button>
+          </div>
+
+          {/* Fake Table Header */}
+          <div className="grid grid-cols-[1fr_100px_80px] gap-4 px-2">
+            <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest">Product</p>
+            <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest text-right">Price (RM)</p>
+            <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest text-center">Status</p>
+          </div>
         </div>
       </div>
 
@@ -498,107 +507,88 @@ export default function ProductsPage() {
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-muted/50 overflow-hidden shadow-sm">
-          <div>
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-muted/50">
-                  <th className="sticky top-[140px] z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest min-w-[200px]">Product</th>
-                  <th className="sticky top-[140px] z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right w-32">Price (RM)</th>
-                  <th className="sticky top-[140px] z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center w-24">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.filter(p => activeTab === 'active' ? p.is_active : !p.is_active).map(product => (
-                  <React.Fragment key={product.id}>
-                    <tr 
-                      onClick={() => setExpandedId(expandedId === product.id ? null : product.id)}
-                      className={`group cursor-pointer transition-colors hover:bg-muted/10 border-b border-muted/20 ${expandedId === product.id ? 'bg-primary/5' : ''}`}
+          <div className="divide-y divide-muted/20">
+            {products.filter(p => activeTab === 'active' ? p.is_active : !p.is_active).map(product => (
+              <React.Fragment key={product.id}>
+                <div 
+                  onClick={() => setExpandedId(expandedId === product.id ? null : product.id)}
+                  className={`grid grid-cols-[1fr_100px_80px] gap-4 items-center px-6 py-4 cursor-pointer transition-colors hover:bg-muted/10 ${expandedId === product.id ? 'bg-primary/5' : ''}`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={`text-[10px] flex-none transition-transform duration-300 ${expandedId === product.id ? 'rotate-90' : ''}`}>▶</span>
+                    <p className="font-black text-foreground text-sm leading-tight truncate" title={product.name}>{product.name}</p>
+                  </div>
+                  <p className="text-right font-black text-primary text-sm">
+                    {product.price.toFixed(2)}
+                  </p>
+                  <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => toggleActive(product)}
+                      className={`relative w-10 h-5 rounded-full transition-all duration-300 shadow-inner ${product.is_active ? 'bg-green-500' : 'bg-red-500'}`}
                     >
-                      <td className="px-6 py-3 max-w-[200px] md:max-w-xs">
-                        <div className="flex items-center gap-3">
-                          <span className={`text-[10px] flex-none transition-transform duration-300 ${expandedId === product.id ? 'rotate-90' : ''}`}>▶</span>
-                          <p className="font-black text-foreground text-sm leading-tight truncate flex-1 min-w-0" title={product.name}>
-                            {product.name}
-                          </p>
+                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300 ${product.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+                </div>
+                    
+                {/* Expanded Section */}
+                {expandedId === product.id && (
+                  <div className="bg-muted/5 px-8 py-8 border-b border-muted/20">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-2">Description</p>
+                          <p className="text-sm text-foreground/70 font-medium leading-relaxed">{product.description || 'No description provided.'}</p>
                         </div>
-                      </td>
-                      <td className="px-6 py-3 text-right font-black text-primary text-sm">
-                        {product.price.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-3 text-center" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center">
+                        <div className="grid grid-cols-3 gap-4 p-3 bg-white/50 rounded-xl border border-muted/30">
+                          <div>
+                            <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest mb-0.5">Prep</p>
+                            <p className="text-xs font-bold text-foreground/70">🥣 {product.prep_time}m</p>
+                          </div>
+                          <div>
+                            <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest mb-0.5">Bake</p>
+                            <p className="text-xs font-bold text-foreground/70">🔥 {product.bake_time}m</p>
+                          </div>
+                          <div>
+                            <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest mb-0.5">Cool</p>
+                            <p className="text-xs font-bold text-foreground/70">❄️ {product.cool_time}m</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-8">
+                          <div>
+                            <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-1">COGS (Cost)</p>
+                            <p className="text-sm font-bold text-foreground/70">RM {product.cogs?.toFixed(2) || '0.00'}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-1">Margin</p>
+                            <p className={`text-sm font-black ${((product.price - (product.cogs || 0)) / product.price) > 0.4 ? 'text-green-500' : 'text-orange-500'}`}>
+                              {product.price > 0 ? `${(((product.price - (product.cogs || 0)) / product.price) * 100).toFixed(0)}%` : '-'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-3 justify-end items-end">
+                        <div className="flex gap-2 w-full max-w-[280px]">
                           <button
-                            onClick={() => toggleActive(product)}
-                            className={`relative w-10 h-5 rounded-full transition-all duration-300 shadow-inner ${product.is_active ? 'bg-green-500' : 'bg-red-500'}`}
+                            onClick={() => setEditingRecipe(product)}
+                            className="flex-1 h-12 rounded-xl text-xs font-black bg-primary text-white shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
                           >
-                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300 ${product.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                            📝 EDIT RECIPE
+                          </button>
+                          <button
+                            onClick={() => deleteProduct(product.id)}
+                            className="w-12 h-12 rounded-xl flex items-center justify-center bg-red-50 text-red-400 hover:bg-red-100 transition-all"
+                          >
+                            🗑️
                           </button>
                         </div>
-                      </td>
-                    </tr>
-                    
-                    {/* Expanded Section */}
-                    {expandedId === product.id && (
-                      <tr className="bg-muted/5">
-                        <td colSpan={4} className="px-12 py-8 border-b border-muted/20">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-4">
-                              <div>
-                                <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-2">Description</p>
-                                <p className="text-sm text-foreground/70 font-medium leading-relaxed">{product.description || 'No description provided.'}</p>
-                              </div>
-                              <div className="grid grid-cols-3 gap-4 p-3 bg-white/50 rounded-xl border border-muted/30">
-                                <div>
-                                  <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest mb-0.5">Prep</p>
-                                  <p className="text-xs font-bold text-foreground/70">🥣 {product.prep_time}m</p>
-                                </div>
-                                <div>
-                                  <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest mb-0.5">Bake</p>
-                                  <p className="text-xs font-bold text-foreground/70">🔥 {product.bake_time}m</p>
-                                </div>
-                                <div>
-                                  <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest mb-0.5">Cool</p>
-                                  <p className="text-xs font-bold text-foreground/70">❄️ {product.cool_time}m</p>
-                                </div>
-                              </div>
-                              <div className="flex gap-8">
-                                <div>
-                                  <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-1">COGS (Cost)</p>
-                                  <p className="text-sm font-bold text-foreground/70">RM {product.cogs?.toFixed(2) || '0.00'}</p>
-                                </div>
-                                <div>
-                                  <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-1">Margin</p>
-                                  <p className={`text-sm font-black ${((product.price - (product.cogs || 0)) / product.price) > 0.4 ? 'text-green-500' : 'text-orange-500'}`}>
-                                    {product.price > 0 ? `${(((product.price - (product.cogs || 0)) / product.price) * 100).toFixed(0)}%` : '-'}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="flex flex-col gap-3 justify-end items-end">
-                              <div className="flex gap-2 w-full max-w-[280px]">
-                                <button
-                                  onClick={() => setEditingRecipe(product)}
-                                  className="flex-1 h-12 rounded-xl text-xs font-black bg-primary text-white shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
-                                >
-                                  📝 EDIT RECIPE
-                                </button>
-                                <button
-                                  onClick={() => deleteProduct(product.id)}
-                                  className="w-12 h-12 rounded-xl flex items-center justify-center bg-red-50 text-red-400 hover:bg-red-100 transition-all"
-                                >
-                                  🗑️
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
           </div>
         </div>
       )}
