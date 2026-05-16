@@ -528,14 +528,14 @@ export default function ProductsPage() {
                       </td>
                       <td className="px-6 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-3">
-                          <span className={`text-[9px] font-black uppercase tracking-tighter ${product.is_active ? 'text-green-600' : 'text-foreground/30'}`}>
+                          <span className={`text-[10px] font-black uppercase tracking-tighter transition-colors ${product.is_active ? 'text-green-600' : 'text-red-400'}`}>
                             {product.is_active ? 'ON' : 'OFF'}
                           </span>
                           <button
                             onClick={() => toggleActive(product)}
-                            className={`relative w-10 h-5 rounded-full transition-all duration-300 ${product.is_active ? 'bg-green-500' : 'bg-muted-foreground/20'}`}
+                            className={`relative w-10 h-5 rounded-full transition-all duration-300 shadow-inner ${product.is_active ? 'bg-green-500' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'}`}
                           >
-                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-300 ${product.is_active ? 'translate-x-5 shadow-sm' : 'translate-x-0.5'}`} />
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300 ${product.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
                           </button>
                         </div>
                       </td>
