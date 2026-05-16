@@ -32,13 +32,23 @@ const hubLinks: Record<string, { href: string; label: string; icon: string }[]> 
   ],
 };
 
-// Desktop sidebar nav
-const sideNavItems: { href: string; label: string; icon: string }[] = [
-  { href: '/dashboard', label: 'Home', icon: '🏠' },
-  { href: '/office/orders', label: 'Office', icon: '🏢' },
-  { href: '/kitchen/production', label: 'Kitchen', icon: '🥣' },
-  { href: '/delivery', label: 'Delivery', icon: '🚚' },
-  { href: '/dashboard/settings', label: 'Settings', icon: '⚙️' },
+// Desktop sidebar nav with children
+const sideNavItems: { href?: string; id: string; label: string; icon: string; children?: { href: string; label: string; icon: string }[] }[] = [
+  { href: '/dashboard', id: 'home', label: 'Home', icon: '🏠' },
+  { 
+    id: 'office', 
+    label: 'Office', 
+    icon: '🏢',
+    children: hubLinks.office
+  },
+  { 
+    id: 'kitchen', 
+    label: 'Kitchen', 
+    icon: '🥣',
+    children: hubLinks.kitchen
+  },
+  { href: '/delivery', id: 'delivery', label: 'Delivery', icon: '🚚' },
+  { href: '/dashboard/settings', id: 'settings', label: 'Settings', icon: '⚙️' },
 ];
 
 export function BottomNav() {
@@ -245,35 +255,61 @@ export function SideNav() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-white border-r border-muted p-6 space-y-8 min-h-screen">
+    <aside className="hidden md:flex flex-col w-64 bg-white border-r border-muted p-6 space-y-8 min-h-screen sticky top-0 h-screen overflow-y-auto">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white font-black text-[10px] text-center leading-tight">BA<br />KE</div>
         <span className="text-xl font-black text-foreground">BakerFlow</span>
       </div>
+      
       <nav className="flex-1 space-y-1">
         {sideNavItems.map(item => {
-          const isActive = item.href === '/dashboard'
-            ? pathname === '/dashboard'
-            : pathname.startsWith(item.href);
+          const isHubActive = item.href 
+            ? pathname === item.href 
+            : pathname.startsWith(`/${item.id}`);
+          
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-                isActive
-                  ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                  : 'text-foreground/60 hover:bg-muted hover:text-foreground'
-              }`}
-            >
-              <span>{item.icon}</span>
-              {item.label}
-            </Link>
+            <div key={item.id} className="space-y-1">
+              <Link
+                href={item.href || item.children?.[0]?.href || '#'}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${
+                  isHubActive
+                    ? 'bg-primary/5 text-primary'
+                    : 'text-foreground/60 hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <span className="text-lg">{item.icon}</span>
+                {item.label}
+              </Link>
+
+              {/* Render Children if Hub is active */}
+              {item.children && isHubActive && (
+                <div className="ml-9 space-y-1 animate-in slide-in-from-top-1 duration-200">
+                  {item.children.map(child => {
+                    const isChildActive = pathname === child.href;
+                    return (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                          isChildActive
+                            ? 'text-primary border-r-2 border-primary'
+                            : 'text-foreground/40 hover:text-foreground/70'
+                        }`}
+                      >
+                        {child.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </nav>
+
       <button
         onClick={handleLogout}
-        className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/40 hover:text-red-500 hover:bg-red-50 transition-all text-sm font-medium"
+        className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/40 hover:text-red-500 hover:bg-red-50 transition-all text-sm font-medium border-t border-muted/50 pt-6"
       >
         🚪 Log Out
       </button>
