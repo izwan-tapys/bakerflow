@@ -138,10 +138,10 @@ export function BottomNav() {
         </div>
       )}
 
-      {/* Backdrop for dismissing popup */}
-      {activePopup && !isInHub(activePopup) && (
+      {/* Backdrop for dismissing popup — active whenever a popup is shown */}
+      {activePopup && (
         <div
-          className="fixed inset-0 z-30 md:hidden"
+          className="fixed inset-0 z-30 md:hidden bg-black/5 backdrop-blur-[1px]"
           onClick={() => setActivePopup(null)}
         />
       )}
