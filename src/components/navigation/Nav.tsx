@@ -166,8 +166,8 @@ export function BottomNav() {
             exit={{ y: 20, opacity: 0 }}
             className="fixed bottom-20 left-4 right-4 z-[70] md:hidden"
           >
-            <div className="bg-card rounded-[2.5rem] p-6 shadow-2xl border border-muted/50 backdrop-blur-xl">
-              <div className="flex items-center justify-between mb-4 px-2">
+            <div className="bg-card rounded-2xl p-5 shadow-lg border border-primary/10 backdrop-blur-xl">
+              <div className="flex items-center justify-between mb-4 px-1">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{activePopup} Hub</span>
                 <button onClick={() => setActivePopup(null)} className="text-foreground/20 text-xs">Close</button>
               </div>
@@ -177,9 +177,9 @@ export function BottomNav() {
                     key={link.label}
                     href={link.href}
                     onClick={() => setActivePopup(null)}
-                    className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-2xl border border-muted/50 hover:bg-primary/5 transition-all group"
+                    className="flex flex-col items-center justify-center p-3 bg-muted/30 rounded-xl border border-muted/50 hover:bg-primary/5 transition-all group"
                   >
-                    <link.icon className="w-6 h-6 mb-1 text-primary group-hover:scale-110 transition-transform" />
+                    <link.icon className="w-5 h-5 mb-1 text-primary group-hover:scale-110 transition-transform" />
                     <span className="text-[8px] font-black uppercase tracking-widest text-foreground/60">{link.label}</span>
                   </Link>
                 ))}
@@ -207,7 +207,7 @@ export function BottomNav() {
                 }}
                 className={`flex flex-col items-center gap-1 py-1 flex-1 transition-all relative ${isActive ? 'text-primary' : 'text-foreground/30'}`}
               >
-                <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-primary/5' : ''}`}>
+                <div className={`p-1.5 rounded-lg transition-all ${isActive ? 'bg-primary/5' : ''}`}>
                   <item.icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''}`} />
                 </div>
                 <span className={`text-[8px] font-black uppercase tracking-widest ${isActive ? 'opacity-100' : 'opacity-60'}`}>{item.label}</span>
@@ -225,9 +225,9 @@ export function BottomNav() {
 
       <AnimatePresence>
         {showMore && (
-          <div className="fixed inset-0 z-[80] flex items-end justify-center px-4 pb-24 md:hidden">
+          <div className="fixed inset-0 z-[80] flex items-end justify-center px-4 pb-20 md:hidden">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowMore(false)} className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-            <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} className="relative w-full max-w-md bg-card rounded-[2.5rem] border border-muted/50 p-6 space-y-6">
+            <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} className="relative w-full max-w-md bg-card rounded-2xl border border-muted/50 p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { label: 'Settings', icon: Settings, href: '/dashboard/settings' },
@@ -236,25 +236,25 @@ export function BottomNav() {
                   { label: theme === 'light' ? 'Dark Mode' : 'Light Mode', icon: theme === 'light' ? Moon : Sun, onClick: toggleTheme },
                 ].map(link => (
                   link.href ? (
-                    <Link key={link.label} href={link.href} onClick={() => setShowMore(false)} className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-2xl border border-muted/50 group">
+                    <Link key={link.label} href={link.href} onClick={() => setShowMore(false)} className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-xl border border-muted/50 group">
                       <link.icon className="w-8 h-8 mb-2 text-primary group-hover:scale-110 transition-transform" />
                       <span className="text-[10px] font-black uppercase tracking-widest text-foreground/60">{link.label}</span>
                     </Link>
                   ) : (
-                    <button key={link.label} onClick={() => { link.onClick?.(); setShowMore(false); }} className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-2xl border border-muted/50 group">
+                    <button key={link.label} onClick={() => { link.onClick?.(); setShowMore(false); }} className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-xl border border-muted/50 group">
                       <link.icon className="w-8 h-8 mb-2 text-primary group-hover:scale-110 transition-transform" />
                       <span className="text-[10px] font-black uppercase tracking-widest text-foreground/60">{link.label}</span>
                     </button>
                   )
                 ))}
               </div>
-              <div className="bg-primary/5 rounded-3xl p-5 border border-primary/10 flex items-center gap-4">
-                <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white font-black">{userData?.name?.[0]}</div>
+              <div className="bg-primary/5 rounded-2xl p-5 border border-primary/10 flex items-center gap-4">
+                <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white font-black">{userData?.name?.[0]}</div>
                 <div className="flex-1 min-w-0">
                   <p className="font-black text-foreground truncate">{userData?.name}</p>
                   <p className="text-[10px] font-bold text-primary uppercase tracking-widest">{userData?.plan}</p>
                 </div>
-                <button onClick={handleLogout} className="w-10 h-10 bg-card border border-muted/50 rounded-xl flex items-center justify-center text-red-500 shadow-sm"><LogOut className="w-5 h-5" /></button>
+                <button onClick={handleLogout} className="w-10 h-10 bg-card border border-muted/50 rounded-lg flex items-center justify-center text-red-500 shadow-sm"><LogOut className="w-5 h-5" /></button>
               </div>
             </motion.div>
           </div>

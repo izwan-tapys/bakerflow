@@ -99,25 +99,25 @@ export function OrderCard({ order, onStatusChange, onEdit, onRefresh }: OrderCar
   };
 
   return (
-    <div className={`bg-gradient-to-b from-card to-card/95 rounded-[2rem] p-6 shadow-md border border-primary/5 transition-all hover:shadow-lg hover:border-primary/20 ${isToday ? 'ring-1 ring-primary/20' : ''}`}>
+    <div className={`bg-gradient-to-b from-card to-card/95 rounded-xl p-5 shadow-sm border border-primary/5 transition-all hover:shadow-md hover:border-primary/20 ${isToday ? 'ring-1 ring-primary/20' : ''}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <p className="font-black text-foreground text-lg leading-tight tracking-tight">{order.customer_name}</p>
+            <p className="font-bold text-foreground text-lg leading-tight tracking-tight">{order.customer_name}</p>
             {isToday ? (
-              <span className="bg-primary text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase animate-pulse">TODAY! 🔥</span>
+              <span className="bg-primary text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase animate-pulse">TODAY!</span>
             ) : isTomorrow ? (
               <span className="bg-orange-400 text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Tomorrow</span>
             ) : null}
           </div>
-          <p className="text-sm font-bold text-foreground/60">{order.product_name} × {order.quantity}</p>
+          <p className="text-sm font-medium text-foreground/60">{order.product_name} × {order.quantity}</p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-1">
             {onEdit && (
               <button 
                 onClick={() => onEdit(order)}
-                className="p-2 hover:bg-muted rounded-xl text-foreground/40 transition-colors"
+                className="p-2 hover:bg-muted rounded-lg text-foreground/40 transition-colors"
                 title="Edit Order"
               >
                 <Pencil className="w-4 h-4" />
@@ -129,19 +129,19 @@ export function OrderCard({ order, onStatusChange, onEdit, onRefresh }: OrderCar
       </div>
 
       {order.special_notes && (
-        <div className="my-3 bg-primary/5 p-3 rounded-2xl border border-primary/10">
+        <div className="my-3 bg-primary/5 p-3 rounded-xl border border-primary/10">
           <div className="flex items-center gap-1.5 mb-1">
             <MessageSquare className="w-3 h-3 text-primary" />
             <p className="text-[10px] font-black text-primary uppercase tracking-widest">Note</p>
           </div>
-          <p className="text-xs font-bold text-foreground/70">{order.special_notes}</p>
+          <p className="text-xs font-medium text-foreground/70">{order.special_notes}</p>
         </div>
       )}
 
       <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-wider text-foreground/30 my-4">
         <div className="flex items-center gap-1.5">
-          <Calendar className={`w-3.5 h-3.5 ${isToday ? 'text-primary' : ''}`} />
-          <span className={isToday ? 'text-primary' : ''}>{formatDate(order.delivery_date)}</span>
+          <Calendar className="w-3.5 h-3.5" />
+          <span>{formatDate(order.delivery_date)}</span>
         </div>
         {order.distance_km && (
           <div className="flex items-center gap-1.5">
@@ -151,26 +151,26 @@ export function OrderCard({ order, onStatusChange, onEdit, onRefresh }: OrderCar
         )}
         <div className="ml-auto flex items-center gap-3">
           {order.payment_status === 'paid' ? (
-            <span className="text-[9px] font-black uppercase bg-green-500/10 text-green-600 px-2 py-0.5 rounded-lg border border-green-500/20">Paid</span>
+            <span className="text-[9px] font-black uppercase bg-green-500/10 text-green-600 px-2 py-0.5 rounded border border-green-500/20">Paid</span>
           ) : (
-            <span className="text-[9px] font-black uppercase bg-orange-500/10 text-orange-600 px-2 py-0.5 rounded-lg border border-orange-500/20">Unpaid</span>
+            <span className="text-[9px] font-black uppercase bg-orange-500/10 text-orange-600 px-2 py-0.5 rounded border border-orange-500/20">Unpaid</span>
           )}
-          <span className="font-black text-foreground text-sm tracking-normal tracking-tight">{formatCurrency(order.total_amount)}</span>
+          <span className="font-bold text-foreground text-sm tracking-tight">{formatCurrency(order.total_amount)}</span>
         </div>
       </div>
 
       <div className="flex gap-2 pt-1">
         <button
           onClick={handleCopyLabel}
-          className="w-12 h-12 rounded-2xl border border-muted/50 hover:bg-muted flex items-center justify-center text-foreground/40 shadow-sm transition-all"
+          className="w-10 h-10 rounded-lg border border-muted/50 hover:bg-muted flex items-center justify-center text-foreground/40 shadow-sm transition-all"
           title="Copy Label"
         >
-          <Copy className="w-5 h-5" />
+          <Copy className="w-4 h-4" />
         </button>
 
         <button
           onClick={handlePaymentToggle}
-          className={`flex-1 h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border ${
+          className={`flex-1 h-10 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all border ${
             order.payment_status === 'paid' 
               ? 'border-muted text-foreground/30 hover:bg-muted' 
               : 'border-green-500/20 text-green-600 bg-green-500/5 hover:bg-green-500/10'
@@ -182,7 +182,7 @@ export function OrderCard({ order, onStatusChange, onEdit, onRefresh }: OrderCar
         {nextStatus && onStatusChange && (
           <button
             onClick={() => onStatusChange(order.id!, nextStatus)}
-            className="flex-[2] h-12 rounded-2xl bg-primary text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="flex-[2] h-10 rounded-lg bg-primary text-white font-bold text-[10px] uppercase tracking-widest shadow-sm hover:bg-primary-dark transition-all flex items-center justify-center gap-2"
           >
             {nextStatusLabel[order.status]} <ArrowRight className="w-4 h-4" />
           </button>
