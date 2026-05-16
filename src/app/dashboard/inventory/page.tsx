@@ -405,226 +405,89 @@ export default function InventoryPage() {
     <div className="pb-4">
       <KitchenTabs />
 
-      {/* Main Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-3xl font-black text-foreground tracking-tight">Inventory</h1>
-          <p className="text-foreground/50 text-sm font-medium">Manage your kitchen resources</p>
+      {/* Unified Sticky Header Section */}
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
+        <div className="pt-4">
+          <KitchenTabs />
         </div>
-        <div className="flex items-center gap-2">
-          {/* Notification Bell */}
-          <div className="relative" ref={notifRef}>
-            <button
-              onClick={() => setShowNotifications(v => !v)}
-              className="relative w-12 h-12 flex items-center justify-center rounded-2xl border-2 border-muted bg-white hover:border-primary/30 hover:bg-primary/5 transition-all active:scale-95"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-foreground/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              {alerts.length > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-md animate-pulse">
-                  {alerts.length > 99 ? '99+' : alerts.length}
-                </span>
-              )}
-            </button>
-
-            {/* Notification Dropdown */}
-            {showNotifications && (
-              <>
-                <div className="fixed inset-0 z-30" onClick={() => { setShowNotifications(false); setNotifSelectMode(false); setNotifSelectedIds([]); }} />
-                <div className="absolute right-0 top-14 w-80 bg-white rounded-2xl shadow-2xl border border-muted/50 z-40 overflow-hidden">
-                  {/* Header */}
-                  <div className="px-4 py-3 border-b border-muted/30 flex items-center justify-between">
-                    {notifSelectMode ? (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => notifSelectedIds.length === alerts.length
-                              ? setNotifSelectedIds([])
-                              : setNotifSelectedIds(alerts.map(a => a.id))
-                            }
-                            className="w-5 h-5 rounded border-2 border-primary flex items-center justify-center"
-                          >
-                            {notifSelectedIds.length === alerts.length && <span className="text-[10px] font-black text-primary">✓</span>}
-                          </button>
-                          <span className="font-black text-sm text-foreground">{notifSelectedIds.length} selected</span>
-                        </div>
-                        <button onClick={() => { setNotifSelectMode(false); setNotifSelectedIds([]); }} className="text-xs font-black text-foreground/40 uppercase tracking-widest">Cancel</button>
-                      </>
-                    ) : (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-sm text-foreground">Notifications</span>
-                          {alerts.length > 0 && <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{alerts.length} alerts</span>}
-                        </div>
-                        {alerts.length > 0 && (
-                          <button
-                            onClick={() => setNotifSelectMode(true)}
-                            className="text-[10px] font-black text-foreground/30 hover:text-primary uppercase tracking-widest px-2 py-1 rounded-lg hover:bg-primary/5 transition-all"
-                          >
-                            Select
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
-
-                  {/* List */}
-                  <div className="max-h-[320px] overflow-y-auto divide-y divide-muted/30">
-                    {alerts.length === 0 ? (
-                      <div className="py-10 text-center">
-                        <p className="text-2xl mb-2">🎉</p>
-                        <p className="text-sm font-bold text-foreground/40">All good! No alerts.</p>
-                      </div>
-                    ) : (
-                      alerts.map(a => {
-                        const isSelected = notifSelectedIds.includes(a.id);
-                        return (
-                          <div
-                            key={a.id}
-                            onPointerDown={() => {
-                              if (!notifSelectMode) {
-                                notifLongPressTimer.current = setTimeout(() => {
-                                  setNotifSelectMode(true);
-                                  setNotifSelectedIds([a.id]);
-                                }, 500);
-                              }
-                            }}
-                            onPointerUp={() => {
-                              if (notifLongPressTimer.current) clearTimeout(notifLongPressTimer.current);
-                              if (notifSelectMode) {
-                                setNotifSelectedIds(prev =>
-                                  prev.includes(a.id) ? prev.filter(i => i !== a.id) : [...prev, a.id]
-                                );
-                              } else {
-                                setPendingAlertAction(a);
-                                setShowNotifications(false);
-                              }
-                            }}
-                            onPointerLeave={() => { if (notifLongPressTimer.current) clearTimeout(notifLongPressTimer.current); }}
-                            onContextMenu={e => e.preventDefault()}
-                            className={`group flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors select-none ${
-                              isSelected ? 'bg-primary/10' : 'hover:bg-muted/10 active:bg-muted/20'
-                            }`}
-                          >
-                            {/* Checkbox (always rendered, visible on hover or in select mode) */}
-                            <div className="flex-shrink-0">
-                              <button
-                                onPointerDown={e => e.stopPropagation()}
-                                onPointerUp={e => {
-                                  e.stopPropagation();
-                                  if (!notifSelectMode) {
-                                    setNotifSelectMode(true);
-                                    setNotifSelectedIds([a.id]);
-                                  } else {
-                                    setNotifSelectedIds(prev =>
-                                      prev.includes(a.id) ? prev.filter(i => i !== a.id) : [...prev, a.id]
-                                    );
-                                  }
-                                }}
-                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                                  isSelected
-                                    ? 'bg-primary border-primary opacity-100'
-                                    : 'border-muted opacity-0 group-hover:opacity-100'
-                                }`}
-                              >
-                                {isSelected && <span className="text-[9px] font-black text-white">✓</span>}
-                              </button>
-                            </div>
-
-                            <div className={`w-9 h-9 rounded-xl ${a.bg} flex items-center justify-center text-base flex-shrink-0`}>
-                              {a.icon}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-black text-sm text-foreground truncate">{a.label}</p>
-                              <p className={`text-xs font-semibold mt-0.5 ${a.color}`}>{a.msg}</p>
-                            </div>
+        
+        <div className="flex items-start justify-between pt-6 pb-4">
+          <div>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Inventory 📦</h1>
+            <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Kitchen Resources</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Notification Bell */}
+            <div className="relative" ref={notifRef}>
+              <button
+                onClick={() => setShowNotifications(v => !v)}
+                className="relative w-10 h-10 flex items-center justify-center rounded-xl border-2 border-muted bg-white hover:border-primary/30 hover:bg-primary/5 transition-all active:scale-95"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-foreground/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {alerts.length > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-md">
+                    {alerts.length > 9 ? '9+' : alerts.length}
+                  </span>
+                )}
+              </button>
+              {showNotifications && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowNotifications(false)} />
+                  <div className="absolute right-0 top-12 w-72 bg-white rounded-2xl shadow-2xl border border-muted/50 z-40 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-muted/30 bg-muted/10 font-black text-[10px] uppercase tracking-widest text-foreground/40">Alerts</div>
+                    <div className="max-h-64 overflow-y-auto divide-y divide-muted/20">
+                      {alerts.map(a => (
+                        <div key={a.id} className="p-3 flex items-center gap-3 hover:bg-muted/10 cursor-pointer" onClick={() => { setPendingAlertAction(a); setShowNotifications(false); }}>
+                          <span className="text-lg">{a.icon}</span>
+                          <div className="min-w-0">
+                            <p className="text-xs font-black text-foreground truncate">{a.label}</p>
+                            <p className={`text-[9px] font-bold ${a.color}`}>{a.msg}</p>
                           </div>
-                        );
-                      })
-                    )}
-                  </div>
-
-                  {/* Footer */}
-                  {notifSelectMode && notifSelectedIds.length > 0 ? (
-                    <div className="px-3 py-3 border-t border-muted/30 flex gap-2">
-                      <button
-                        onClick={() => {
-                          const selectedAlerts = alerts.filter((a: any) => notifSelectedIds.includes(a.id));
-                          const ids = selectedAlerts.map((a: any) => a.ingredient?.id).filter(Boolean) as string[];
-                          handleToggleShoppingList(ids, true);
-                          setNotifSelectMode(false);
-                          setNotifSelectedIds([]);
-                          setShowNotifications(false);
-                          setActiveMainTab('shopping');
-                        }}
-                        className="flex-1 h-10 bg-primary text-white rounded-xl font-black text-[10px] uppercase tracking-wide flex items-center justify-center gap-1"
-                      >
-                        🛒 Add to Shopping
-                      </button>
-                      <button
-                        onClick={() => { setNotifSelectMode(false); setNotifSelectedIds([]); }}
-                        className="h-10 px-4 bg-muted/40 rounded-xl font-black text-[10px] uppercase text-foreground/50"
-                      >
-                        Cancel
-                      </button>
+                        </div>
+                      ))}
                     </div>
-                  ) : (
-                    alerts.length > 0 && (
-                      <div className="px-4 py-2.5 border-t border-muted/30 bg-muted/10">
-                        <p className="text-[10px] font-bold text-foreground/30 text-center uppercase tracking-widest">Hold to select multiple</p>
-                      </div>
-                    )
-                  )}
-                </div>
-              </>
-            )}
+                  </div>
+                </>
+              )}
+            </div>
+            <button onClick={() => setShowAdd(true)} className="h-10 px-4 bg-primary text-white rounded-xl font-black text-xs shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+              + Add Item
+            </button>
+          </div>
+        </div>
+
+        {/* Inventory Navigation & Filters Combo */}
+        <div className="space-y-4 pb-3">
+          <div className="flex bg-muted/30 p-1 rounded-xl border border-muted/50 overflow-x-auto no-scrollbar">
+            {[
+              { id: 'raw', label: 'Raw', icon: '🥣' },
+              { id: 'component', label: 'Comp', icon: '🍰' },
+              { id: 'supply', label: 'Supp', icon: '📦' },
+              { id: 'shopping', label: 'Shop', icon: '🛒' },
+              { id: 'purchases', label: 'Purch', icon: '🧾' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => { setActiveMainTab(tab.id as any); setSelectedCategory('Semua'); }}
+                className={`flex-1 min-w-[64px] py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex flex-col items-center gap-0.5 ${
+                  activeMainTab === tab.id ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            ))}
           </div>
 
-          {/* Add Item Button */}
-          <button 
-            onClick={() => {
-              setForm({ 
-                name: '', brand: '', type: activeMainTab === 'purchases' ? 'raw' : activeMainTab as IngredientType, 
-                unit: 'g', current_stock: 0, category: 'Lain-lain',
-                sku: '', shelf_life: '', pack_size: '', pack_unit: '', pack_size_unit: 'g',
-                low_stock_threshold: 10
-              });
-              setShowAdd(true);
-            }} 
-            className="h-12 px-6 bg-primary text-white rounded-2xl font-black text-sm shadow-lg shadow-primary/20 hover:scale-105 transition-transform active:scale-95"
-          >
-            + Add Item
-          </button>
-        </div>
-      </div>
-
-      {/* Main Navigation Tabs - STICKY within main scroll container */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md -mx-4 md:-mx-8 px-4 md:px-8 py-3 border-b border-muted/30 mb-4">
-        <div className="flex bg-muted/30 p-1.5 rounded-[12px] border border-muted/50 overflow-x-auto no-scrollbar">
-          {[
-            { id: 'raw', label: 'Raw', icon: '🥣' },
-            { id: 'component', label: 'Comp', icon: '🍰' },
-            { id: 'supply', label: 'Supp', icon: '📦' },
-            { id: 'shopping', label: 'Shop', icon: '🛒' },
-            { id: 'purchases', label: 'Purch', icon: '🧾' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveMainTab(tab.id as any);
-                setSelectedCategory('Semua');
-              }}
-              className={`flex-1 min-w-[80px] flex flex-col items-center justify-center py-3 rounded-xl transition-all ${
-                activeMainTab === tab.id 
-                  ? 'bg-white text-primary shadow-sm border border-muted/50' 
-                  : 'text-foreground/40 hover:text-foreground/60'
-              }`}
-            >
-              <span className="text-lg mb-1">{tab.icon}</span>
-              <span className="text-[10px] font-black uppercase tracking-wider">{tab.label}</span>
-            </button>
-          ))}
+          {(activeMainTab === 'raw' || activeMainTab === 'component' || activeMainTab === 'supply') && (
+            <div className="grid grid-cols-[1fr_80px_100px] gap-4 px-2">
+              <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest">Resource</p>
+              <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest text-center">Stock</p>
+              <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest text-right">Status</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -644,7 +507,7 @@ export default function InventoryPage() {
               />
             ) : (
               <>
-                <InventoryFilterBar
+            <InventoryFilterBar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               selectedCategory={selectedCategory}
@@ -1282,223 +1145,113 @@ function InventoryFilterBar({ searchQuery, onSearchChange, selectedCategory, onC
 }
 
 function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBulkDelete }: any) {
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectMode, setSelectMode] = useState(false);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const exitSelectMode = () => { setSelectMode(false); setSelectedIds([]); };
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-2xl animate-pulse" />)}
+      </div>
     );
-  };
+  }
 
-  const startLongPress = (id: string) => {
-    longPressTimer.current = setTimeout(() => {
-      setSelectMode(true);
-      setSelectedIds([id]);
-    }, 500);
-  };
-
-  const cancelLongPress = () => {
-    if (longPressTimer.current) clearTimeout(longPressTimer.current);
-  };
-
-  const allSelected = selectedIds.length === ingredients.length && ingredients.length > 0;
+  if (ingredients.length === 0) {
+    return (
+      <div className="text-center py-20 bg-white rounded-xl border border-dashed border-muted">
+        <div className="text-4xl mb-3">📦</div>
+        <p className="font-bold text-foreground/40">No items found</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative">
-      {/* Select mode header bar — shown in select mode */}
-      {selectMode && (
-        <div className="sticky top-0 z-20 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-t-[16px] shadow-md overflow-x-auto no-scrollbar">
-          {/* Select all checkbox + count */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={() => allSelected ? setSelectedIds([]) : setSelectedIds(ingredients.map((i: Ingredient) => i.id))}
-              className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all flex-shrink-0 ${
-                allSelected ? 'bg-white border-white text-primary' : 'border-white/60'
-              }`}
+    <div className="bg-white rounded-xl border border-muted/50 overflow-hidden shadow-sm">
+      <div className="divide-y divide-muted/20">
+        {ingredients.map((ing: Ingredient) => (
+          <div key={ing.id} className="contents">
+            <div 
+              onClick={() => setExpandedId(expandedId === ing.id ? null : (ing.id ?? null))}
+              className={`grid grid-cols-[1fr_80px_100px] gap-4 items-center px-6 py-4 cursor-pointer transition-colors hover:bg-muted/10 ${expandedId === ing.id ? 'bg-primary/5' : ''}`}
             >
-              {allSelected && <span className="text-[10px] font-black text-primary">✓</span>}
-            </button>
-            <span className="font-black text-sm whitespace-nowrap">{selectedIds.length} selected</span>
-          </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] flex-none transition-transform duration-300 ${expandedId === ing.id ? 'rotate-90' : ''}`}>▶</span>
+                  <p className="font-black text-foreground text-sm truncate">{ing.name}</p>
+                </div>
+                <p className="text-[10px] font-bold text-foreground/30 uppercase tracking-tighter ml-6">{ing.brand || 'No Brand'} • {ing.category}</p>
+              </div>
 
-          {/* Actions — only shown when something is selected */}
-          {selectedIds.length > 0 && (
-            <>
-              <div className="h-4 w-px bg-white/20 flex-shrink-0 mx-1" />
-              <button
-                onClick={() => { onAddToShopping(selectedIds); exitSelectMode(); }}
-                className="flex items-center gap-1 px-3 h-8 bg-white/15 hover:bg-white/25 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap transition-all flex-shrink-0"
-              >
-                🛒 Shopping
-              </button>
-              <button
-                onClick={() => { onBulkDelete(selectedIds); exitSelectMode(); }}
-                className="flex items-center gap-1 px-3 h-8 bg-red-400/60 hover:bg-red-400/80 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap transition-all flex-shrink-0"
-              >
-                🗑 Delete
-              </button>
-            </>
-          )}
+              <div className="text-center">
+                <p className="text-sm font-black text-foreground">{ing.current_stock}</p>
+                <p className="text-[8px] font-black uppercase text-foreground/30">{ing.unit}</p>
+              </div>
 
-          {/* Spacer + Cancel */}
-          <div className="flex-1" />
-          <button onClick={exitSelectMode} className="text-white/70 font-black text-xs uppercase tracking-widest whitespace-nowrap flex-shrink-0">Cancel</button>
-        </div>
-      )}
+              <div className="flex justify-end">
+                <div className={`px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-widest ${
+                  ing.current_stock <= 0 ? 'bg-red-100 text-red-600' :
+                  ing.current_stock <= ing.low_stock_threshold ? 'bg-amber-100 text-amber-600' :
+                  'bg-green-100 text-green-600'
+                }`}>
+                  {ing.current_stock <= 0 ? 'Out' : 
+                   ing.current_stock <= ing.low_stock_threshold ? 'Low' : 'OK'}
+                </div>
+              </div>
+            </div>
 
-      {/* "Select" button shown when NOT in select mode — for desktop users */}
-      {!selectMode && ingredients.length > 0 && (
-        <div className="flex justify-end mb-1">
-          <button
-            onClick={() => setSelectMode(true)}
-            className="text-[10px] font-black text-foreground/30 hover:text-primary uppercase tracking-widest px-2 py-1 rounded-lg hover:bg-primary/5 transition-all"
-          >
-            Select
-          </button>
-        </div>
-      )}
-
-      <div className="bg-white rounded-[16px] border border-muted overflow-hidden shadow-sm">
-        {/* Frozen header */}
-        <div className="overflow-x-auto border-b border-muted/50">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-muted/30">
-                {/* Checkbox column — always reserve space, header shows select-all in select mode */}
-                <th className="pl-4 pr-1 py-4 w-10">
-                  {selectMode && (
-                    <button
-                      onClick={() => allSelected ? setSelectedIds([]) : setSelectedIds(ingredients.map((i: Ingredient) => i.id))}
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                        allSelected ? 'bg-primary border-primary' : 'border-muted'
-                      }`}
-                    >
-                      {allSelected && <span className="text-[9px] font-black text-white">✓</span>}
-                    </button>
-                  )}
-                </th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Inventory</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Avg Cost</th>
-                <th className="px-6 py-4 w-10" />
-              </tr>
-            </thead>
-          </table>
-        </div>
-
-        {/* Scrollable body */}
-        <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
-          <table className="w-full text-left border-collapse">
-            <tbody className="divide-y divide-muted/50">
-              {loading ? (
-                [1,2,3].map(i => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-6 py-5"><div className="h-4 bg-muted rounded w-32" /></td>
-                    <td className="px-6 py-5 text-right"><div className="h-4 bg-muted rounded w-16 ml-auto" /></td>
-                    <td className="px-6 py-5 text-right"><div className="h-4 bg-muted rounded w-20 ml-auto" /></td>
-                  </tr>
-                ))
-              ) : ingredients.length === 0 ? (
-                <tr><td colSpan={selectMode ? 5 : 4} className="px-6 py-20 text-center text-foreground/30 font-bold italic text-sm">No items found.</td></tr>
-              ) : (
-                ingredients.map((ing: Ingredient) => {
-                  const isSelected = selectedIds.includes(ing.id);
-                  return (
-                    <tr
-                      key={ing.id}
-                      onPointerDown={() => { if (!selectMode) startLongPress(ing.id); }}
-                      onPointerUp={() => {
-                        cancelLongPress();
-                        if (selectMode) toggleSelect(ing.id);
-                        else onSelect(ing);
-                      }}
-                      onPointerLeave={cancelLongPress}
-                      onContextMenu={e => e.preventDefault()}
-                      className={`group cursor-pointer transition-colors select-none ${
-                        isSelected
-                          ? 'bg-primary/10'
-                          : 'hover:bg-primary/[0.02] active:bg-primary/[0.05]'
-                      }`}
-                    >
-                      {/* Checkbox column — always rendered, visible on hover or in select mode */}
-                      <td className="pl-4 pr-1 py-5 w-10">
-                        <button
-                          onPointerDown={e => e.stopPropagation()}
-                          onPointerUp={e => {
-                            e.stopPropagation();
-                            if (!selectMode) {
-                              setSelectMode(true);
-                              setSelectedIds([ing.id]);
-                            } else {
-                              toggleSelect(ing.id);
-                            }
-                          }}
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                            isSelected
-                              ? 'bg-primary border-primary opacity-100'
-                              : 'border-muted opacity-0 group-hover:opacity-100'
-                          }`}
-                        >
-                          {isSelected && <span className="text-[9px] font-black text-white">✓</span>}
-                        </button>
-                      </td>
-                      <td className="px-6 py-5">
-                        <p className="font-bold text-foreground text-sm">{ing.name}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          {ing.brand && <span className="text-[9px] font-black text-primary/60 bg-primary/5 px-1.5 py-0.5 rounded uppercase tracking-tighter">@{ing.brand}</span>}
-                          <span className="text-[9px] font-bold text-foreground/30 uppercase tracking-tighter">{ing.category}</span>
+            {expandedId === ing.id && (
+              <div className="bg-muted/5 px-8 py-8 border-b border-muted/20 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div>
+                      <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-2">Inventory Stats</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-white border border-muted/50 rounded-xl">
+                          <p className="text-[8px] font-black text-foreground/40 uppercase tracking-widest mb-1">Avg Cost</p>
+                          <p className="text-sm font-black text-primary">RM {ing.avg_cost_per_unit.toFixed(2)}</p>
                         </div>
-                      </td>
-                      <td className="px-6 py-5 text-right font-black text-sm text-foreground/80">
-                        {(() => {
-                          const pSize = Number(ing.pack_size);
-                          const currentStock = Number(ing.current_stock) || 0;
-                          const unit = ing.unit || 'g';
+                        <div className="p-3 bg-white border border-muted/50 rounded-xl">
+                          <p className="text-[8px] font-black text-foreground/40 uppercase tracking-widest mb-1">Threshold</p>
+                          <p className="text-sm font-black text-foreground">{ing.low_stock_threshold}{ing.unit}</p>
+                        </div>
+                      </div>
+                    </div>
 
-                          if (pSize > 0 && ing.pack_unit) {
-                            const packs = Math.floor(currentStock / pSize);
-                            const remainder = Math.round((currentStock % pSize) * 100) / 100;
-                            if (packs > 0) {
-                              return (
-                                <div className="flex flex-col items-end leading-tight">
-                                  <span>
-                                    {packs} <span className="text-[8px] uppercase text-primary/60 font-bold tracking-tighter">{ing.pack_unit}</span>
-                                  </span>
-                                  {remainder > 0 && (
-                                    <span className="text-[10px] text-foreground/30 font-medium italic">
-                                      + {remainder >= 1000 && unit === 'g' ? `${(remainder/1000).toFixed(2).replace(/\.?0+$/, '')}kg` : 
-                                         remainder >= 1000 && unit === 'ml' ? `${(remainder/1000).toFixed(2).replace(/\.?0+$/, '')}L` : 
-                                         `${remainder}${unit}`}
-                                    </span>
-                                  )}
-                                </div>
-                              );
-                            }
-                          }
-                          const val = currentStock;
-                          const displayVal = (unit === 'g' && val >= 1000) ? `${(val/1000).toFixed(2).replace(/\.?0+$/, '')}kg` :
-                                           (unit === 'ml' && val >= 1000) ? `${(val/1000).toFixed(2).replace(/\.?0+$/, '')}L` :
-                                           `${val}${unit}`;
-                          
-                          return <span className="text-sm">{displayVal}</span>;
-                        })()}
-                      </td>
-                      <td className="px-6 py-5 text-right font-black text-primary/80 text-sm">
-                        RM {ing.avg_cost_per_unit.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-5 text-center text-foreground/20">{!selectMode && '›'}</td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-2">Additional Info</p>
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-foreground/60">SKU: <span className="text-foreground">{ing.sku || '-'}</span></p>
+                        <p className="text-xs font-bold text-foreground/60">Shelf Life: <span className="text-foreground">{ing.shelf_life ? `${ing.shelf_life} days` : '-'}</span></p>
+                        <p className="text-xs font-bold text-foreground/60">Category: <span className="text-foreground">{ing.category}</span></p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col justify-end gap-3">
+                    <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest text-right mb-2">Actions</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button 
+                        onClick={() => onSelect(ing)} 
+                        className="h-12 rounded-xl bg-primary text-white font-black text-xs shadow-lg shadow-primary/10 hover:scale-[1.02] transition-all"
+                      >
+                        RESTOCK / EDIT
+                      </button>
+                      <button 
+                        onClick={() => onAddToShopping([ing.id])} 
+                        className="h-12 rounded-xl bg-white border-2 border-primary/20 text-primary font-black text-xs hover:bg-primary/5 transition-all"
+                      >
+                        🛒 ADD TO SHOP
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
+    </div>
+  );
+}
 
     </div>
   );
