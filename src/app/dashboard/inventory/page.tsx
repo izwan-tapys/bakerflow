@@ -1096,7 +1096,17 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                         <p className="text-[10px] text-foreground/40 font-bold uppercase mt-0.5">{item.ingredient.brand || 'No Brand'}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] font-black text-amber-600/60 uppercase">Stock: {item.ingredient.current_stock}{item.ingredient.unit}</p>
+                        <div className="text-[10px] font-black text-amber-600/60 uppercase">
+                          Stock: {(() => {
+                            const ing = item.ingredient;
+                            if (ing.pack_size > 0 && ing.pack_unit) {
+                              const p = Math.floor(ing.current_stock / ing.pack_size);
+                              const r = Math.round((ing.current_stock % ing.pack_size) * 100) / 100;
+                              return p > 0 ? `${p}${ing.pack_unit}${r > 0 ? ` + ${r}${ing.unit}` : ''}` : `${ing.current_stock}${ing.unit}`;
+                            }
+                            return `${ing.current_stock}${ing.unit}`;
+                          })()}
+                        </div>
                         <p className="text-[10px] font-black text-primary uppercase mt-1">Need: {item.suggestedPacks > 0 ? `${item.suggestedPacks} pk` : `${item.shortfall}${item.ingredient.unit}`}</p>
                       </div>
                     </div>
@@ -1420,7 +1430,31 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
                         </div>
                       </td>
                       <td className="px-6 py-5 text-right font-black text-sm text-foreground/80">
-                        {ing.current_stock}<span className="text-[10px] ml-0.5 opacity-40">{ing.unit}</span>
+                        {(() => {
+                          if (ing.pack_size > 0 && ing.pack_unit) {
+                            const packs = Math.floor(ing.current_stock / ing.pack_size);
+                            const remainder = Math.round((ing.current_stock % ing.pack_size) * 100) / 100;
+                            if (packs > 0) {
+                              return (
+                                <div className="flex flex-col items-end leading-tight">
+                                  <span>
+                                    {packs} <span className="text-[8px] uppercase text-primary/60 font-bold tracking-tighter">{ing.pack_unit}</span>
+                                  </span>
+                                  {remainder > 0 && (
+                                    <span className="text-[10px] text-foreground/30 font-medium italic">
+                                      + {remainder}{ing.unit}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            }
+                          }
+                          return (
+                            <>
+                              {ing.current_stock}<span className="text-[10px] ml-0.5 opacity-40">{ing.unit}</span>
+                            </>
+                          );
+                        })()}
                       </td>
                       <td className="px-6 py-5 text-right font-black text-primary/80 text-sm">
                         RM {ing.avg_cost_per_unit.toFixed(2)}
