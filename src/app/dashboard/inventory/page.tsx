@@ -1253,9 +1253,7 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
   );
 }
 
-    </div>
-  );
-}
+
 
 function IngredientForm({ data, setData, categories, getAutoCategory }: any) {
   return (
