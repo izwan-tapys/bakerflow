@@ -99,11 +99,11 @@ export function OrderCard({ order, onStatusChange, onEdit, onRefresh }: OrderCar
   };
 
   return (
-    <div className={`bg-card rounded-3xl p-5 shadow-sm border transition-all ${isToday ? 'border-primary shadow-lg ring-1 ring-primary/20' : 'border-muted/50'}`}>
+    <div className={`bg-gradient-to-b from-card to-card/95 rounded-[2rem] p-6 shadow-md border border-primary/5 transition-all hover:shadow-lg hover:border-primary/20 ${isToday ? 'ring-1 ring-primary/20' : ''}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <p className="font-black text-foreground text-lg leading-tight">{order.customer_name}</p>
+            <p className="font-black text-foreground text-lg leading-tight tracking-tight">{order.customer_name}</p>
             {isToday ? (
               <span className="bg-primary text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase animate-pulse">TODAY! 🔥</span>
             ) : isTomorrow ? (

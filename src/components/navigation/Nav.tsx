@@ -193,7 +193,7 @@ export function BottomNav() {
         <div className="fixed inset-0 z-[60] bg-black/5 backdrop-blur-[1px]" onClick={() => setActivePopup(null)} />
       )}
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-muted/50 safe-area-pb md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-t border-primary/5 safe-area-pb md:hidden">
         <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
           {navItems.map(item => {
             const isActive = item.href ? pathname === item.href : activePopup === item.id;
@@ -205,11 +205,18 @@ export function BottomNav() {
                   else if (item.id === 'more') setShowMore(true);
                   else toggleHub(item.id);
                 }}
-                className={`flex flex-col items-center gap-0.5 py-1 flex-1 transition-all ${isActive ? 'text-primary' : 'text-foreground/40'}`}
+                className={`flex flex-col items-center gap-1 py-1 flex-1 transition-all relative ${isActive ? 'text-primary' : 'text-foreground/30'}`}
               >
-                <item.icon className={`w-6 h-6 mb-0.5 ${isActive ? 'scale-110' : ''}`} />
-                <span className="text-[9px] font-black uppercase tracking-tighter">{item.label}</span>
-                {isActive && <motion.div layoutId="activeDot" className="w-1.5 h-1.5 rounded-full bg-primary shadow-sm" />}
+                <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-primary/5' : ''}`}>
+                  <item.icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''}`} />
+                </div>
+                <span className={`text-[8px] font-black uppercase tracking-widest ${isActive ? 'opacity-100' : 'opacity-60'}`}>{item.label}</span>
+                {isActive && (
+                  <motion.div 
+                    layoutId="activeDot" 
+                    className="absolute -bottom-1 w-1 h-1 rounded-full bg-primary shadow-[0_0_8px_rgba(139,94,60,0.5)]" 
+                  />
+                )}
               </button>
             );
           })}

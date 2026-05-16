@@ -10,43 +10,58 @@
   --color-primary: var(--primary);
   --color-muted: var(--muted);
   --color-border: var(--border-color);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  /* Premium Luxury Bakery Palette - Light */
+  --background: #FCFAf8; /* Soft Off-White / Champagne */
+  --foreground: #2D241E; /* Deep Espresso */
   --card: #ffffff;
-  --muted: #f1f5f9;
-  --border-color: #e2e8f0;
+  --muted: #F3EFEA; /* Creamy Neutral */
+  --border-color: rgba(139, 94, 60, 0.08);
   --primary: #8B5E3C;
+  
+  /* Ambient Soft Shadows */
+  --shadow-sm: 0 2px 8px -2px rgba(45, 36, 30, 0.05);
+  --shadow-md: 0 12px 24px -4px rgba(45, 36, 30, 0.08);
+  --shadow-lg: 0 20px 40px -8px rgba(45, 36, 30, 0.12);
 }
 
 .dark {
-  --background: #0a0a0a !important;
-  --foreground: #f8fafc !important;
-  --card: #171717 !important;
-  --muted: #1e293b !important;
-  --border-color: #334155 !important;
-  --primary: #d4a373 !important;
+  /* Premium Luxury Bakery Palette - Dark */
+  --background: #0D0B0A !important; /* Rich Obsidian */
+  --foreground: #EFE9E5 !important; /* Soft Linen */
+  --card: #161412 !important; /* Dark Charcoal */
+  --muted: #231F1D !important; /* Muted Cocoa */
+  --border-color: rgba(239, 233, 229, 0.08) !important;
+  --primary: #D4A373 !important; /* Warm Sandstone */
+  
+  --shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.5) !important;
+  --shadow-md: 0 12px 32px -8px rgba(0, 0, 0, 0.7) !important;
+  --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.8) !important;
 }
 
 .light {
-  --background: #ffffff !important;
-  --foreground: #0f172a !important;
+  --background: #FCFAf8 !important;
+  --foreground: #2D241E !important;
   --card: #ffffff !important;
-  --muted: #f1f5f9 !important;
-  --border-color: #e2e8f0 !important;
+  --muted: #F3EFEA !important;
+  --border-color: rgba(139, 94, 60, 0.08) !important;
   --primary: #8B5E3C !important;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --background: #0a0a0a;
-    --foreground: #f8fafc;
-    --card: #171717;
-    --muted: #1e293b;
-    --border-color: #334155;
-    --primary: #d4a373;
+    --background: #0D0B0A;
+    --foreground: #EFE9E5;
+    --card: #161412;
+    --muted: #231F1D;
+    --border-color: rgba(239, 233, 229, 0.08);
+    --primary: #D4A373;
   }
 }
 
