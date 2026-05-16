@@ -200,36 +200,36 @@ export default function OrdersPage() {
         </div>
 
         {/* Filters & Search Combo */}
-        <div className="space-y-4 pb-3">
-          <div className="flex gap-3">
-            {/* Search */}
-            <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs">🔍</span>
-              <input
-                type="search"
-                placeholder="Search..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full h-9 pl-8 pr-4 rounded-lg border border-muted bg-white focus:border-primary focus:outline-none text-[10px] font-bold"
-              />
-            </div>
-            {/* Filter Pills */}
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide no-scrollbar" style={{ scrollbarWidth: 'none' }}>
-              {STATUS_FILTERS.map(f => (
-                <button
-                  key={f.value}
-                  onClick={() => setFilter(f.value)}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${
-                    filter === f.value
-                      ? 'bg-primary text-white border-primary shadow-sm'
-                      : 'bg-white text-foreground/40 border-muted hover:border-primary'
-                  }`}
-                >
-                  {f.label.split(' ')[1]}
-                </button>
-              ))}
-            </div>
+        <div className="space-y-3 pb-3">
+          {/* Search Row */}
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs">🔍</span>
+            <input
+              type="search"
+              placeholder="Search by customer or order number..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full h-10 pl-9 pr-4 rounded-xl border border-muted bg-white focus:border-primary focus:outline-none text-xs font-bold shadow-sm"
+            />
           </div>
+
+          {/* Filter Pills Row */}
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar select-none">
+            {STATUS_FILTERS.map(f => (
+              <button
+                key={f.value}
+                onClick={() => setFilter(f.value)}
+                className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                  filter === f.value
+                    ? 'bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105'
+                    : 'bg-white text-foreground/40 border-muted hover:border-primary'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
           {/* Table Header */}
           <div className="grid grid-cols-[1fr_80px_100px] gap-4 px-2">
