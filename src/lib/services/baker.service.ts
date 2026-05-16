@@ -63,37 +63,46 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
   // 2. Pre-check: Stock validation
   if (status === 'approved' || status === 'production' || status === 'ready') {
     if (order.product_id) {
-      const { data: recipes } = await supabase
+      const { data: recipes, error: recipeError } = await supabase
         .from('recipes')
         .select('*, ingredient:ingredients(id, name, current_stock, unit)')
         .eq('product_id', order.product_id);
 
-      if (recipes && recipes.length > 0) {
-        const missing = recipes.filter(r => {
-          const needed = r.quantity_needed * order.quantity;
-          const current = (r.ingredient as any)?.current_stock || 0;
-          return current < (needed - 0.001);
-        });
+      if (recipeError) return { success: false, message: 'Ralat menyemak resipi: ' + recipeError.message };
 
-        if (missing.length > 0) {
-          const missingItems = missing.map(m => 
-            `- ${(m.ingredient as any)?.name} (Perlu: ${m.quantity_needed * order.quantity}${(m.ingredient as any)?.unit}, Ada: ${(m.ingredient as any)?.current_stock}${(m.ingredient as any)?.unit})`
-          ).join('\n');
-          
-          const msg = `Bahan tak cukup:\n${missingItems}\n\nSila restock sebelum mula baking.`;
-          
-          if (status === 'approved') {
-            // Allow approval but with warning
-            const { error } = await supabase
-              .from('orders')
-              .update({ status, updated_at: new Date().toISOString() })
-              .eq('id', orderId);
-            if (error) return { success: false, message: error.message };
-            return { success: true, warning: msg };
-          } else {
-            // Hard block for production/ready
-            return { success: false, message: `Tak boleh mula! ${msg}` };
-          }
+      if (!recipes || recipes.length === 0) {
+        // Warning if recipe is missing
+        const warningMsg = `Produk "${order.product_name}" belum ada resipi yang disetup. Stok tidak akan ditolak secara automatik.`;
+        if (status === 'production' || status === 'ready') {
+          return { success: false, message: `Tak boleh mula! ${warningMsg}` };
+        }
+        return { success: true, warning: warningMsg };
+      }
+
+      const missing = recipes.filter(r => {
+        const needed = Number(r.quantity_needed) * Number(order.quantity);
+        const current = Number((r.ingredient as any)?.current_stock) || 0;
+        return current < (needed - 0.001); // Small buffer for float precision
+      });
+
+      if (missing.length > 0) {
+        const missingItems = missing.map(m => 
+          `- ${(m.ingredient as any)?.name} (Perlu: ${Number(m.quantity_needed) * Number(order.quantity)}${(m.ingredient as any)?.unit}, Ada: ${Number((m.ingredient as any)?.current_stock)}${(m.ingredient as any)?.unit})`
+        ).join('\n');
+        
+        const msg = `Bahan tak cukup untuk order ini:\n${missingItems}\n\nSila restock sebelum mula production.`;
+        
+        if (status === 'approved') {
+          // Allow approval but with warning
+          const { error } = await supabase
+            .from('orders')
+            .update({ status, updated_at: new Date().toISOString() })
+            .eq('id', orderId);
+          if (error) return { success: false, message: error.message };
+          return { success: true, warning: msg };
+        } else {
+          // Hard block for production/ready
+          return { success: false, message: `DITOLAK! ${msg}` };
         }
       }
     }
