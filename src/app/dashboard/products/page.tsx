@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
+import { Package, Clock, Flame, Wind } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -312,7 +313,7 @@ export default function ProductsPage() {
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
         <div className="flex items-start justify-between pt-6 pb-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Menu 🧁</h1>
+            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Products</h1>
             <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Bakery Catalog</p>
           </div>
           <button onClick={() => { setShowAdd(true); setAddStep(1); setShowAddError(false); setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 }); setPendingRecipes([]); }} className="h-10 px-4 bg-primary text-white rounded-xl font-black text-xs shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
@@ -324,7 +325,7 @@ export default function ProductsPage() {
         <div className="space-y-4 pb-3">
           <div className="flex bg-muted/30 p-1 rounded-xl border border-muted/50 w-full sm:w-64">
             <button onClick={() => setActiveTab('active')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'active' ? 'bg-card text-primary shadow-sm' : 'text-foreground/40'}`}>
-              Active Menu
+              Active Products
             </button>
             <button onClick={() => setActiveTab('archived')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'archived' ? 'bg-card text-primary shadow-sm' : 'text-foreground/40'}`}>
               Archived
@@ -530,9 +531,11 @@ export default function ProductsPage() {
         </div>
       ) : products.filter(p => activeTab === 'active' ? p.is_active : !p.is_active).length === 0 ? (
         <div className="text-center py-20 bg-card rounded-xl border border-dashed border-muted mt-4">
-          <div className="text-5xl mb-3">{activeTab === 'active' ? '🍩' : '📦'}</div>
+          <div className="flex justify-center mb-4">
+            <Package className="w-12 h-12 text-muted" />
+          </div>
           <p className="font-bold text-foreground">
-            {activeTab === 'active' ? 'Your active menu is empty' : 'No archived products'}
+            {activeTab === 'active' ? 'No active products found' : 'No archived products'}
           </p>
           {activeTab === 'active' && (
             <button onClick={() => setShowAdd(true)} className="text-primary font-black text-sm uppercase tracking-widest mt-2">+ Add First Product</button>
@@ -576,15 +579,15 @@ export default function ProductsPage() {
                         <div className="grid grid-cols-3 gap-4 p-3 bg-white/50 rounded-xl border border-muted/30">
                           <div>
                             <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest mb-0.5">Prep</p>
-                            <p className="text-xs font-bold text-foreground/70">🥣 {product.prep_time}m</p>
+                            <p className="text-xs font-bold text-foreground/70 flex items-center gap-1"><Clock className="w-3 h-3" /> {product.prep_time}m</p>
                           </div>
                           <div>
                             <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest mb-0.5">Bake</p>
-                            <p className="text-xs font-bold text-foreground/70">🔥 {product.bake_time}m</p>
+                            <p className="text-xs font-bold text-foreground/70 flex items-center gap-1"><Flame className="w-3 h-3" /> {product.bake_time}m</p>
                           </div>
                           <div>
                             <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest mb-0.5">Cool</p>
-                            <p className="text-xs font-bold text-foreground/70">❄️ {product.cool_time}m</p>
+                            <p className="text-xs font-bold text-foreground/70 flex items-center gap-1"><Wind className="w-3 h-3" /> {product.cool_time}m</p>
                           </div>
                         </div>
                         <div className="flex gap-8">
@@ -938,7 +941,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
 
           {/* Ingredient List */}
           <div className="space-y-3">
-            <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">🥣 Ingredients List</p>
+            <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest flex items-center gap-2"><Package className="w-3 h-3" /> Ingredients List</p>
             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
               {loading ? (
                 <p className="text-sm text-foreground/40 text-center py-4">Loading...</p>
