@@ -136,6 +136,26 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
   return { success: true };
 }
 
+export async function checkOrderStock(orderId: string): Promise<{ isOk: boolean; missing: any[] }> {
+  const { data: order } = await supabase.from('orders').select('*').eq('id', orderId).single();
+  if (!order || !order.product_id) return { isOk: true, missing: [] };
+
+  const { data: recipes } = await supabase
+    .from('recipes')
+    .select('*, ingredient:ingredients(id, name, current_stock, unit)')
+    .eq('product_id', order.product_id);
+
+  if (!recipes || recipes.length === 0) return { isOk: true, missing: [] };
+
+  const missing = recipes.filter(r => {
+    const needed = Number(r.quantity_needed) * Number(order.quantity);
+    const current = Number((r.ingredient as any)?.current_stock) || 0;
+    return current < (needed - 0.001);
+  });
+
+  return { isOk: missing.length === 0, missing };
+}
+
 export async function updatePaymentStatus(orderId: string, payment_status: 'unpaid' | 'paid'): Promise<boolean> {
   const { error } = await supabase
     .from('orders')

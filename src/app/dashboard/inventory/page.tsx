@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { KitchenTabs } from '@/components/dashboard/KitchenTabs';
 import { formatDate } from '@/lib/utils';
@@ -47,7 +48,19 @@ export default function InventoryPage() {
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
   const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
   const [activeMainTab, setActiveMainTab] = useState<IngredientType | 'purchases' | 'shopping'>('raw');
+  const [selectedCategory, setSelectedCategory] = useState('Semua');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Handle URL Params
+  useEffect(() => {
+    const filter = searchParams.get('filter');
+    if (filter === 'negative') {
+      setStatusFilter('low_stock');
+    }
+  }, [searchParams]);
   
   // Modal States
   const [showAdd, setShowAdd] = useState(false);

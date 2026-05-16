@@ -6,7 +6,19 @@ import { Order, OrderStatus } from '@/lib/types';
 import { updateOrderStatus } from '@/lib/services/baker.service';
 import { formatDate } from '@/lib/utils';
 
+import { checkOrderStock } from '@/lib/services/baker.service';
+
 function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; onStatusChange: (id: string, s: OrderStatus) => void; onRefresh?: () => void }) {
+  const [stockStatus, setStockStatus] = useState<{ isOk: boolean; checked: boolean }>({ isOk: true, checked: false });
+
+  useEffect(() => {
+    if (order.status === 'approved') {
+      checkOrderStock(order.id!).then(res => setStockStatus({ isOk: res.isOk, checked: true }));
+    } else {
+      setStockStatus({ isOk: true, checked: true });
+    }
+  }, [order.id, order.status]);
+
   const nextStatus: Record<string, { label: string; status: OrderStatus; color: string }> = {
     approved: { label: 'Start Baking 🔥', status: 'production', color: 'bg-orange-500' },
     production: { label: 'Mark as Ready ✅', status: 'ready', color: 'bg-green-600' },
@@ -79,12 +91,23 @@ function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; on
       </a>
 
       {next && (
-        <button
-          onClick={() => onStatusChange(order.id!, next.status)}
-          className={`w-full h-12 rounded-xl text-white font-bold transition-all hover:scale-[1.02] active:scale-95 ${next.color}`}
-        >
-          {next.label}
-        </button>
+        <>
+          {order.status === 'approved' && stockStatus.checked && !stockStatus.isOk ? (
+            <button
+              onClick={() => window.location.href = '/dashboard/inventory?filter=negative'}
+              className="w-full h-12 rounded-xl bg-amber-500 text-white font-bold transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+            >
+              ⚠️ Check Inventory (Insufficient Stock)
+            </button>
+          ) : (
+            <button
+              onClick={() => onStatusChange(order.id!, next.status)}
+              className={`w-full h-12 rounded-xl text-white font-bold transition-all hover:scale-[1.02] active:scale-95 ${next.color}`}
+            >
+              {next.label}
+            </button>
+          )}
+        </>
       )}
     </div>
   );
