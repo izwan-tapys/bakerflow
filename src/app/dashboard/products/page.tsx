@@ -502,7 +502,6 @@ export default function ProductsPage() {
                   <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Product</th>
                   <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Price</th>
                   <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">Status</th>
-                  <th className="sticky top-0 z-20 bg-muted px-6 py-3 w-10"></th>
                 </tr>
               </thead>
               <tbody>
@@ -515,12 +514,7 @@ export default function ProductsPage() {
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-3">
                           <span className={`text-[10px] transition-transform duration-300 ${expandedId === product.id ? 'rotate-90' : ''}`}>▶</span>
-                          <div>
-                            <p className="font-black text-foreground text-sm leading-tight">{product.name}</p>
-                            <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-tighter">
-                              🥣{product.prep_time}m • 🔥{product.bake_time}m
-                            </p>
-                          </div>
+                          <p className="font-black text-foreground text-sm leading-tight">{product.name}</p>
                         </div>
                       </td>
                       <td className="px-6 py-3 text-right font-black text-primary text-sm">
@@ -536,9 +530,6 @@ export default function ProductsPage() {
                           </button>
                         </div>
                       </td>
-                      <td className="px-6 py-3 text-foreground/20 group-hover:text-primary transition-colors text-right">
-                        <span className="text-[10px] font-bold uppercase tracking-widest">{expandedId === product.id ? 'Tutup' : 'Info'}</span>
-                      </td>
                     </tr>
                     
                     {/* Expanded Section */}
@@ -550,6 +541,20 @@ export default function ProductsPage() {
                               <div>
                                 <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-2">Description</p>
                                 <p className="text-sm text-foreground/70 font-medium leading-relaxed">{product.description || 'No description provided.'}</p>
+                              </div>
+                              <div className="grid grid-cols-3 gap-4 p-3 bg-white/50 rounded-xl border border-muted/30">
+                                <div>
+                                  <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest mb-0.5">Prep</p>
+                                  <p className="text-xs font-bold text-foreground/70">🥣 {product.prep_time}m</p>
+                                </div>
+                                <div>
+                                  <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest mb-0.5">Bake</p>
+                                  <p className="text-xs font-bold text-foreground/70">🔥 {product.bake_time}m</p>
+                                </div>
+                                <div>
+                                  <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest mb-0.5">Cool</p>
+                                  <p className="text-xs font-bold text-foreground/70">❄️ {product.cool_time}m</p>
+                                </div>
                               </div>
                               <div className="flex gap-8">
                                 <div>
