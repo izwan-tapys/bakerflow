@@ -76,6 +76,29 @@ export function BottomNav() {
     fetchUser();
   }, []);
 
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    // Initial theme check
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' || 
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    
+    setTheme(savedTheme);
+    if (savedTheme === 'dark') document.documentElement.classList.add('dark');
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
   // Auto-detect active hub from pathname
   useEffect(() => {
     setActivePopup(null);
@@ -230,17 +253,32 @@ export function BottomNav() {
                   { label: 'Settings', icon: '⚙️', href: '/dashboard/settings' },
                   { label: 'Analytics', icon: '📊', href: '/office/analytics' },
                   { label: 'Directory', icon: '📇', href: '/office/directory' },
-                  { label: 'Feedback', icon: '💬', href: '#' },
+                  { 
+                    label: theme === 'light' ? 'Dark Mode' : 'Light Mode', 
+                    icon: theme === 'light' ? '🌙' : '☀️', 
+                    onClick: toggleTheme 
+                  },
                 ].map(link => (
-                  <Link
-                    key={link.label}
-                    href={link.href}
-                    onClick={() => setShowMore(false)}
-                    className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-2xl border border-muted/50 hover:bg-primary/5 hover:border-primary/20 transition-all active:scale-95"
-                  >
-                    <span className="text-2xl mb-1">{link.icon}</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-foreground/60">{link.label}</span>
-                  </Link>
+                  link.href ? (
+                    <Link
+                      key={link.label}
+                      href={link.href}
+                      onClick={() => setShowMore(false)}
+                      className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-2xl border border-muted/50 hover:bg-primary/5 hover:border-primary/20 transition-all active:scale-95"
+                    >
+                      <span className="text-2xl mb-1">{link.icon}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-foreground/60">{link.label}</span>
+                    </Link>
+                  ) : (
+                    <button
+                      key={link.label}
+                      onClick={() => { link.onClick?.(); setShowMore(false); }}
+                      className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-2xl border border-muted/50 hover:bg-primary/5 hover:border-primary/20 transition-all active:scale-95"
+                    >
+                      <span className="text-2xl mb-1">{link.icon}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-foreground/60">{link.label}</span>
+                    </button>
+                  )
                 ))}
               </div>
 
