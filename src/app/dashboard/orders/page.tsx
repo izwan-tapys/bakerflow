@@ -170,10 +170,11 @@ export default function OrdersPage() {
   };
 
   const filtered = orders.filter(o => {
+    const searchLower = search.toLowerCase();
     const matchesSearch = 
-      o.customer_name.toLowerCase().includes(search.toLowerCase()) ||
-      o.product_name.toLowerCase().includes(search.toLowerCase()) ||
-      o.order_number?.toLowerCase().includes(search.toLowerCase());
+      (o.customer_name ?? '').toLowerCase().includes(searchLower) ||
+      (o.product_name ?? '').toLowerCase().includes(searchLower) ||
+      (o.order_number ?? '').toLowerCase().includes(searchLower);
     
     const matchesStatus = o.status === filter;
     
