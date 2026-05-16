@@ -60,6 +60,7 @@ export function BottomNav() {
   const [activePopup, setActivePopup] = useState<string | null>(null);
   const [showMore, setShowMore] = useState(false);
   const [userData, setUserData] = useState<{ name: string; plan: string } | null>(null);
+  const [dismissedHubs, setDismissedHubs] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchUser = async () => {
