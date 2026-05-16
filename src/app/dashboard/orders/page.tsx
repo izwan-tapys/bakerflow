@@ -238,7 +238,6 @@ export default function OrdersPage() {
             <p className="text-[10px] font-black uppercase text-foreground/30 tracking-widest text-right">Delivery</p>
           </div>
         </div>
-      </div>
 
       {/* Manual Order Modal (Same as before but with modernized classes) */}
       {showManual && (
