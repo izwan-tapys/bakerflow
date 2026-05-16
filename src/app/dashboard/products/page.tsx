@@ -495,8 +495,8 @@ export default function ProductsPage() {
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-muted/50 overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div>
+            <table className="w-full text-left border-collapse table-fixed">
               <thead>
                 <tr className="border-b border-muted/50">
                   <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Product</th>
