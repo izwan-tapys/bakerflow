@@ -9,29 +9,47 @@
 }
 
 
-:root {
-  --background: #FDF8F3;
-  --foreground: #3E2C22;
-  --primary: #8B5E3C;
-  --secondary: #E6CCB2;
-  --accent: #FFB37C;
-  --muted: #EDE0D4;
-}
+@import "tailwindcss";
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
-  --color-accent: var(--accent);
-  --color-muted: var(--muted);
+@theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --radius-xl: 0.5rem;
-  --radius-2xl: 0.75rem;
-  --radius-3xl: 1rem;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-primary: var(--primary);
+  --color-muted: var(--muted);
+  --color-border: var(--border-color);
 }
 
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --muted: #f1f5f9;
+  --border-color: #e2e8f0;
+  --primary: #8B5E3C;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #f8fafc;
+  --card: #171717;
+  --muted: #1e293b;
+  --border-color: #334155;
+  --primary: #d4a373;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: #0a0a0a;
+    --foreground: #f8fafc;
+    --card: #171717;
+    --muted: #1e293b;
+    --border-color: #334155;
+  }
+}
 
 body {
   background-color: var(--background);
@@ -39,12 +57,12 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Update standard utility classes to use variables */
+/* Base utility overrides to ensure variables are used */
 .bg-background { background-color: var(--background); }
 .bg-white { background-color: var(--card); }
 .bg-muted { background-color: var(--muted); }
 .text-foreground { color: var(--foreground); }
-.border-muted { border-color: var(--border); }
+.border-muted { border-color: var(--border-color); }
 
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
