@@ -24,7 +24,7 @@ export default function DeliverySettings() {
         {/* Fees Section */}
         <section className="space-y-3">
           <p className="text-[10px] font-black uppercase text-foreground/30 tracking-[0.2em] ml-2">Delivery Fees</p>
-          <div className="bg-card rounded-3xl border border-muted/50 overflow-hidden shadow-sm">
+          <div className="bg-card rounded-xl border border-muted/50 overflow-hidden shadow-sm">
             <div className="p-4 flex items-center justify-between">
               <span className="text-sm font-bold text-foreground">Flat Rate (RM)</span>
               <input 
@@ -40,7 +40,7 @@ export default function DeliverySettings() {
         {/* Windows Section */}
         <section className="space-y-3">
           <p className="text-[10px] font-black uppercase text-foreground/30 tracking-[0.2em] ml-2">Delivery Window</p>
-          <div className="bg-card rounded-3xl border border-muted/50 overflow-hidden shadow-sm">
+          <div className="bg-card rounded-xl border border-muted/50 overflow-hidden shadow-sm">
             <div className="p-4 border-b border-muted/30 flex items-center justify-between">
               <span className="text-sm font-bold text-foreground">Start Time</span>
               <input 
@@ -65,7 +65,7 @@ export default function DeliverySettings() {
         {/* Collection Section */}
         <section className="space-y-3">
           <p className="text-[10px] font-black uppercase text-foreground/30 tracking-[0.2em] ml-2">Customer Pickup</p>
-          <div className="bg-card rounded-3xl border border-muted/50 overflow-hidden shadow-sm">
+          <div className="bg-card rounded-xl border border-muted/50 overflow-hidden shadow-sm">
             <div className="p-4 flex items-center justify-between">
               <span className="text-sm font-bold text-foreground">Allow Self-Collect</span>
               <button 
@@ -79,7 +79,7 @@ export default function DeliverySettings() {
         </section>
 
         <div className="pt-4">
-          <button className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-xs shadow-xl shadow-blue-200 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
+          <button className="w-full py-4 bg-blue-600 text-white rounded-xl font-black text-xs shadow-xl shadow-blue-200 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
             Save Delivery Config
           </button>
         </div>

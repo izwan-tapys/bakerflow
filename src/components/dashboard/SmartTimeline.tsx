@@ -102,14 +102,14 @@ export function SmartTimeline({ orders }: SmartTimelineProps) {
 
   if (tasks.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-4 border border-muted/50">
+      <div className="bg-white rounded-xl p-4 border border-muted/50">
         <p className="text-sm text-foreground/50 text-center py-2">No tasks for today. Enjoy your rest! ☕</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-muted/50 overflow-hidden">
+    <div className="bg-white rounded-xl border border-muted/50 overflow-hidden">
       <div className="px-4 pt-4 pb-2 flex items-center justify-between">
         <p className="text-sm font-bold text-foreground">Today&apos;s Timeline</p>
         <p className="text-xs text-foreground/40 font-mono">{currentTimeStr}</p>
@@ -128,7 +128,7 @@ export function SmartTimeline({ orders }: SmartTimelineProps) {
             <div
               key={index}
               data-hour={taskHour}
-              className={`flex-shrink-0 w-44 rounded-2xl p-3 border-2 transition-all ${
+              className={`flex-shrink-0 w-44 rounded-xl p-3 border-2 transition-all ${
                 isCurrent
                   ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10 scale-105'
                   : isPast

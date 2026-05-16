@@ -52,17 +52,17 @@ export default function DeliveryPage() {
 
         {loading ? (
           <div className="space-y-3">
-            {[1,2,3].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-2xl" />)}
+            {[1,2,3].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />)}
           </div>
         ) : readyOrders.length === 0 ? (
-          <div className="text-center py-20 bg-card rounded-3xl border-2 border-dashed border-muted space-y-4">
+          <div className="text-center py-20 bg-card rounded-xl border-2 border-dashed border-muted space-y-4">
             <div className="text-5xl">🏘️</div>
             <p className="font-bold text-foreground/40 italic">No orders ready for delivery yet.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {readyOrders.map(order => (
-              <div key={order.id} className="bg-card rounded-2xl p-5 border border-muted/50 shadow-sm flex items-center justify-between">
+              <div key={order.id} className="bg-card rounded-xl p-5 border border-muted/50 shadow-sm flex items-center justify-between">
                 <div>
                   <p className="font-black text-foreground">#{order.order_number || (order.id ?? '').slice(0,8)}</p>
                   <p className="text-xs font-bold text-foreground/40">{order.customer_name}</p>

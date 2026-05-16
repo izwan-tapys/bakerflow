@@ -24,7 +24,7 @@ export default function KitchenSettings() {
         {/* Production Section */}
         <section className="space-y-3">
           <p className="text-[10px] font-black uppercase text-foreground/30 tracking-[0.2em] ml-2">Production Capacity</p>
-          <div className="bg-card rounded-3xl border border-muted/50 overflow-hidden shadow-sm">
+          <div className="bg-card rounded-xl border border-muted/50 overflow-hidden shadow-sm">
             <div className="p-4 border-b border-muted/30 flex items-center justify-between">
               <span className="text-sm font-bold text-foreground">Max Daily Orders</span>
               <div className="flex items-center gap-3">
@@ -54,7 +54,7 @@ export default function KitchenSettings() {
         {/* Inventory Section */}
         <section className="space-y-3">
           <p className="text-[10px] font-black uppercase text-foreground/30 tracking-[0.2em] ml-2">Inventory Alerts</p>
-          <div className="bg-card rounded-3xl border border-muted/50 overflow-hidden shadow-sm">
+          <div className="bg-card rounded-xl border border-muted/50 overflow-hidden shadow-sm">
             <div className="p-4 border-b border-muted/30 flex items-center justify-between">
               <span className="text-sm font-bold text-foreground">Low Stock Notifications</span>
               <button 
@@ -77,7 +77,7 @@ export default function KitchenSettings() {
         </section>
 
         <div className="pt-4">
-          <button className="w-full py-4 bg-orange-500 text-white rounded-2xl font-black text-xs shadow-xl shadow-orange-200 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
+          <button className="w-full py-4 bg-orange-500 text-white rounded-xl font-black text-xs shadow-xl shadow-orange-200 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
             Save Kitchen Config
           </button>
         </div>

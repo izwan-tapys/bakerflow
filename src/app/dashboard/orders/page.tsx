@@ -245,7 +245,7 @@ export default function OrdersPage() {
       {/* Manual Order Modal (Same as before but with modernized classes) */}
       {showManual && (
         <div className="fixed inset-0 z-[100] bg-background/40 backdrop-blur-md flex items-center justify-center p-[5%] pb-[90px] md:pb-[5%]">
-          <div className="bg-card w-full max-w-xl h-fit max-h-[90vh] rounded-[32px] p-8 shadow-2xl flex flex-col overflow-hidden border border-primary/10">
+          <div className="bg-card w-full max-w-xl h-fit max-h-[90vh] rounded-xl p-8 shadow-2xl flex flex-col overflow-hidden border border-primary/10">
             <div className="flex justify-between items-center mb-6 flex-none">
               <p className="text-xl font-black text-foreground tracking-tight">{editingOrder ? 'Edit Order' : 'Add Manual Order'}</p>
               <button onClick={() => { setShowManual(false); setEditingOrder(null); }} className="w-10 h-10 flex items-center justify-center bg-primary/5 hover:bg-primary/10 transition-colors rounded-xl text-foreground/40">
@@ -310,7 +310,7 @@ export default function OrdersPage() {
 
             <div className="pt-6 flex-none">
               <button onClick={editingOrder ? handleUpdateOrder : handleAddManualOrder} disabled={!manualForm.customer_name || !manualForm.product_id}
-                className="w-full h-16 bg-primary text-white rounded-2xl font-black text-lg disabled:opacity-50 shadow-xl shadow-primary/20 transition-all">
+                className="w-full h-16 bg-primary text-white rounded-xl font-black text-lg disabled:opacity-50 shadow-xl shadow-primary/20 transition-all">
                 {editingOrder ? 'UPDATE ORDER' : 'SAVE ORDER'}
               </button>
             </div>
@@ -321,7 +321,7 @@ export default function OrdersPage() {
       {/* Orders List */}
       {loading ? (
         <div className="space-y-3">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-2xl animate-pulse" />)}
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-xl animate-pulse" />)}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 bg-card rounded-xl border border-dashed border-muted">

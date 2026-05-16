@@ -115,7 +115,7 @@ export default function SetupPage() {
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 bg-primary rounded-2xl items-center justify-center text-white text-2xl font-bold mb-4 shadow-xl shadow-primary/20">
+          <div className="inline-flex w-16 h-16 bg-primary rounded-xl items-center justify-center text-white text-2xl font-bold mb-4 shadow-xl shadow-primary/20">
             BF
           </div>
           <h1 className="text-2xl font-bold text-foreground">Let&apos;s set up your bakery!</h1>
@@ -126,7 +126,7 @@ export default function SetupPage() {
         <StepIndicator currentStep={step} />
 
         {/* Card */}
-        <div className="bg-card rounded-3xl shadow-xl shadow-foreground/5 p-8 border border-muted">
+        <div className="bg-card rounded-xl shadow-xl shadow-foreground/5 p-8 border border-muted">
 
           {/* Step 0: Shop Identity */}
           {step === 0 && (
@@ -143,7 +143,7 @@ export default function SetupPage() {
                     placeholder="e.g. Wan's Sweet Kitchen"
                     value={settings.shop_name}
                     onChange={e => updateSettings('shop_name', e.target.value)}
-                    className="w-full h-14 px-4 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors"
+                    className="w-full h-14 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors"
                   />
                 </div>
                 <div>
@@ -153,7 +153,7 @@ export default function SetupPage() {
                     placeholder="e.g. 0123456789"
                     value={settings.whatsapp_number}
                     onChange={e => updateSettings('whatsapp_number', e.target.value)}
-                    className="w-full h-14 px-4 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors"
+                    className="w-full h-14 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors"
                   />
                 </div>
               </div>
@@ -174,10 +174,10 @@ export default function SetupPage() {
                   placeholder="e.g. No 12, Jalan Bakeri, Taman Selaman, 47500 Subang Jaya, Selangor"
                   value={settings.home_address}
                   onChange={e => updateSettings('home_address', e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors resize-none"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors resize-none"
                 />
               </div>
-              <div className="bg-accent/10 rounded-2xl p-4 text-sm text-foreground/70">
+              <div className="bg-accent/10 rounded-xl p-4 text-sm text-foreground/70">
                 💡 <span className="font-semibold">Tip:</span> Enter your full address including postcode for accurate delivery calculations.
               </div>
             </div>
@@ -198,7 +198,7 @@ export default function SetupPage() {
                 <div className="flex items-center justify-center gap-6 mt-6">
                   <button
                     onClick={() => updateSettings('daily_capacity', Math.max(1, (settings.daily_capacity || 5) - 1))}
-                    className="w-14 h-14 rounded-2xl bg-muted text-foreground text-2xl font-bold hover:bg-secondary transition-colors"
+                    className="w-14 h-14 rounded-xl bg-muted text-foreground text-2xl font-bold hover:bg-secondary transition-colors"
                   >−</button>
                   <div className="flex gap-1">
                     {[3, 5, 10, 15, 20].map(cap => (
@@ -215,7 +215,7 @@ export default function SetupPage() {
                   </div>
                   <button
                     onClick={() => updateSettings('daily_capacity', Math.min(50, (settings.daily_capacity || 5) + 1))}
-                    className="w-14 h-14 rounded-2xl bg-muted text-foreground text-2xl font-bold hover:bg-secondary transition-colors"
+                    className="w-14 h-14 rounded-xl bg-muted text-foreground text-2xl font-bold hover:bg-secondary transition-colors"
                   >+</button>
                 </div>
               </div>
@@ -231,7 +231,7 @@ export default function SetupPage() {
               </div>
               <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
                 {zones.map((zone, index) => (
-                  <div key={index} className="bg-muted/40 rounded-2xl p-4 space-y-3">
+                  <div key={index} className="bg-muted/40 rounded-xl p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <input
                         type="text"
@@ -263,7 +263,7 @@ export default function SetupPage() {
                   </div>
                 ))}
               </div>
-              <button onClick={addZone} className="w-full h-10 rounded-2xl border-2 border-dashed border-primary/30 text-primary/60 text-sm font-medium hover:border-primary hover:text-primary transition-colors">
+              <button onClick={addZone} className="w-full h-10 rounded-xl border-2 border-dashed border-primary/30 text-primary/60 text-sm font-medium hover:border-primary hover:text-primary transition-colors">
                 + Add Zone
               </button>
             </div>
@@ -280,19 +280,19 @@ export default function SetupPage() {
                 <div>
                   <label className="text-sm font-semibold text-foreground/80 block mb-2">Bank Name</label>
                   <input type="text" placeholder="e.g. Maybank" value={settings.bank_name} onChange={e => updateSettings('bank_name', e.target.value)}
-                    className="w-full h-12 px-4 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors" />
+                    className="w-full h-12 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors" />
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-foreground/80 block mb-2">Account Number</label>
                   <input type="text" placeholder="e.g. 1234567890" value={settings.bank_account} onChange={e => updateSettings('bank_account', e.target.value)}
-                    className="w-full h-12 px-4 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors" />
+                    className="w-full h-12 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors" />
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-foreground/80 block mb-2">Account Holder Name</label>
                   <input type="text" placeholder="e.g. WAN AHMAD BIN IBRAHIM" value={settings.bank_holder} onChange={e => updateSettings('bank_holder', e.target.value)}
-                    className="w-full h-12 px-4 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors" />
+                    className="w-full h-12 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors" />
                 </div>
-                <div className="bg-muted/40 rounded-2xl p-4 text-sm text-foreground/60">
+                <div className="bg-muted/40 rounded-xl p-4 text-sm text-foreground/60">
                   🔒 ToyyibPay credentials can be added later in <span className="font-semibold">Settings</span>.
                 </div>
               </div>
@@ -309,16 +309,16 @@ export default function SetupPage() {
           {/* Navigation */}
           <div className="flex gap-3 mt-8">
             {step > 0 && (
-              <button onClick={handleBack} className="h-14 px-6 rounded-2xl border-2 border-muted text-foreground/70 font-semibold hover:bg-muted transition-colors">
+              <button onClick={handleBack} className="h-14 px-6 rounded-xl border-2 border-muted text-foreground/70 font-semibold hover:bg-muted transition-colors">
                 Back
               </button>
             )}
             {step < TOTAL_STEPS - 1 ? (
-              <button onClick={handleNext} className="flex-1 h-14 rounded-2xl bg-primary text-white font-bold text-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+              <button onClick={handleNext} className="flex-1 h-14 rounded-xl bg-primary text-white font-bold text-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
                 Continue →
               </button>
             ) : (
-              <button onClick={handleFinish} disabled={loading} className="flex-1 h-14 rounded-2xl bg-primary text-white font-bold text-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+              <button onClick={handleFinish} disabled={loading} className="flex-1 h-14 rounded-xl bg-primary text-white font-bold text-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
                 {loading ? 'Setting up...' : '🎉 Launch My Bakery!'}
               </button>
             )}

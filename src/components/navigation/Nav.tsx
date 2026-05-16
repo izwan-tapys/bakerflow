@@ -166,7 +166,7 @@ export function BottomNav() {
             exit={{ y: 20, opacity: 0 }}
             className="fixed bottom-20 left-4 right-4 z-[70] md:hidden"
           >
-            <div className="bg-card rounded-2xl p-5 shadow-lg border border-primary/10 backdrop-blur-xl">
+            <div className="bg-card rounded-xl p-5 shadow-lg border border-primary/10 backdrop-blur-xl">
               <div className="flex items-center justify-between mb-4 px-1">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{activePopup} Hub</span>
                 <button onClick={() => setActivePopup(null)} className="text-foreground/20 text-xs">Close</button>
@@ -227,7 +227,7 @@ export function BottomNav() {
         {showMore && (
           <div className="fixed inset-0 z-[80] flex items-end justify-center px-4 pb-20 md:hidden">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowMore(false)} className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-            <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} className="relative w-full max-w-md bg-card rounded-2xl border border-muted/50 p-6 space-y-6">
+            <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} className="relative w-full max-w-md bg-card rounded-xl border border-muted/50 p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { label: 'Settings', icon: Settings, href: '/dashboard/settings' },
@@ -248,7 +248,7 @@ export function BottomNav() {
                   )
                 ))}
               </div>
-              <div className="bg-primary/5 rounded-2xl p-5 border border-primary/10 flex items-center gap-4">
+              <div className="bg-primary/5 rounded-xl p-5 border border-primary/10 flex items-center gap-4">
                 <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white font-black">{userData?.name?.[0]}</div>
                 <div className="flex-1 min-w-0">
                   <p className="font-black text-foreground truncate">{userData?.name}</p>

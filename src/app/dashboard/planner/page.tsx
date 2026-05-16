@@ -123,9 +123,9 @@ export default function PlannerPage() {
       </div>
 
       {schedule.length > 0 && (
-        <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl p-6 text-white shadow-lg shadow-orange-200">
+        <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl p-6 text-white shadow-lg shadow-orange-200">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl">👨‍🍳</div>
+            <div className="h-16 w-16 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl">👨‍🍳</div>
             <div>
               <p className="text-xs font-black uppercase opacity-70 tracking-widest">Today's Goal</p>
               <h2 className="text-xl font-black">Start Production at <span className="underline decoration-yellow-300">{schedule[0].prepStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></h2>
@@ -137,7 +137,7 @@ export default function PlannerPage() {
 
       {/* Delivery Window Setting */}
       {settings && (
-        <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10 flex items-center justify-between">
+        <div className="bg-primary/5 rounded-xl p-4 border border-primary/10 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-black uppercase text-primary tracking-widest">Delivery Window</p>
             <p className="font-bold text-foreground">{settings.delivery_start_time} - {settings.delivery_end_time}</p>
@@ -161,9 +161,9 @@ export default function PlannerPage() {
       )}
 
       {loading ? (
-        <div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-32 bg-muted rounded-2xl animate-pulse" />)}</div>
+        <div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-32 bg-muted rounded-xl animate-pulse" />)}</div>
       ) : schedule.length === 0 ? (
-        <div className="text-center py-20 bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
+        <div className="text-center py-20 bg-muted/20 rounded-xl border-2 border-dashed border-muted">
           <p className="text-4xl mb-4">🌙</p>
           <p className="font-bold text-foreground">No orders for this date.</p>
           <p className="text-sm text-foreground/40">You can rest well tonight!</p>
@@ -177,7 +177,7 @@ export default function PlannerPage() {
                 <span className="text-xs font-black text-primary">{idx + 1}</span>
               </div>
 
-              <div className="bg-card rounded-2xl p-4 border border-muted/50 shadow-sm space-y-4 hover:border-primary/30 transition-colors">
+              <div className="bg-card rounded-xl p-4 border border-muted/50 shadow-sm space-y-4 hover:border-primary/30 transition-colors">
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="font-black text-lg text-foreground leading-tight">{item.customer}</p>
@@ -222,7 +222,7 @@ export default function PlannerPage() {
             
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
           }}
-          className="fixed bottom-6 left-6 right-6 h-14 bg-green-500 text-white rounded-2xl font-bold shadow-xl shadow-green-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
+          className="fixed bottom-6 left-6 right-6 h-14 bg-green-500 text-white rounded-xl font-bold shadow-xl shadow-green-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
         >
           <span>💬</span> Send Schedule to WhatsApp
         </button>

@@ -572,9 +572,9 @@ export default function InventoryPage() {
       {/* Notification Action Chooser */}
       {pendingAlertAction && (
         <div className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-md flex items-end justify-center sm:items-center p-4">
-          <div className="bg-card w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] p-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div className="bg-card w-full max-w-sm rounded-t-[32px] sm:rounded-xl p-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+              <div className="w-16 h-16 bg-muted rounded-xl flex items-center justify-center text-3xl mx-auto mb-4">
                 {pendingAlertAction.icon}
               </div>
               <h3 className="text-xl font-black text-foreground">{pendingAlertAction.label}</h3>
@@ -588,7 +588,7 @@ export default function InventoryPage() {
                   setPendingAlertAction(null);
                   setActiveMainTab('shopping');
                 }}
-                className="w-full h-14 bg-primary text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                className="w-full h-14 bg-primary text-white rounded-xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
               >
                 🛒 ADD TO SHOPPING LIST
               </button>
@@ -597,7 +597,7 @@ export default function InventoryPage() {
                   setSelectedIngredient(pendingAlertAction.ingredient);
                   setPendingAlertAction(null);
                 }}
-                className="w-full h-14 bg-card text-foreground border-2 border-muted rounded-2xl font-black text-sm flex items-center justify-center gap-2"
+                className="w-full h-14 bg-card text-foreground border-2 border-muted rounded-xl font-black text-sm flex items-center justify-center gap-2"
               >
                 ➕ RESTOCK MANUALLY
               </button>
@@ -642,7 +642,7 @@ export default function InventoryPage() {
 
 function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
   return (
-    <div className="bg-card rounded-[16px] border border-muted overflow-hidden shadow-sm">
+    <div className="bg-card rounded-xl border border-muted overflow-hidden shadow-sm">
       {/* Frozen header */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
@@ -847,8 +847,8 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
       <div className="bg-card rounded-xl border border-primary/10 shadow-sm overflow-hidden flex flex-col max-h-[75vh] md:max-h-[70vh] relative">
         {scanning && (
           <div className="absolute inset-0 z-[100] bg-background/80 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
-            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 relative">
-              <div className="absolute inset-0 bg-primary/20 rounded-2xl animate-ping" />
+            <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-4 relative">
+              <div className="absolute inset-0 bg-primary/20 rounded-xl animate-ping" />
               <Receipt className="w-8 h-8 text-primary" />
             </div>
             <h3 className="text-lg font-black text-foreground tracking-tight uppercase">AI Reading Receipt</h3>

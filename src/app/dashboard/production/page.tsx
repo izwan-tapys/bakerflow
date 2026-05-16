@@ -28,7 +28,7 @@ function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; on
   const next = nextStatus[order.status];
 
   return (
-    <div className="bg-card rounded-2xl p-5 border-2 border-muted/50 space-y-4 shadow-sm">
+    <div className="bg-card rounded-xl p-5 border-2 border-muted/50 space-y-4 shadow-sm">
       <div className="flex items-start justify-between">
         <div>
           <p className="font-extrabold text-foreground text-lg">{order.product_name}</p>
@@ -179,7 +179,7 @@ export default function ProductionPage() {
 
       {loading ? (
         <div className="space-y-3">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-2xl animate-pulse" />)}
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-xl animate-pulse" />)}
         </div>
       ) : orders.length === 0 ? (
         <div className="text-center py-20 bg-card rounded-xl border border-dashed border-muted">
@@ -364,14 +364,14 @@ function ProductionRow({ order, isExpanded, onExpand, onStatusChange, onRefresh 
                   {order.status === 'approved' && stockStatus.checked && !stockStatus.isOk ? (
                     <button
                       onClick={(e) => { e.stopPropagation(); window.location.href = '/kitchen/inventory?filter=negative'; }}
-                      className="w-full h-14 rounded-2xl bg-amber-500 text-white font-black text-sm shadow-xl shadow-amber-200 flex items-center justify-center gap-2"
+                      className="w-full h-14 rounded-xl bg-amber-500 text-white font-black text-sm shadow-xl shadow-amber-200 flex items-center justify-center gap-2"
                     >
                       ⚠️ INSUFFICIENT STOCK
                     </button>
                   ) : (
                     <button
                       onClick={(e) => { e.stopPropagation(); onStatusChange(order.id!, next.status); }}
-                      className={`w-full h-14 rounded-2xl text-white font-black text-sm shadow-xl transition-all hover:scale-[1.02] ${next.color} ${
+                      className={`w-full h-14 rounded-xl text-white font-black text-sm shadow-xl transition-all hover:scale-[1.02] ${next.color} ${
                         next.status === 'production' ? 'shadow-orange-200' : 'shadow-green-200'
                       }`}
                     >

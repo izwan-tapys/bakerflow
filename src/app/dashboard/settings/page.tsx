@@ -23,9 +23,9 @@ export default function SettingsHub() {
           <Link 
             key={hub.label}
             href={hub.href}
-            className="flex items-center gap-4 bg-card p-5 rounded-[32px] border border-muted/50 shadow-sm active:scale-95 transition-all group hover:border-primary/20"
+            className="flex items-center gap-4 bg-card p-5 rounded-xl border border-muted/50 shadow-sm active:scale-95 transition-all group hover:border-primary/20"
           >
-            <div className={`w-14 h-14 ${hub.color} rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-black/5`}>
+            <div className={`w-14 h-14 ${hub.color} rounded-xl flex items-center justify-center text-2xl shadow-lg shadow-black/5`}>
               {hub.icon}
             </div>
             <div className="flex-1">

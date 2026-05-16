@@ -123,7 +123,7 @@ export default function OrderPage() {
     return (
       <div className="p-8 space-y-4 animate-pulse">
         <div className="h-8 bg-muted rounded-xl" />
-        <div className="h-40 bg-muted rounded-2xl" />
+        <div className="h-40 bg-muted rounded-xl" />
       </div>
     );
   }
@@ -142,7 +142,7 @@ export default function OrderPage() {
     <div className="p-5 space-y-6 pb-8">
       {/* Header */}
       <div className="text-center space-y-1">
-        <div className="w-16 h-16 bg-primary rounded-2xl mx-auto flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-primary/20">
+        <div className="w-16 h-16 bg-primary rounded-xl mx-auto flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-primary/20">
           🎂
         </div>
         <h1 className="text-xl font-extrabold text-foreground">{bakerInfo.shop_name}</h1>
@@ -169,7 +169,7 @@ export default function OrderPage() {
                 <button
                   key={dateStr}
                   onClick={() => setSelectedDate(dateStr)}
-                  className={`flex-shrink-0 w-[4.5rem] flex flex-col items-center p-3 rounded-2xl border-2 transition-all snap-center ${
+                  className={`flex-shrink-0 w-[4.5rem] flex flex-col items-center p-3 rounded-xl border-2 transition-all snap-center ${
                     isSelected
                       ? 'border-primary bg-primary text-white shadow-lg shadow-primary/30 transform scale-105'
                       : 'border-muted bg-white text-foreground hover:border-primary/30'
@@ -191,7 +191,7 @@ export default function OrderPage() {
                 <button
                   key={product.id}
                   onClick={() => setSelectedProduct(product)}
-                  className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
+                  className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
                     selectedProduct?.id === product.id
                       ? 'border-primary bg-primary/5'
                       : 'border-muted bg-white hover:border-primary/30'
@@ -210,7 +210,7 @@ export default function OrderPage() {
           )}
 
           {products.length === 0 && (
-            <div className="bg-muted/40 rounded-2xl p-4 text-center text-foreground/50 text-sm">
+            <div className="bg-muted/40 rounded-xl p-4 text-center text-foreground/50 text-sm">
               No products available yet. Check back soon!
             </div>
           )}
@@ -218,7 +218,7 @@ export default function OrderPage() {
           <button
             onClick={() => setStep('form')}
             disabled={!selectedDate || !selectedProduct}
-            className="w-full h-14 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-40 disabled:scale-100"
+            className="w-full h-14 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-40 disabled:scale-100"
           >
             Continue →
           </button>
@@ -234,7 +234,7 @@ export default function OrderPage() {
           </div>
 
           {/* Summary */}
-          <div className="bg-primary/5 rounded-2xl p-4 border border-primary/20 space-y-1">
+          <div className="bg-primary/5 rounded-xl p-4 border border-primary/20 space-y-1">
             <p className="text-sm font-bold text-primary">{selectedProduct?.name}</p>
             <p className="text-xs text-foreground/60">
               📅 {formatDate(selectedDate)}
@@ -248,27 +248,27 @@ export default function OrderPage() {
               <label className="text-sm font-semibold text-foreground/70 block mb-2">Delivery Address *</label>
               <textarea rows={2} value={form.customer_address} onChange={e => setForm({ ...form, customer_address: e.target.value })}
                 placeholder="Full delivery address..."
-                className="w-full px-4 py-3 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm resize-none" />
+                className="w-full px-4 py-3 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm resize-none" />
             </div>
             <div>
               <label className="text-sm font-semibold text-foreground/70 block mb-2">Quantity</label>
               <div className="flex items-center gap-4">
-                <button onClick={() => setForm({ ...form, quantity: Math.max(1, form.quantity - 1) })} className="w-12 h-12 rounded-2xl bg-muted text-xl font-bold">−</button>
+                <button onClick={() => setForm({ ...form, quantity: Math.max(1, form.quantity - 1) })} className="w-12 h-12 rounded-xl bg-muted text-xl font-bold">−</button>
                 <span className="text-2xl font-extrabold text-foreground w-8 text-center">{form.quantity}</span>
-                <button onClick={() => setForm({ ...form, quantity: form.quantity + 1 })} className="w-12 h-12 rounded-2xl bg-muted text-xl font-bold">+</button>
+                <button onClick={() => setForm({ ...form, quantity: form.quantity + 1 })} className="w-12 h-12 rounded-xl bg-muted text-xl font-bold">+</button>
               </div>
             </div>
             <div>
               <label className="text-sm font-semibold text-foreground/70 block mb-2">Special Notes (optional)</label>
               <textarea rows={2} value={form.special_notes} onChange={e => setForm({ ...form, special_notes: e.target.value })}
                 placeholder="e.g. Allergens, dedications, custom designs..."
-                className="w-full px-4 py-3 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm resize-none" />
+                className="w-full px-4 py-3 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm resize-none" />
             </div>
           </div>
 
           {/* Order Summary */}
           {selectedProduct && (
-            <div className="bg-white rounded-2xl border border-muted p-4 space-y-2">
+            <div className="bg-white rounded-xl border border-muted p-4 space-y-2">
               <p className="font-bold text-sm">Order Summary</p>
               <div className="flex justify-between text-sm">
                 <span className="text-foreground/60">{selectedProduct.name} × {form.quantity}</span>
@@ -288,7 +288,7 @@ export default function OrderPage() {
           <button
             onClick={() => setStep('payment')}
             disabled={!form.customer_name || !form.customer_phone || !form.customer_address}
-            className="w-full h-14 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-40 disabled:scale-100"
+            className="w-full h-14 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-40 disabled:scale-100"
           >
             Choose Payment →
           </button>
@@ -306,7 +306,7 @@ export default function OrderPage() {
           <div className="space-y-3">
             <button
               onClick={() => setForm({ ...form, payment_method: 'manual_transfer' })}
-              className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${
+              className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
                 form.payment_method === 'manual_transfer' ? 'border-primary bg-primary/5' : 'border-muted bg-white'
               }`}
             >
@@ -316,7 +316,7 @@ export default function OrderPage() {
 
             <button
               onClick={() => setForm({ ...form, payment_method: 'cod' })}
-              className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${
+              className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
                 form.payment_method === 'cod' ? 'border-primary bg-primary/5' : 'border-muted bg-white'
               }`}
             >
@@ -326,7 +326,7 @@ export default function OrderPage() {
           </div>
 
           {form.payment_method === 'manual_transfer' && bakerInfo && (
-            <div className="bg-muted/40 rounded-2xl p-4 space-y-2">
+            <div className="bg-muted/40 rounded-xl p-4 space-y-2">
               <p className="font-bold text-sm">Bank Details</p>
               <div className="space-y-1 text-sm">
                 <p><span className="text-foreground/50">Bank:</span> <span className="font-bold">{bakerInfo.bank_name || '—'}</span></p>
@@ -340,7 +340,7 @@ export default function OrderPage() {
           <button
             onClick={handleSubmitOrder}
             disabled={submitting}
-            className="w-full h-14 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60"
+            className="w-full h-14 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60"
           >
             {submitting ? 'Submitting...' : '🎉 Confirm Order'}
           </button>
@@ -356,7 +356,7 @@ export default function OrderPage() {
           <div className="space-y-2">
             <h2 className="text-2xl font-extrabold text-foreground">Order Placed!</h2>
             <p className="text-foreground/60">Your order has been received.</p>
-            <div className="bg-primary/5 rounded-2xl p-4 inline-block mt-2">
+            <div className="bg-primary/5 rounded-xl p-4 inline-block mt-2">
               <p className="text-xs text-foreground/50 mb-1">Order Number</p>
               <p className="text-xl font-extrabold text-primary">{orderNumber}</p>
             </div>
@@ -369,7 +369,7 @@ export default function OrderPage() {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full h-14 bg-green-600 text-white rounded-2xl font-bold shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
+              className="flex items-center justify-center gap-2 w-full h-14 bg-green-600 text-white rounded-xl font-bold shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
             >
               💬 WhatsApp the Baker
             </a>
@@ -395,7 +395,7 @@ function InputField({ label, placeholder, value, onChange, type = 'text' }: {
         placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="w-full h-12 px-4 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm transition-colors"
+        className="w-full h-12 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-sm transition-colors"
       />
     </div>
   );

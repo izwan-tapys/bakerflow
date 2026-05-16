@@ -12,7 +12,7 @@ export default function DirectoryPage() {
         </div>
       </div>
 
-      <div className="bg-card rounded-3xl p-10 border-2 border-dashed border-muted text-center space-y-4">
+      <div className="bg-card rounded-xl p-10 border-2 border-dashed border-muted text-center space-y-4">
         <div className="text-5xl">👥</div>
         <div>
           <h2 className="text-lg font-black text-foreground">Directory is coming soon!</h2>

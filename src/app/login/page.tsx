@@ -59,7 +59,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="text-center space-y-3">
-          <div className="inline-flex w-20 h-20 bg-primary rounded-3xl items-center justify-center text-white text-3xl font-black shadow-2xl shadow-primary/30 transform hover:rotate-3 transition-transform">
+          <div className="inline-flex w-20 h-20 bg-primary rounded-xl items-center justify-center text-white text-3xl font-black shadow-2xl shadow-primary/30 transform hover:rotate-3 transition-transform">
             BF
           </div>
           <div>
@@ -71,7 +71,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-3xl shadow-xl shadow-foreground/5 border border-muted p-8">
+        <div className="bg-white rounded-xl shadow-xl shadow-foreground/5 border border-muted p-8">
           <div className="mb-6">
             <h2 className="text-xl font-bold text-foreground">
               {isLogin ? 'Welcome back! 👋' : 'Create an account 🚀'}
@@ -84,7 +84,7 @@ export default function LoginPage() {
           <button
             onClick={handleGoogleLogin}
             type="button"
-            className="w-full h-14 bg-white border-2 border-muted text-foreground font-bold text-base rounded-2xl flex items-center justify-center gap-3 hover:bg-muted/50 transition-all mb-4"
+            className="w-full h-14 bg-white border-2 border-muted text-foreground font-bold text-base rounded-xl flex items-center justify-center gap-3 hover:bg-muted/50 transition-all mb-4"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -110,7 +110,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                className="w-full h-14 px-4 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors text-base"
+                className="w-full h-14 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors text-base"
               />
             </div>
 
@@ -123,7 +123,7 @@ export default function LoginPage() {
                 onChange={e => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full h-14 px-4 rounded-2xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors text-base"
+                className="w-full h-14 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-foreground font-medium transition-colors text-base"
               />
             </div>
 
@@ -134,7 +134,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || !email || !password}
-              className="w-full h-14 bg-primary text-white font-bold text-base rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 mt-2"
+              className="w-full h-14 bg-primary text-white font-bold text-base rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 mt-2"
             >
               {loading ? 'Processing...' : isLogin ? 'Log In' : 'Sign Up'}
             </button>

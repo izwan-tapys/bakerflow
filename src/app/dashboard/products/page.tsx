@@ -340,7 +340,7 @@ export default function ProductsPage() {
       {/* Add Form with Inline Recipe */}
       {showAdd && (
         <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
-          <div className="bg-card w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+          <div className="bg-card w-full h-full rounded-xl p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
             <div className="flex justify-between items-center mb-6 flex-none">
               <p className="text-xl font-black text-primary">Add New Product</p>
               <button onClick={() => setShowAdd(false)} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
@@ -396,7 +396,7 @@ export default function ProductsPage() {
                     </div>
                   )}
 
-                  <div className="bg-muted/10 p-5 rounded-2xl border-2 border-muted/30 space-y-4">
+                  <div className="bg-muted/10 p-5 rounded-xl border-2 border-muted/30 space-y-4">
                     <div className="relative">
                       <label className="text-[10px] font-black text-foreground/30 uppercase mb-1.5 block">Search Ingredient</label>
                       <input 
@@ -493,10 +493,10 @@ export default function ProductsPage() {
       {/* Product List - Table Style */}
       {loading ? (
         <div className="space-y-3">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-2xl animate-pulse" />)}
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-xl animate-pulse" />)}
         </div>
       ) : products.filter(p => activeTab === 'active' ? p.is_active : !p.is_active).length === 0 ? (
-        <div className="text-center py-20 bg-card rounded-3xl border border-dashed border-muted mt-4">
+        <div className="text-center py-20 bg-card rounded-xl border border-dashed border-muted mt-4">
           <div className="text-5xl mb-3">{activeTab === 'active' ? '🍩' : '📦'}</div>
           <p className="font-bold text-foreground">
             {activeTab === 'active' ? 'Your active menu is empty' : 'No archived products'}
@@ -605,7 +605,7 @@ export default function ProductsPage() {
       {/* Edit Product Modal */}
       {editingProduct && (
         <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
-          <div className="bg-card w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+          <div className="bg-card w-full h-full rounded-xl p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
             <div className="flex justify-between items-center mb-6 flex-none">
               <h2 className="text-xl font-black text-primary">Edit Product</h2>
               <button onClick={() => { setEditingProduct(null); setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 }); }} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
@@ -788,7 +788,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
-      <div className="bg-card w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+      <div className="bg-card w-full h-full rounded-xl p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
         <div className="flex-none mb-6">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-xl font-black text-primary">Recipe Setup</h2>
@@ -819,7 +819,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
           </div>
 
           {/* Add New Item */}
-          <div className="bg-muted/10 p-4 rounded-2xl border-2 border-muted/30 space-y-4">
+          <div className="bg-muted/10 p-4 rounded-xl border-2 border-muted/30 space-y-4">
             <p className="text-[10px] font-black text-foreground/40 uppercase tracking-widest">+ Add Ingredient</p>
             <div className="flex gap-2">
               <div className="flex-[2] relative">

@@ -24,7 +24,7 @@ export default function OfficeSettings() {
         {/* Business Profile Section */}
         <section className="space-y-3">
           <p className="text-[10px] font-black uppercase text-foreground/30 tracking-[0.2em] ml-2">Business Profile</p>
-          <div className="bg-card rounded-3xl border border-muted/50 overflow-hidden shadow-sm">
+          <div className="bg-card rounded-xl border border-muted/50 overflow-hidden shadow-sm">
             <div className="p-4 border-b border-muted/30 flex items-center justify-between">
               <span className="text-sm font-bold text-foreground">Shop Name</span>
               <input 
@@ -44,7 +44,7 @@ export default function OfficeSettings() {
         {/* Sales Defaults Section */}
         <section className="space-y-3">
           <p className="text-[10px] font-black uppercase text-foreground/30 tracking-[0.2em] ml-2">Sales Defaults</p>
-          <div className="bg-card rounded-3xl border border-muted/50 overflow-hidden shadow-sm">
+          <div className="bg-card rounded-xl border border-muted/50 overflow-hidden shadow-sm">
             <div className="p-4 border-b border-muted/30 flex items-center justify-between">
               <span className="text-sm font-bold text-foreground">Invoice Prefix</span>
               <input 
@@ -70,7 +70,7 @@ export default function OfficeSettings() {
         </section>
 
         <div className="pt-4">
-          <button className="w-full py-4 bg-primary text-white rounded-2xl font-black text-xs shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
+          <button className="w-full py-4 bg-primary text-white rounded-xl font-black text-xs shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
             Save Office Config
           </button>
         </div>
