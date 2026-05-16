@@ -497,12 +497,12 @@ export default function ProductsPage() {
         <div className="bg-white rounded-[24px] border border-muted/50 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-muted/30 border-b border-muted/50">
-                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Product</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Price</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">Status</th>
-                  <th className="px-6 py-4 w-10"></th>
+              <thead className="sticky top-0 z-10">
+                <tr className="bg-muted border-b border-muted/50">
+                  <th className="px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Product</th>
+                  <th className="px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Price</th>
+                  <th className="px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">Status</th>
+                  <th className="px-6 py-3 w-10"></th>
                 </tr>
               </thead>
               <tbody>
@@ -512,9 +512,9 @@ export default function ProductsPage() {
                       onClick={() => setExpandedId(expandedId === product.id ? null : product.id)}
                       className={`group cursor-pointer transition-colors hover:bg-muted/10 border-b border-muted/20 ${expandedId === product.id ? 'bg-primary/5' : ''}`}
                     >
-                      <td className="px-6 py-5">
+                      <td className="px-6 py-3">
                         <div className="flex items-center gap-3">
-                          <span className={`transition-transform duration-300 ${expandedId === product.id ? 'rotate-90' : ''}`}>▶</span>
+                          <span className={`text-[10px] transition-transform duration-300 ${expandedId === product.id ? 'rotate-90' : ''}`}>▶</span>
                           <div>
                             <p className="font-black text-foreground text-sm leading-tight">{product.name}</p>
                             <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-tighter">
@@ -523,10 +523,10 @@ export default function ProductsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-5 text-right font-black text-primary text-sm">
+                      <td className="px-6 py-3 text-right font-black text-primary text-sm">
                         RM {product.price.toFixed(2)}
                       </td>
-                      <td className="px-6 py-5 text-center" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-6 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-3">
                           <span className={`text-[9px] font-black uppercase tracking-tighter ${product.is_active ? 'text-green-600' : 'text-foreground/30'}`}>
                             {product.is_active ? 'ON' : 'OFF'}
@@ -539,7 +539,8 @@ export default function ProductsPage() {
                           </button>
                         </div>
                       </td>
-                      <td className="px-6 py-5 text-foreground/20 group-hover:text-primary transition-colors">
+                      <td className="px-6 py-3 text-foreground/20 group-hover:text-primary transition-colors text-right">
+                        <span className="text-[10px] font-bold uppercase tracking-widest">{expandedId === product.id ? 'Tutup' : 'Info'}</span>
                       </td>
                     </tr>
                     
