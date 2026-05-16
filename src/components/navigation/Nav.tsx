@@ -140,6 +140,14 @@ export function BottomNav() {
 
 import { useState, useEffect } from 'react';
 
+// Desktop sidebar uses a full set with required hrefs
+const sideNavItems: { href: string; label: string; icon: string }[] = [
+  { href: '/dashboard', label: 'Office', icon: '🏢' },
+  { href: '/dashboard/production', label: 'Kitchen', icon: '🥣' },
+  { href: '/dashboard/delivery', label: 'Delivery', icon: '🚚' },
+  { href: '/dashboard/settings', label: 'Settings', icon: '⚙️' },
+];
+
 export function SideNav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -156,7 +164,7 @@ export function SideNav() {
         <span className="text-xl font-black text-foreground">BakersBestie</span>
       </div>
       <nav className="flex-1 space-y-1">
-        {navItems.map(item => {
+        {sideNavItems.map(item => {
           const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
           return (
             <Link
