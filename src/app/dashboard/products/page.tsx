@@ -306,7 +306,7 @@ export default function ProductsPage() {
   return (
     <div className="space-y-5 pb-4">
       {/* Unified Sticky Header Section */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
         <div className="flex items-start justify-between pt-6 pb-4">
           <div>
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Menu 🧁</h1>
