@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { Order, OrderStatus, Product, PaymentStatus } from '@/lib/types';
 import { OrderCard } from '@/components/orders/OrderCard';
@@ -243,7 +244,7 @@ export default function OrdersPage() {
         </div>
 
       {/* Manual Order Modal (Same as before but with modernized classes) */}
-      {showManual && (
+      {showManual && createPortal(
         <div className="fixed inset-0 z-[100] bg-background/40 backdrop-blur-md flex items-center justify-center p-3 md:p-[5%]">
           <div className="bg-card w-full max-w-xl h-fit max-h-[90vh] rounded-xl p-8 shadow-2xl flex flex-col overflow-hidden border border-primary/10">
             <div className="flex justify-between items-center mb-6 flex-none">
@@ -315,7 +316,8 @@ export default function OrdersPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Orders List */}

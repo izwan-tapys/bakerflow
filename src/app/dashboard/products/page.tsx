@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 
 interface Product {
@@ -338,7 +339,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Add Form with Inline Recipe */}
-      {showAdd && (
+      {showAdd && createPortal(
         <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-3 md:p-[10%]">
           <div className="bg-card w-full h-full rounded-xl p-5 md:p-8 shadow-2xl flex flex-col overflow-hidden border border-primary/10">
             <div className="flex justify-between items-center mb-6 flex-none">
@@ -493,7 +494,8 @@ export default function ProductsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
 
@@ -610,7 +612,7 @@ export default function ProductsPage() {
       )}
 
       {/* Edit Product Modal */}
-      {editingProduct && (
+      {editingProduct && createPortal(
         <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-3 md:p-[10%]">
           <div className="bg-card w-full h-full rounded-xl p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
             <div className="flex justify-between items-center mb-6 flex-none">
@@ -654,7 +656,8 @@ export default function ProductsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -793,7 +796,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-3 md:p-[10%]">
       <div className="bg-card w-full h-full rounded-xl p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
         <div className="flex-none mb-6">
@@ -939,7 +942,8 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
