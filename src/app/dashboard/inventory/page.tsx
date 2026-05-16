@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { KitchenTabs } from '@/components/dashboard/KitchenTabs';
 import { formatDate } from '@/lib/utils';
 
 type IngredientType = 'raw' | 'component' | 'supply';
@@ -406,10 +405,6 @@ export default function InventoryPage() {
 
       {/* Unified Sticky Header Section */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
-        <div className="pt-4">
-          <KitchenTabs />
-        </div>
-        
         <div className="flex items-start justify-between pt-6 pb-4">
           <div>
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Inventory 📦</h1>

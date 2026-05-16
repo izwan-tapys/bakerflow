@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Order, Product, BakerSettings } from '@/lib/types';
-import { KitchenTabs } from '@/components/dashboard/KitchenTabs';
 import { formatDate } from '@/lib/utils';
 
 interface Task {
@@ -107,19 +106,20 @@ export default function PlannerPage() {
 
   return (
     <div className="space-y-6 pb-20">
-      <KitchenTabs />
-
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-foreground">Planner 📅</h1>
-          <p className="text-foreground/50 text-sm">Automated schedule for {formatDate(selectedDate)}</p>
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
+        <div className="flex items-center justify-between pt-6 pb-4">
+          <div>
+            <h1 className="text-2xl font-extrabold text-foreground">Planner 📅</h1>
+            <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Automated schedule for {formatDate(selectedDate)}</p>
+          </div>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={e => setSelectedDate(e.target.value)}
+            className="h-10 px-3 rounded-xl border-2 border-muted font-bold text-sm focus:border-primary outline-none"
+          />
         </div>
-        <input 
-          type="date" 
-          value={selectedDate} 
-          onChange={e => setSelectedDate(e.target.value)}
-          className="h-10 px-3 rounded-xl border-2 border-muted font-bold text-sm focus:border-primary outline-none"
-        />
       </div>
 
       {schedule.length > 0 && (

@@ -94,7 +94,7 @@ function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; on
         <>
           {order.status === 'approved' && stockStatus.checked && !stockStatus.isOk ? (
             <button
-              onClick={() => window.location.href = '/dashboard/inventory?filter=negative'}
+              onClick={() => window.location.href = '/kitchen/inventory?filter=negative'}
               className="w-full h-12 rounded-xl bg-amber-500 text-white font-bold transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
             >
               ⚠️ Check Inventory (Insufficient Stock)
@@ -113,7 +113,6 @@ function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; on
   );
 }
 
-import { KitchenTabs } from '@/components/dashboard/KitchenTabs';
 
 export default function ProductionPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -140,7 +139,7 @@ export default function ProductionPage() {
     const result = await updateOrderStatus(orderId, status);
     if (!result.success) {
       if (confirm(`${result.message}\n\nNak pergi ke Inventory untuk restock sekarang?`)) {
-        window.location.href = '/dashboard/inventory';
+        window.location.href = '/kitchen/inventory';
       }
       return;
     }
@@ -157,10 +156,6 @@ export default function ProductionPage() {
     <div className="space-y-5 pb-4">
       {/* Unified Sticky Header Section */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
-        <div className="pt-4">
-          <KitchenTabs />
-        </div>
-        
         <div className="flex items-start justify-between pt-6 pb-4">
           <div>
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Production Line 🥣</h1>
@@ -368,7 +363,7 @@ function ProductionRow({ order, isExpanded, onExpand, onStatusChange, onRefresh 
                   <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest text-right mb-2">Next Step</p>
                   {order.status === 'approved' && stockStatus.checked && !stockStatus.isOk ? (
                     <button
-                      onClick={(e) => { e.stopPropagation(); window.location.href = '/dashboard/inventory?filter=negative'; }}
+                      onClick={(e) => { e.stopPropagation(); window.location.href = '/kitchen/inventory?filter=negative'; }}
                       className="w-full h-14 rounded-2xl bg-amber-500 text-white font-black text-sm shadow-xl shadow-amber-200 flex items-center justify-center gap-2"
                     >
                       ⚠️ INSUFFICIENT STOCK

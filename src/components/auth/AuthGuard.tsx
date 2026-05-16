@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase';
 
 const PUBLIC_PATHS = ['/login', '/order'];
 
+const PROTECTED_PREFIXES = ['/dashboard', '/office', '/kitchen', '/delivery', '/settings'];
+
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -13,7 +15,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const isPublic = PUBLIC_PATHS.some(p => pathname.startsWith(p));
-    if (isPublic) {
+    const isProtected = PROTECTED_PREFIXES.some(p => pathname.startsWith(p));
+    
+    if (isPublic || !isProtected) {
       setChecking(false);
       return;
     }
@@ -24,7 +28,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Check setup status for all private routes EXCEPT setup itself
+      // Check setup status — skip for setup page itself
       if (!pathname.startsWith('/dashboard/setup')) {
         const { data: settings, error: settingsError } = await supabase
           .from('baker_settings')

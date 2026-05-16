@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { OfficeTabs } from '@/components/dashboard/OfficeTabs';
 import { Order, OrderStatus, Product, PaymentStatus } from '@/lib/types';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { updateOrderStatus } from '@/lib/services/baker.service';
@@ -157,14 +156,14 @@ export default function OrdersPage() {
     const result = await updateOrderStatus(orderId, status);
     if (!result.success) {
       if (confirm(`${result.message}\n\nNak pergi ke Inventory untuk restock sekarang?`)) {
-        window.location.href = '/dashboard/inventory';
+        window.location.href = '/kitchen/inventory';
       }
       return;
     }
 
     if (result.warning) {
       if (confirm(`${result.warning}\n\nOrder telah di-approve. Nak ke page Inventory untuk tengok Shopping List?`)) {
-        window.location.href = '/dashboard/inventory';
+        window.location.href = '/kitchen/inventory';
       }
     }
     loadData();
@@ -187,9 +186,6 @@ export default function OrdersPage() {
     <div className="space-y-5 pb-4">
       {/* Unified Sticky Header Section */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
-        <div className="pt-4">
-          <OfficeTabs />
-        </div>
         <div className="flex items-start justify-between pt-6 pb-4">
           <div>
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Orders 📝</h1>
