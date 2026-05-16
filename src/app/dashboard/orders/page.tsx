@@ -255,17 +255,15 @@ export default function OrdersPage() {
             
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Customer Name</label>
-                    <input value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})}
-                      className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Phone</label>
-                    <input value={manualForm.customer_phone} onChange={e => setManualForm({...manualForm, customer_phone: e.target.value})} placeholder="0123456789"
-                      className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
-                  </div>
+                <div>
+                  <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Customer Name</label>
+                  <input value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})}
+                    className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Phone</label>
+                  <input value={manualForm.customer_phone} onChange={e => setManualForm({...manualForm, customer_phone: e.target.value})} placeholder="0123456789"
+                    className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" />
                 </div>
 
                 <div>
