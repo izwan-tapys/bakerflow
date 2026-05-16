@@ -1099,12 +1099,25 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                         <div className="text-[10px] font-black text-amber-600/60 uppercase">
                           Stock: {(() => {
                             const ing = item.ingredient;
+                            const val = ing.current_stock;
+                            const unit = ing.unit;
+                            
                             if (ing.pack_size > 0 && ing.pack_unit) {
-                              const p = Math.floor(ing.current_stock / ing.pack_size);
-                              const r = Math.round((ing.current_stock % ing.pack_size) * 100) / 100;
-                              return p > 0 ? `${p}${ing.pack_unit}${r > 0 ? ` + ${r}${ing.unit}` : ''}` : `${ing.current_stock}${ing.unit}`;
+                              const p = Math.floor(val / ing.pack_size);
+                              const r = Math.round((val % ing.pack_size) * 100) / 100;
+                              const rDisplay = (unit === 'g' && r >= 1000) ? `${(r/1000).toFixed(2).replace(/\.?0+$/, '')}kg` :
+                                               (unit === 'ml' && r >= 1000) ? `${(r/1000).toFixed(2).replace(/\.?0+$/, '')}L` :
+                                               `${r}${unit}`;
+                              
+                              return p > 0 ? `${p}${ing.pack_unit}${r > 0 ? ` + ${rDisplay}` : ''}` : 
+                                     (unit === 'g' && val >= 1000) ? `${(val/1000).toFixed(2).replace(/\.?0+$/, '')}kg` :
+                                     (unit === 'ml' && val >= 1000) ? `${(val/1000).toFixed(2).replace(/\.?0+$/, '')}L` :
+                                     `${val}${unit}`;
                             }
-                            return `${ing.current_stock}${ing.unit}`;
+                            
+                            return (unit === 'g' && val >= 1000) ? `${(val/1000).toFixed(2).replace(/\.?0+$/, '')}kg` :
+                                   (unit === 'ml' && val >= 1000) ? `${(val/1000).toFixed(2).replace(/\.?0+$/, '')}L` :
+                                   `${val}${unit}`;
                           })()}
                         </div>
                         <p className="text-[10px] font-black text-primary uppercase mt-1">Need: {item.suggestedPacks > 0 ? `${item.suggestedPacks} pk` : `${item.shortfall}${item.ingredient.unit}`}</p>
@@ -1442,18 +1455,22 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
                                   </span>
                                   {remainder > 0 && (
                                     <span className="text-[10px] text-foreground/30 font-medium italic">
-                                      + {remainder}{ing.unit}
+                                      + {remainder >= 1000 && ing.unit === 'g' ? `${(remainder/1000).toFixed(2).replace(/\.?0+$/, '')}kg` : 
+                                         remainder >= 1000 && ing.unit === 'ml' ? `${(remainder/1000).toFixed(2).replace(/\.?0+$/, '')}L` : 
+                                         `${remainder}${ing.unit}`}
                                     </span>
                                   )}
                                 </div>
                               );
                             }
                           }
-                          return (
-                            <>
-                              {ing.current_stock}<span className="text-[10px] ml-0.5 opacity-40">{ing.unit}</span>
-                            </>
-                          );
+                          const val = ing.current_stock;
+                          const unit = ing.unit;
+                          const displayVal = (unit === 'g' && val >= 1000) ? `${(val/1000).toFixed(2).replace(/\.?0+$/, '')}kg` :
+                                           (unit === 'ml' && val >= 1000) ? `${(val/1000).toFixed(2).replace(/\.?0+$/, '')}L` :
+                                           `${val}${unit}`;
+                          
+                          return <span className="text-sm">{displayVal}</span>;
                         })()}
                       </td>
                       <td className="px-6 py-5 text-right font-black text-primary/80 text-sm">
