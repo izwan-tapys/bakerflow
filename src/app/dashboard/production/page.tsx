@@ -28,7 +28,7 @@ function ProductionCard({ order, onStatusChange, onRefresh }: { order: Order; on
   const next = nextStatus[order.status];
 
   return (
-    <div className="bg-white rounded-2xl p-5 border-2 border-muted/50 space-y-4 shadow-sm">
+    <div className="bg-card rounded-2xl p-5 border-2 border-muted/50 space-y-4 shadow-sm">
       <div className="flex items-start justify-between">
         <div>
           <p className="font-extrabold text-foreground text-lg">{order.product_name}</p>
@@ -182,7 +182,7 @@ export default function ProductionPage() {
           {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-2xl animate-pulse" />)}
         </div>
       ) : orders.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-xl border border-dashed border-muted">
+        <div className="text-center py-20 bg-card rounded-xl border border-dashed border-muted">
           <div className="text-5xl mb-3">🎉</div>
           <p className="font-bold text-foreground/40 text-sm">Kitchen is clear!</p>
         </div>
@@ -231,7 +231,7 @@ function ProductionList({ orders, expandedId, setExpandedId, onStatusChange, onR
   onRefresh: () => void;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-muted/50 overflow-hidden shadow-sm">
+    <div className="bg-card rounded-xl border border-muted/50 overflow-hidden shadow-sm">
       <div className="divide-y divide-muted/20">
         {orders.map(order => (
           <ProductionRow 

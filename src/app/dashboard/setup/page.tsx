@@ -126,7 +126,7 @@ export default function SetupPage() {
         <StepIndicator currentStep={step} />
 
         {/* Card */}
-        <div className="bg-white rounded-3xl shadow-xl shadow-foreground/5 p-8 border border-muted">
+        <div className="bg-card rounded-3xl shadow-xl shadow-foreground/5 p-8 border border-muted">
 
           {/* Step 0: Shop Identity */}
           {step === 0 && (
@@ -247,17 +247,17 @@ export default function SetupPage() {
                       <div>
                         <label className="text-xs text-foreground/50">From (KM)</label>
                         <input type="number" value={zone.min_km} onChange={e => updateZone(index, 'min_km', +e.target.value)}
-                          className="w-full h-10 px-3 rounded-xl border border-muted bg-white focus:border-primary focus:outline-none text-sm font-medium" />
+                          className="w-full h-10 px-3 rounded-xl border border-muted bg-card focus:border-primary focus:outline-none text-sm font-medium" />
                       </div>
                       <div>
                         <label className="text-xs text-foreground/50">To (KM)</label>
                         <input type="number" value={zone.max_km} onChange={e => updateZone(index, 'max_km', +e.target.value)}
-                          className="w-full h-10 px-3 rounded-xl border border-muted bg-white focus:border-primary focus:outline-none text-sm font-medium" />
+                          className="w-full h-10 px-3 rounded-xl border border-muted bg-card focus:border-primary focus:outline-none text-sm font-medium" />
                       </div>
                       <div>
                         <label className="text-xs text-foreground/50">Fee (RM)</label>
                         <input type="number" value={zone.fee} onChange={e => updateZone(index, 'fee', +e.target.value)}
-                          className="w-full h-10 px-3 rounded-xl border border-muted bg-white focus:border-primary focus:outline-none text-sm font-medium" />
+                          className="w-full h-10 px-3 rounded-xl border border-muted bg-card focus:border-primary focus:outline-none text-sm font-medium" />
                       </div>
                     </div>
                   </div>

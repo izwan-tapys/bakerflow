@@ -320,10 +320,10 @@ export default function ProductsPage() {
         {/* Tab Switcher & Table Header Combo */}
         <div className="space-y-4 pb-3">
           <div className="flex bg-muted/30 p-1 rounded-xl border border-muted/50 w-full sm:w-64">
-            <button onClick={() => setActiveTab('active')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'active' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>
+            <button onClick={() => setActiveTab('active')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'active' ? 'bg-card text-primary shadow-sm' : 'text-foreground/40'}`}>
               Active Menu
             </button>
-            <button onClick={() => setActiveTab('archived')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'archived' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>
+            <button onClick={() => setActiveTab('archived')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'archived' ? 'bg-card text-primary shadow-sm' : 'text-foreground/40'}`}>
               Archived
             </button>
           </div>
@@ -340,7 +340,7 @@ export default function ProductsPage() {
       {/* Add Form with Inline Recipe */}
       {showAdd && (
         <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
-          <div className="bg-white w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+          <div className="bg-card w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
             <div className="flex justify-between items-center mb-6 flex-none">
               <p className="text-xl font-black text-primary">Add New Product</p>
               <button onClick={() => setShowAdd(false)} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
@@ -420,7 +420,7 @@ export default function ProductsPage() {
                         className="w-full h-11 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold" 
                       />
                       {showIngSuggestions && (ingSearch || catalogSuggestions.length > 0) && (
-                        <div className="absolute z-50 w-full mt-1 bg-white border-2 border-muted rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                        <div className="absolute z-50 w-full mt-1 bg-card border-2 border-muted rounded-xl shadow-2xl max-h-60 overflow-y-auto">
                           {/* LOCAL INVENTORY SUGGESTIONS */}
                           {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
                             <div key={i.id} onClick={() => { 
@@ -470,7 +470,7 @@ export default function ProductsPage() {
                       </div>
                       <div className="w-20">
                         <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Unit</label>
-                        <select value={ingForm.unit} onChange={e => setIngForm({ ...ingForm, unit: e.target.value })} className="w-full h-10 px-1 rounded-lg border-2 border-muted font-bold text-xs bg-white">
+                        <select value={ingForm.unit} onChange={e => setIngForm({ ...ingForm, unit: e.target.value })} className="w-full h-10 px-1 rounded-lg border-2 border-muted font-bold text-xs bg-card">
                           {['g', 'kg', 'ml', 'L', 'pcs'].map(u => <option key={u}>{u}</option>)}
                         </select>
                       </div>
@@ -496,7 +496,7 @@ export default function ProductsPage() {
           {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-2xl animate-pulse" />)}
         </div>
       ) : products.filter(p => activeTab === 'active' ? p.is_active : !p.is_active).length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-muted mt-4">
+        <div className="text-center py-20 bg-card rounded-3xl border border-dashed border-muted mt-4">
           <div className="text-5xl mb-3">{activeTab === 'active' ? '🍩' : '📦'}</div>
           <p className="font-bold text-foreground">
             {activeTab === 'active' ? 'Your active menu is empty' : 'No archived products'}
@@ -506,7 +506,7 @@ export default function ProductsPage() {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-muted/50 overflow-hidden shadow-sm">
+        <div className="bg-card rounded-xl border border-muted/50 overflow-hidden shadow-sm">
           <div className="divide-y divide-muted/20">
             {products.filter(p => activeTab === 'active' ? p.is_active : !p.is_active).map(product => (
               <React.Fragment key={product.id}>
@@ -526,7 +526,7 @@ export default function ProductsPage() {
                       onClick={() => toggleActive(product)}
                       className={`relative w-10 h-5 rounded-full transition-all duration-300 shadow-inner ${product.is_active ? 'bg-green-500' : 'bg-red-500'}`}
                     >
-                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300 ${product.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-card shadow-md transition-all duration-300 ${product.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
                     </button>
                   </div>
                 </div>
@@ -605,7 +605,7 @@ export default function ProductsPage() {
       {/* Edit Product Modal */}
       {editingProduct && (
         <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
-          <div className="bg-white w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+          <div className="bg-card w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
             <div className="flex justify-between items-center mb-6 flex-none">
               <h2 className="text-xl font-black text-primary">Edit Product</h2>
               <button onClick={() => { setEditingProduct(null); setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 }); }} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
@@ -788,7 +788,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[10%] md:p-[15%] lg:p-[20%] pb-[90px] md:pb-[15%] lg:pb-[20%]">
-      <div className="bg-white w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+      <div className="bg-card w-full h-full rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
         <div className="flex-none mb-6">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-xl font-black text-primary">Recipe Setup</h2>
@@ -843,10 +843,10 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
                     }
                   }}
                   onFocus={() => setShowIngSuggestions(true)}
-                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white"
+                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-card"
                 />
                 {showIngSuggestions && (ingSearch || catalogSuggestions.length > 0) && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-muted rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                  <div className="absolute z-50 w-full mt-1 bg-card border border-muted rounded-xl shadow-xl max-h-60 overflow-y-auto">
                     {/* LOCAL */}
                     {ingredients.filter(i => i.name.toLowerCase().includes(ingSearch.toLowerCase())).map(i => (
                       <div key={i.id} onClick={() => { 
@@ -898,7 +898,7 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
               <div className="flex-1">
                 <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Brand (Opt)</label>
                 <input placeholder="Anchor" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })}
-                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-white" />
+                  className="w-full h-11 px-3 rounded-xl border border-muted text-sm focus:border-primary focus:outline-none bg-card" />
               </div>
             </div>
 
@@ -906,12 +906,12 @@ function RecipeModal({ product, ingredients, onClose }: { product: Product, ingr
               <div className="flex-1">
                 <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Qty</label>
                 <input type="number" placeholder="0" value={form.quantity_needed || ''} onChange={e => setForm({ ...form, quantity_needed: e.target.value === '' ? 0 : +e.target.value })}
-                  className="w-full h-10 px-2 rounded-xl border border-muted text-sm focus:border-primary outline-none bg-white" />
+                  className="w-full h-10 px-2 rounded-xl border border-muted text-sm focus:border-primary outline-none bg-card" />
               </div>
               <div className="w-20">
                 <label className="text-[10px] font-bold text-foreground/40 uppercase mb-1 block">Unit</label>
                 <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
-                  className="w-full h-10 px-1 rounded-xl border border-muted text-[10px] font-bold focus:border-primary outline-none bg-white">
+                  className="w-full h-10 px-1 rounded-xl border border-muted text-[10px] font-bold focus:border-primary outline-none bg-card">
                   {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
                 </select>
               </div>

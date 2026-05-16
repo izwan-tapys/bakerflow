@@ -154,11 +154,11 @@ export default function AdminDashboardPage() {
 
       {/* Quick Stats Grid */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded-3xl p-5 border border-muted/50 shadow-sm">
+        <div className="bg-card rounded-3xl p-5 border border-muted/50 shadow-sm">
           <p className="text-[10px] font-black text-foreground/30 uppercase tracking-widest mb-1">Monthly Sales</p>
           <p className="text-2xl font-black text-primary">RM {monthlyRevenue.toLocaleString()}</p>
         </div>
-        <div className="bg-white rounded-3xl p-5 border border-muted/50 shadow-sm flex flex-col justify-center items-center gap-1">
+        <div className="bg-card rounded-3xl p-5 border border-muted/50 shadow-sm flex flex-col justify-center items-center gap-1">
           <Link href="/dashboard/planner" className="text-xs font-bold text-primary bg-primary/5 px-4 py-2 rounded-xl hover:bg-primary/10 transition-all">
             View Full Schedule 📅
           </Link>
@@ -166,7 +166,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Today's Agenda Summary */}
-      <div className="bg-white rounded-3xl p-5 border border-muted/50 shadow-sm">
+      <div className="bg-card rounded-3xl p-5 border border-muted/50 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-black text-foreground flex items-center gap-2">
             Today&apos;s Agenda

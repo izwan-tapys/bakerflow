@@ -13,7 +13,7 @@ export default function DeliverySettings() {
   return (
     <div className="space-y-6 pb-20">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
         <div className="pt-8 pb-4">
           <h1 className="text-2xl font-black text-foreground">Delivery Settings 🚚</h1>
           <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Logistics & Fees</p>
@@ -24,7 +24,7 @@ export default function DeliverySettings() {
         {/* Fees Section */}
         <section className="space-y-3">
           <p className="text-[10px] font-black uppercase text-foreground/30 tracking-[0.2em] ml-2">Delivery Fees</p>
-          <div className="bg-white rounded-3xl border border-muted/50 overflow-hidden shadow-sm">
+          <div className="bg-card rounded-3xl border border-muted/50 overflow-hidden shadow-sm">
             <div className="p-4 flex items-center justify-between">
               <span className="text-sm font-bold text-foreground">Flat Rate (RM)</span>
               <input 
@@ -40,7 +40,7 @@ export default function DeliverySettings() {
         {/* Windows Section */}
         <section className="space-y-3">
           <p className="text-[10px] font-black uppercase text-foreground/30 tracking-[0.2em] ml-2">Delivery Window</p>
-          <div className="bg-white rounded-3xl border border-muted/50 overflow-hidden shadow-sm">
+          <div className="bg-card rounded-3xl border border-muted/50 overflow-hidden shadow-sm">
             <div className="p-4 border-b border-muted/30 flex items-center justify-between">
               <span className="text-sm font-bold text-foreground">Start Time</span>
               <input 
@@ -65,14 +65,14 @@ export default function DeliverySettings() {
         {/* Collection Section */}
         <section className="space-y-3">
           <p className="text-[10px] font-black uppercase text-foreground/30 tracking-[0.2em] ml-2">Customer Pickup</p>
-          <div className="bg-white rounded-3xl border border-muted/50 overflow-hidden shadow-sm">
+          <div className="bg-card rounded-3xl border border-muted/50 overflow-hidden shadow-sm">
             <div className="p-4 flex items-center justify-between">
               <span className="text-sm font-bold text-foreground">Allow Self-Collect</span>
               <button 
                 onClick={() => setSettings({...settings, allowSelfCollect: !settings.allowSelfCollect})}
                 className={`w-12 h-6 rounded-full transition-all flex items-center px-1 ${settings.allowSelfCollect ? 'bg-blue-600 justify-end' : 'bg-muted justify-start'}`}
               >
-                <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
+                <div className="w-4 h-4 bg-card rounded-full shadow-sm" />
               </button>
             </div>
           </div>

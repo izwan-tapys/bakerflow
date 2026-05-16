@@ -173,11 +173,11 @@ export default function PlannerPage() {
           {schedule.map((item, idx) => (
             <div key={idx} className="relative pl-12 space-y-3">
               {/* Dot */}
-              <div className="absolute left-0 top-1 w-10 h-10 rounded-full bg-white border-4 border-primary flex items-center justify-center z-10 shadow-sm">
+              <div className="absolute left-0 top-1 w-10 h-10 rounded-full bg-card border-4 border-primary flex items-center justify-center z-10 shadow-sm">
                 <span className="text-xs font-black text-primary">{idx + 1}</span>
               </div>
 
-              <div className="bg-white rounded-2xl p-4 border border-muted/50 shadow-sm space-y-4 hover:border-primary/30 transition-colors">
+              <div className="bg-card rounded-2xl p-4 border border-muted/50 shadow-sm space-y-4 hover:border-primary/30 transition-colors">
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="font-black text-lg text-foreground leading-tight">{item.customer}</p>

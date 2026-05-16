@@ -210,7 +210,7 @@ export default function OrdersPage() {
               placeholder="Search by customer or order number..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 rounded-xl border border-muted bg-white focus:border-primary focus:outline-none text-xs font-bold shadow-sm"
+              className="w-full h-10 pl-9 pr-4 rounded-xl border border-muted bg-card focus:border-primary focus:outline-none text-xs font-bold shadow-sm"
             />
           </div>
 
@@ -223,7 +223,7 @@ export default function OrdersPage() {
                 className={`flex-shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
                   filter === f.value
                     ? 'bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105'
-                    : 'bg-white text-foreground/40 border-muted hover:border-primary'
+                    : 'bg-card text-foreground/40 border-muted hover:border-primary'
                 }`}
               >
                 {f.label}
@@ -243,7 +243,7 @@ export default function OrdersPage() {
       {/* Manual Order Modal (Same as before but with modernized classes) */}
       {showManual && (
         <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-[5%] pb-[90px] md:pb-[5%]">
-          <div className="bg-white w-full max-w-xl h-fit max-h-[90vh] rounded-[32px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
+          <div className="bg-card w-full max-w-xl h-fit max-h-[90vh] rounded-[32px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
             <div className="flex justify-between items-center mb-6 flex-none">
               <p className="text-xl font-black text-primary">{editingOrder ? 'Edit Order' : 'Add Manual Order'}</p>
               <button onClick={() => { setShowManual(false); setEditingOrder(null); }} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
@@ -274,7 +274,7 @@ export default function OrdersPage() {
                   <div>
                     <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Product</label>
                     <select value={manualForm.product_id} onChange={e => setManualForm({...manualForm, product_id: e.target.value})}
-                      className="w-full h-12 px-3 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold bg-white">
+                      className="w-full h-12 px-3 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold bg-card">
                       <option value="">Select Product</option>
                       {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
@@ -295,7 +295,7 @@ export default function OrdersPage() {
                   <div>
                     <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest block mb-1">Payment</label>
                     <select value={manualForm.payment_status} onChange={e => setManualForm({...manualForm, payment_status: e.target.value as any})}
-                      className="w-full h-12 px-3 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold bg-white text-primary">
+                      className="w-full h-12 px-3 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold bg-card text-primary">
                       <option value="unpaid">🔴 UNPAID</option>
                       <option value="paid">🟢 PAID</option>
                     </select>
@@ -320,12 +320,12 @@ export default function OrdersPage() {
           {[1, 2, 3, 4].map(i => <div key={i} className="h-16 bg-muted rounded-2xl animate-pulse" />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-xl border border-dashed border-muted">
+        <div className="text-center py-20 bg-card rounded-xl border border-dashed border-muted">
           <div className="text-4xl mb-3">📭</div>
           <p className="font-bold text-foreground/40">No {filter} orders found</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-muted/50 overflow-hidden shadow-sm">
+        <div className="bg-card rounded-xl border border-muted/50 overflow-hidden shadow-sm">
           <div className="divide-y divide-muted/20">
             {filtered.map(order => (
               <div key={order.id} className="contents">

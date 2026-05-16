@@ -415,7 +415,7 @@ export default function InventoryPage() {
             <div className="relative" ref={notifRef}>
               <button
                 onClick={() => setShowNotifications(v => !v)}
-                className="relative w-10 h-10 flex items-center justify-center rounded-xl border-2 border-muted bg-white hover:border-primary/30 hover:bg-primary/5 transition-all active:scale-95"
+                className="relative w-10 h-10 flex items-center justify-center rounded-xl border-2 border-muted bg-card hover:border-primary/30 hover:bg-primary/5 transition-all active:scale-95"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-foreground/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -429,7 +429,7 @@ export default function InventoryPage() {
               {showNotifications && (
                 <>
                   <div className="fixed inset-0 z-30" onClick={() => setShowNotifications(false)} />
-                  <div className="absolute right-0 top-12 w-72 bg-white rounded-2xl shadow-2xl border border-muted/50 z-40 overflow-hidden">
+                  <div className="absolute right-0 top-12 w-72 bg-card rounded-2xl shadow-2xl border border-muted/50 z-40 overflow-hidden">
                     <div className="px-4 py-3 border-b border-muted/30 bg-muted/10 font-black text-[10px] uppercase tracking-widest text-foreground/40">Alerts</div>
                     <div className="max-h-64 overflow-y-auto divide-y divide-muted/20">
                       {alerts.map(a => (
@@ -466,7 +466,7 @@ export default function InventoryPage() {
                 key={tab.id}
                 onClick={() => { setActiveMainTab(tab.id as any); setSelectedCategory('Semua'); }}
                 className={`flex-1 min-w-[64px] py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex flex-col items-center gap-0.5 ${
-                  activeMainTab === tab.id ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'
+                  activeMainTab === tab.id ? 'bg-card text-primary shadow-sm' : 'text-foreground/40'
                 }`}
               >
                 <span>{tab.icon}</span>
@@ -537,7 +537,7 @@ export default function InventoryPage() {
       {/* Notification Action Chooser */}
       {pendingAlertAction && (
         <div className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-md flex items-end justify-center sm:items-center p-4">
-          <div className="bg-white w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] p-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div className="bg-card w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] p-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
                 {pendingAlertAction.icon}
@@ -562,7 +562,7 @@ export default function InventoryPage() {
                   setSelectedIngredient(pendingAlertAction.ingredient);
                   setPendingAlertAction(null);
                 }}
-                className="w-full h-14 bg-white text-foreground border-2 border-muted rounded-2xl font-black text-sm flex items-center justify-center gap-2"
+                className="w-full h-14 bg-card text-foreground border-2 border-muted rounded-2xl font-black text-sm flex items-center justify-center gap-2"
               >
                 ➕ RESTOCK MANUALLY
               </button>
@@ -607,7 +607,7 @@ export default function InventoryPage() {
 
 function PurchasesList({ purchases }: { purchases: PurchaseRecord[] }) {
   return (
-    <div className="bg-white rounded-[16px] border border-muted overflow-hidden shadow-sm">
+    <div className="bg-card rounded-[16px] border border-muted overflow-hidden shadow-sm">
       {/* Frozen header */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
@@ -774,7 +774,7 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
             onClick={() => fileInputRef.current?.click()}
             disabled={scanning}
             className={`h-12 px-5 rounded-2xl border-2 flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest transition-all shadow-sm active:scale-95 ${
-              scanning ? 'bg-muted text-foreground/20' : 'bg-white border-primary text-primary hover:bg-primary/5'
+              scanning ? 'bg-muted text-foreground/20' : 'bg-card border-primary text-primary hover:bg-primary/5'
             }`}
           >
             {scanning ? '⌛ Scanning...' : '📷 Scan Receipt'}
@@ -831,7 +831,7 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
         </div>
       </div>
 
-      <div className="bg-white rounded-[16px] border border-muted shadow-sm overflow-hidden flex flex-col max-h-[75vh] md:max-h-[70vh] relative">
+      <div className="bg-card rounded-[16px] border border-muted shadow-sm overflow-hidden flex flex-col max-h-[75vh] md:max-h-[70vh] relative">
         {/* Scanning Overlay */}
         {scanning && (
           <div className="absolute inset-0 z-[100] bg-white/60 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
@@ -849,7 +849,7 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
         <div className="overflow-auto flex-1">
           {/* DESKTOP TABLE VIEW */}
           <table className="w-full text-left border-collapse relative hidden md:table">
-            <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
+            <thead className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
               <tr className="bg-muted/30">
                 <th className="pl-4 py-4 w-12 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">No</th>
                 <th className="px-4 py-4 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Item To Buy</th>
@@ -959,7 +959,7 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                 return (
                   <div key={item.ingredient.id + idx} className={`p-4 rounded-2xl border-2 transition-all duration-700 ${
                     isScanned ? 'bg-green-100 border-green-500 scale-[1.02]' : 
-                    isReady ? 'bg-green-50/30 border-green-200' : 'bg-white border-muted/50'
+                    isReady ? 'bg-green-50/30 border-green-200' : 'bg-card border-muted/50'
                   }`}>
                     <div className="flex justify-between items-start mb-3">
                       <div>
@@ -1078,7 +1078,7 @@ function InventoryFilterBar({ searchQuery, onSearchChange, selectedCategory, onC
               value={searchQuery}
               onChange={e => onSearchChange(e.target.value)}
               onBlur={() => { if (!searchQuery) setIsSearchExpanded(false); }}
-              className="w-full h-10 pl-8 pr-7 rounded-xl border-2 border-muted bg-white text-sm font-medium focus:border-primary outline-none transition-colors placeholder:text-foreground/30"
+              className="w-full h-10 pl-8 pr-7 rounded-xl border-2 border-muted bg-card text-sm font-medium focus:border-primary outline-none transition-colors placeholder:text-foreground/30"
             />
             <button 
               onClick={() => { onSearchChange(''); setIsSearchExpanded(false); }} 
@@ -1090,7 +1090,7 @@ function InventoryFilterBar({ searchQuery, onSearchChange, selectedCategory, onC
         ) : (
           <button 
             onClick={() => setIsSearchExpanded(true)}
-            className="w-10 h-10 flex items-center justify-center rounded-xl border-2 border-muted bg-white text-foreground/50 hover:border-primary/40 hover:text-primary transition-all"
+            className="w-10 h-10 flex items-center justify-center rounded-xl border-2 border-muted bg-card text-foreground/50 hover:border-primary/40 hover:text-primary transition-all"
           >
             🔍
           </button>
@@ -1104,7 +1104,7 @@ function InventoryFilterBar({ searchQuery, onSearchChange, selectedCategory, onC
       <select
         value={selectedCategory}
         onChange={e => onCategoryChange(e.target.value)}
-        className="h-10 px-3 rounded-xl border-2 border-muted bg-white text-[10px] font-black focus:border-primary outline-none transition-colors text-foreground/60 flex-shrink-0"
+        className="h-10 px-3 rounded-xl border-2 border-muted bg-card text-[10px] font-black focus:border-primary outline-none transition-colors text-foreground/60 flex-shrink-0"
       >
         {categories.map((c: string) => <option key={c} value={c}>{c === 'Semua' ? 'All Categories' : c}</option>)}
       </select>
@@ -1120,7 +1120,7 @@ function InventoryFilterBar({ searchQuery, onSearchChange, selectedCategory, onC
           className={`flex items-center gap-1 px-3 h-10 rounded-xl text-[10px] font-black uppercase tracking-wide whitespace-nowrap border-2 transition-all flex-shrink-0 ${
             statusFilter === f.id
               ? 'bg-primary border-primary text-white shadow-md shadow-primary/20'
-              : 'bg-white border-muted text-foreground/40 hover:border-primary/40 hover:text-foreground/60'
+              : 'bg-card border-muted text-foreground/40 hover:border-primary/40 hover:text-foreground/60'
           }`}
         >
           <span>{f.icon}</span>
@@ -1155,7 +1155,7 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
 
   if (ingredients.length === 0) {
     return (
-      <div className="text-center py-20 bg-white rounded-xl border border-dashed border-muted">
+      <div className="text-center py-20 bg-card rounded-xl border border-dashed border-muted">
         <div className="text-4xl mb-3">📦</div>
         <p className="font-bold text-foreground/40">No items found</p>
       </div>
@@ -1163,7 +1163,7 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
   }
 
   return (
-    <div className="bg-white rounded-xl border border-muted/50 overflow-hidden shadow-sm">
+    <div className="bg-card rounded-xl border border-muted/50 overflow-hidden shadow-sm">
       <div className="divide-y divide-muted/20">
         {ingredients.map((ing: Ingredient) => (
           <div key={ing.id} className="contents">
@@ -1203,11 +1203,11 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
                     <div>
                       <p className="text-[9px] font-black uppercase text-foreground/30 tracking-widest mb-2">Inventory Stats</p>
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="p-3 bg-white border border-muted/50 rounded-xl">
+                        <div className="p-3 bg-card border border-muted/50 rounded-xl">
                           <p className="text-[8px] font-black text-foreground/40 uppercase tracking-widest mb-1">Avg Cost</p>
                           <p className="text-sm font-black text-primary">RM {ing.avg_cost_per_unit.toFixed(2)}</p>
                         </div>
-                        <div className="p-3 bg-white border border-muted/50 rounded-xl">
+                        <div className="p-3 bg-card border border-muted/50 rounded-xl">
                           <p className="text-[8px] font-black text-foreground/40 uppercase tracking-widest mb-1">Threshold</p>
                           <p className="text-sm font-black text-foreground">{ing.low_stock_threshold}{ing.unit}</p>
                         </div>
@@ -1235,7 +1235,7 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
                       </button>
                       <button 
                         onClick={() => onAddToShopping([ing.id])} 
-                        className="h-12 rounded-xl bg-white border-2 border-primary/20 text-primary font-black text-xs hover:bg-primary/5 transition-all"
+                        className="h-12 rounded-xl bg-card border-2 border-primary/20 text-primary font-black text-xs hover:bg-primary/5 transition-all"
                       >
                         🛒 ADD TO SHOP
                       </button>
@@ -1264,7 +1264,7 @@ function IngredientForm({ data, setData, categories, getAutoCategory }: any) {
             <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Type</label>
             <div className="flex bg-muted/40 p-1 rounded-xl">
               {['raw', 'component', 'supply'].map(t => (
-                <button key={t} onClick={() => setData({ ...data, type: t })} className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${data.type === t ? 'bg-white text-primary shadow-sm' : 'text-foreground/30'}`}>
+                <button key={t} onClick={() => setData({ ...data, type: t })} className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${data.type === t ? 'bg-card text-primary shadow-sm' : 'text-foreground/30'}`}>
                   {t}
                 </button>
               ))}
@@ -1282,7 +1282,7 @@ function IngredientForm({ data, setData, categories, getAutoCategory }: any) {
             </div>
             <div>
               <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Category</label>
-              <select value={data.category} onChange={e => setData({ ...data, category: e.target.value })} className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none bg-white font-bold text-sm">
+              <select value={data.category} onChange={e => setData({ ...data, category: e.target.value })} className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none bg-card font-bold text-sm">
                 {categories.filter((c: string) => c !== 'Semua').map((c: string) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
@@ -1301,7 +1301,7 @@ function IngredientForm({ data, setData, categories, getAutoCategory }: any) {
             </div>
             <div>
               <label className="text-[10px] font-black text-foreground/40 mb-1 block uppercase">Pack Unit</label>
-              <select value={data.pack_size_unit} onChange={e => setData({ ...data, pack_size_unit: e.target.value })} className="w-full h-11 px-3 rounded-xl border border-muted font-bold bg-white focus:border-primary">
+              <select value={data.pack_size_unit} onChange={e => setData({ ...data, pack_size_unit: e.target.value })} className="w-full h-11 px-3 rounded-xl border border-muted font-bold bg-card focus:border-primary">
                 {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
               </select>
             </div>
@@ -1319,7 +1319,7 @@ function IngredientForm({ data, setData, categories, getAutoCategory }: any) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-[10px] font-black uppercase text-foreground/40 mb-1.5 block tracking-widest">Base Unit</label>
-            <select value={data.unit} onChange={e => setData({ ...data, unit: e.target.value })} className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none bg-white font-bold">
+            <select value={data.unit} onChange={e => setData({ ...data, unit: e.target.value })} className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none bg-card font-bold">
               {['g', 'kg', 'ml', 'L', 'pcs', 'tbsp', 'tsp'].map(u => <option key={u} value={u}>{u}</option>)}
             </select>
           </div>
@@ -1408,7 +1408,7 @@ function AddIngredientModal({ onClose, onAdd, initialForm, categories, getAutoCa
   };
   return (
     <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-end sm:items-center justify-center">
-      <div className="bg-white w-full sm:max-w-lg sm:mx-4 rounded-t-[24px] sm:rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20" style={{height: 'min(90vh, 700px)'}}>
+      <div className="bg-card w-full sm:max-w-lg sm:mx-4 rounded-t-[24px] sm:rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20" style={{height: 'min(90vh, 700px)'}}>
         <div className="flex justify-between items-center mb-8 flex-none">
           <h2 className="text-2xl font-black text-primary tracking-tight">New Item</h2>
           <button onClick={onClose} className="w-12 h-12 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-2xl font-bold hover:bg-muted/80 transition-colors">&times;</button>
@@ -1431,7 +1431,7 @@ function AddIngredientModal({ onClose, onAdd, initialForm, categories, getAutoCa
                 </div>
               )}
               {showSuggestions && (
-                <div ref={suggestionRef} className="absolute z-50 left-0 right-0 top-[calc(100%+8px)] bg-white rounded-2xl shadow-2xl border border-muted/50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div ref={suggestionRef} className="absolute z-50 left-0 right-0 top-[calc(100%+8px)] bg-card rounded-2xl shadow-2xl border border-muted/50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="px-4 py-2 bg-muted/10 border-b border-muted/30">
                     <p className="text-[8px] font-black uppercase text-foreground/30 tracking-widest">Suggested from Catalog</p>
                   </div>
@@ -1514,7 +1514,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-end sm:items-center justify-center">
-      <div className="bg-white w-full sm:max-w-lg sm:mx-4 rounded-t-[24px] sm:rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20" style={{height: 'min(90vh, 700px)'}}>
+      <div className="bg-card w-full sm:max-w-lg sm:mx-4 rounded-t-[24px] sm:rounded-[24px] p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20" style={{height: 'min(90vh, 700px)'}}>
         <div className="flex justify-between items-start mb-6 flex-none">
           <div>
             <h2 className="text-2xl font-black text-foreground tracking-tight">{ingredient.name}</h2>
@@ -1525,10 +1525,10 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
 
         <div className="flex bg-muted/40 p-1.5 rounded-xl mb-6 flex-none border border-muted/50">
           {ingredient.type === 'component' && (
-            <button onClick={() => setTab('recipe')} className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'recipe' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>Recipe</button>
+            <button onClick={() => setTab('recipe')} className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'recipe' ? 'bg-card text-primary shadow-sm' : 'text-foreground/40'}`}>Recipe</button>
           )}
-          <button onClick={() => setTab('restock')} className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'restock' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>Restock</button>
-          <button onClick={() => setTab('edit')} className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'edit' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>Edit Info</button>
+          <button onClick={() => setTab('restock')} className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'restock' ? 'bg-card text-primary shadow-sm' : 'text-foreground/40'}`}>Restock</button>
+          <button onClick={() => setTab('edit')} className={`flex-1 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${tab === 'edit' ? 'bg-card text-primary shadow-sm' : 'text-foreground/40'}`}>Edit Info</button>
         </div>
 
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -1545,7 +1545,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
                 ))}
               </div>
               <div className="p-4 bg-primary/5 rounded-xl space-y-3 border border-primary/10">
-                <select value={recipeForm.ingredient_id} onChange={e => setRecipeForm({...recipeForm, ingredient_id: e.target.value})} className="w-full h-11 px-3 rounded-lg border border-muted text-sm bg-white">
+                <select value={recipeForm.ingredient_id} onChange={e => setRecipeForm({...recipeForm, ingredient_id: e.target.value})} className="w-full h-11 px-3 rounded-lg border border-muted text-sm bg-card">
                   <option value="">Add ingredient...</option>
                   {allIngredients.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
                 </select>
@@ -1571,7 +1571,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
                 <div className="grid grid-cols-3 gap-3 bg-muted/20 p-5 rounded-2xl border border-muted/50">
                   <input type="number" value={numPacks} onChange={e => setNumPacks(+e.target.value)} placeholder="Packs" className="h-12 px-3 rounded-lg border border-muted text-sm font-black outline-none" />
                   <input type="number" value={packSize} onChange={e => setPackSize(+e.target.value)} placeholder="Size" className="h-12 px-3 rounded-lg border border-muted text-sm font-black outline-none" />
-                  <select value={packSizeUnit} onChange={e => setPackSizeUnit(e.target.value)} className="h-12 px-2 rounded-lg border border-muted text-xs font-black bg-white">
+                  <select value={packSizeUnit} onChange={e => setPackSizeUnit(e.target.value)} className="h-12 px-2 rounded-lg border border-muted text-xs font-black bg-card">
                     {['g', 'kg', 'ml', 'L', 'pcs'].map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
                   <div className="col-span-3 relative">

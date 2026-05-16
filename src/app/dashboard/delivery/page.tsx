@@ -29,7 +29,7 @@ export default function DeliveryPage() {
   return (
     <div className="space-y-6 pb-20">
       {/* Unified Sticky Header Section */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
         <div className="pt-8 pb-4">
           <h1 className="text-2xl font-black text-foreground">Delivery 🚚</h1>
           <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Logistic Hub</p>
@@ -42,7 +42,7 @@ export default function DeliveryPage() {
             <button
               key={tab}
               className={`flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
-                tab === 'Ready' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'
+                tab === 'Ready' ? 'bg-card text-primary shadow-sm' : 'text-foreground/40'
               }`}
             >
               {tab}
@@ -55,14 +55,14 @@ export default function DeliveryPage() {
             {[1,2,3].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-2xl" />)}
           </div>
         ) : readyOrders.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-muted space-y-4">
+          <div className="text-center py-20 bg-card rounded-3xl border-2 border-dashed border-muted space-y-4">
             <div className="text-5xl">🏘️</div>
             <p className="font-bold text-foreground/40 italic">No orders ready for delivery yet.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {readyOrders.map(order => (
-              <div key={order.id} className="bg-white rounded-2xl p-5 border border-muted/50 shadow-sm flex items-center justify-between">
+              <div key={order.id} className="bg-card rounded-2xl p-5 border border-muted/50 shadow-sm flex items-center justify-between">
                 <div>
                   <p className="font-black text-foreground">#{order.order_number || (order.id ?? '').slice(0,8)}</p>
                   <p className="text-xs font-bold text-foreground/40">{order.customer_name}</p>
