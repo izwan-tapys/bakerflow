@@ -497,12 +497,12 @@ export default function ProductsPage() {
         <div className="bg-white rounded-xl border border-muted/50 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 z-10">
-                <tr className="bg-muted border-b border-muted/50">
-                  <th className="px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Product</th>
-                  <th className="px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Price</th>
-                  <th className="px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">Status</th>
-                  <th className="px-6 py-3 w-10"></th>
+              <thead>
+                <tr className="border-b border-muted/50">
+                  <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Product</th>
+                  <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Price</th>
+                  <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">Status</th>
+                  <th className="sticky top-0 z-20 bg-muted px-6 py-3 w-10"></th>
                 </tr>
               </thead>
               <tbody>
