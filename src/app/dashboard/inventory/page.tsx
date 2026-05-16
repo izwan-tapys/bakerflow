@@ -1099,12 +1099,13 @@ function ShoppingListView({ ordersShopping, manualIds, allIngredients, onRestock
                         <div className="text-[10px] font-black text-amber-600/60 uppercase">
                           Stock: {(() => {
                             const ing = item.ingredient;
-                            const val = ing.current_stock;
-                            const unit = ing.unit;
+                            const val = Number(ing.current_stock) || 0;
+                            const unit = ing.unit || 'g';
+                            const pSize = Number(ing.pack_size);
                             
-                            if (ing.pack_size > 0 && ing.pack_unit) {
-                              const p = Math.floor(val / ing.pack_size);
-                              const r = Math.round((val % ing.pack_size) * 100) / 100;
+                            if (pSize > 0 && ing.pack_unit) {
+                              const p = Math.floor(val / pSize);
+                              const r = Math.round((val % pSize) * 100) / 100;
                               const rDisplay = (unit === 'g' && r >= 1000) ? `${(r/1000).toFixed(2).replace(/\.?0+$/, '')}kg` :
                                                (unit === 'ml' && r >= 1000) ? `${(r/1000).toFixed(2).replace(/\.?0+$/, '')}L` :
                                                `${r}${unit}`;
@@ -1444,9 +1445,13 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
                       </td>
                       <td className="px-6 py-5 text-right font-black text-sm text-foreground/80">
                         {(() => {
-                          if (ing.pack_size > 0 && ing.pack_unit) {
-                            const packs = Math.floor(ing.current_stock / ing.pack_size);
-                            const remainder = Math.round((ing.current_stock % ing.pack_size) * 100) / 100;
+                          const pSize = Number(ing.pack_size);
+                          const currentStock = Number(ing.current_stock) || 0;
+                          const unit = ing.unit || 'g';
+
+                          if (pSize > 0 && ing.pack_unit) {
+                            const packs = Math.floor(currentStock / pSize);
+                            const remainder = Math.round((currentStock % pSize) * 100) / 100;
                             if (packs > 0) {
                               return (
                                 <div className="flex flex-col items-end leading-tight">
@@ -1455,17 +1460,16 @@ function IngredientsList({ ingredients, onSelect, loading, onAddToShopping, onBu
                                   </span>
                                   {remainder > 0 && (
                                     <span className="text-[10px] text-foreground/30 font-medium italic">
-                                      + {remainder >= 1000 && ing.unit === 'g' ? `${(remainder/1000).toFixed(2).replace(/\.?0+$/, '')}kg` : 
-                                         remainder >= 1000 && ing.unit === 'ml' ? `${(remainder/1000).toFixed(2).replace(/\.?0+$/, '')}L` : 
-                                         `${remainder}${ing.unit}`}
+                                      + {remainder >= 1000 && unit === 'g' ? `${(remainder/1000).toFixed(2).replace(/\.?0+$/, '')}kg` : 
+                                         remainder >= 1000 && unit === 'ml' ? `${(remainder/1000).toFixed(2).replace(/\.?0+$/, '')}L` : 
+                                         `${remainder}${unit}`}
                                     </span>
                                   )}
                                 </div>
                               );
                             }
                           }
-                          const val = ing.current_stock;
-                          const unit = ing.unit;
+                          const val = currentStock;
                           const displayVal = (unit === 'g' && val >= 1000) ? `${(val/1000).toFixed(2).replace(/\.?0+$/, '')}kg` :
                                            (unit === 'ml' && val >= 1000) ? `${(val/1000).toFixed(2).replace(/\.?0+$/, '')}L` :
                                            `${val}${unit}`;
