@@ -124,9 +124,22 @@ export default function AdminDashboardPage() {
     <div className="space-y-6 pb-20">
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
-        <div className="pt-6 pb-4">
-          <p className="text-foreground/30 font-black text-[10px] uppercase tracking-[0.2em] mb-1">Morning Briefing ☀️</p>
-          <h1 className="text-2xl font-black text-foreground">Good Morning, {shopName}!</h1>
+        <div className="pt-6 pb-4 flex items-center justify-between">
+          <div>
+            <p className="text-foreground/30 font-black text-[10px] uppercase tracking-[0.2em] mb-1">{getGreeting()} ☀️</p>
+            <h1 className="text-2xl font-black text-foreground">{shopName}</h1>
+          </div>
+          <button 
+            onClick={() => {
+              const slug = shopName.toLowerCase().replace(/ /g, '-');
+              const url = `${window.location.origin}/${slug}`;
+              navigator.clipboard.writeText(url);
+              alert('Order Link Copied! 🧁\n' + url);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-primary hover:text-white transition-all shadow-sm active:scale-95"
+          >
+            <span>🔗</span> Share Link
+          </button>
         </div>
       </div>
       <div className="bg-gradient-to-br from-primary to-primary-dark rounded-3xl p-6 text-white shadow-xl shadow-primary/20">
