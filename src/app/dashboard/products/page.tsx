@@ -305,24 +305,27 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-5 pb-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-foreground">Menu 🧁</h1>
-          <p className="text-foreground/50 text-sm">Manage your bakery catalog</p>
+      {/* Sticky Top Header Section */}
+      <div className="sticky top-0 z-30 bg-[#fafafa]/80 backdrop-blur-md -mx-4 px-4 pt-1 pb-4 space-y-5 border-b border-muted/20">
+        <div className="flex items-start justify-between pt-4">
+          <div>
+            <h1 className="text-2xl font-extrabold text-foreground">Menu 🧁</h1>
+            <p className="text-foreground/50 text-sm">Manage your bakery catalog</p>
+          </div>
+          <button onClick={() => setShowAdd(!showAdd)} className="h-10 px-4 bg-primary text-white rounded-xl font-bold text-sm shadow-md shadow-primary/20 hover:scale-105 transition-all">
+            + Add Product
+          </button>
         </div>
-        <button onClick={() => setShowAdd(!showAdd)} className="h-10 px-4 bg-primary text-white rounded-xl font-bold text-sm shadow-md shadow-primary/20 hover:scale-105 transition-all">
-          + Add Product
-        </button>
-      </div>
 
-      {/* Tab Switcher */}
-      <div className="flex bg-muted/30 p-1 rounded-xl border border-muted/50 w-full sm:w-64">
-        <button onClick={() => setActiveTab('active')} className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'active' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>
-          Active Menu
-        </button>
-        <button onClick={() => setActiveTab('archived')} className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'archived' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>
-          Archived
-        </button>
+        {/* Tab Switcher */}
+        <div className="flex bg-muted/30 p-1 rounded-xl border border-muted/50 w-full sm:w-64">
+          <button onClick={() => setActiveTab('active')} className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'active' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>
+            Active Menu
+          </button>
+          <button onClick={() => setActiveTab('archived')} className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'archived' ? 'bg-white text-primary shadow-sm' : 'text-foreground/40'}`}>
+            Archived
+          </button>
+        </div>
       </div>
 
       {/* Add Form with Inline Recipe */}
@@ -499,9 +502,9 @@ export default function ProductsPage() {
             <table className="w-full text-left border-collapse table-fixed">
               <thead>
                 <tr className="border-b border-muted/50">
-                  <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Product</th>
-                  <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Price (RM)</th>
-                  <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">Status</th>
+                  <th className="sticky top-[148px] z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Product</th>
+                  <th className="sticky top-[148px] z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Price (RM)</th>
+                  <th className="sticky top-[148px] z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">Status</th>
                 </tr>
               </thead>
               <tbody>
