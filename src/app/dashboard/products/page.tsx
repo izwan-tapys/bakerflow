@@ -500,7 +500,7 @@ export default function ProductsPage() {
               <thead>
                 <tr className="border-b border-muted/50">
                   <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest">Product</th>
-                  <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Price</th>
+                  <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-right">Price (RM)</th>
                   <th className="sticky top-0 z-20 bg-muted px-6 py-3 text-[10px] font-black uppercase text-foreground/40 tracking-widest text-center">Status</th>
                 </tr>
               </thead>
@@ -518,7 +518,7 @@ export default function ProductsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-3 text-right font-black text-primary text-sm">
-                        RM {product.price.toFixed(2)}
+                        {product.price.toFixed(2)}
                       </td>
                       <td className="px-6 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center">
