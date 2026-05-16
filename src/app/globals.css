@@ -1,16 +1,5 @@
 @import "tailwindcss";
 
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
-}
-
-
-@import "tailwindcss";
-
 @theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -33,12 +22,12 @@
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #f8fafc;
-  --card: #171717;
-  --muted: #1e293b;
-  --border-color: #334155;
-  --primary: #d4a373;
+  --background: #0a0a0a !important;
+  --foreground: #f8fafc !important;
+  --card: #171717 !important;
+  --muted: #1e293b !important;
+  --border-color: #334155 !important;
+  --primary: #d4a373 !important;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -48,6 +37,7 @@
     --card: #171717;
     --muted: #1e293b;
     --border-color: #334155;
+    --primary: #d4a373;
   }
 }
 
@@ -57,13 +47,22 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Base utility overrides to ensure variables are used */
-.bg-background { background-color: var(--background); }
-.bg-white { background-color: var(--card); }
-.bg-muted { background-color: var(--muted); }
-.text-foreground { color: var(--foreground); }
-.border-muted { border-color: var(--border-color); }
+/* Force overrides for common utility classes */
+.bg-background { background-color: var(--background) !important; }
+.bg-white { background-color: var(--card) !important; }
+.bg-muted { background-color: var(--muted) !important; }
+.text-foreground { color: var(--foreground) !important; }
+.border-muted { border-color: var(--border-color) !important; }
 
+/* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #EDE0D4; border-radius: 10px; }
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
