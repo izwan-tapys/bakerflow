@@ -331,7 +331,7 @@ export default function OrdersPage() {
             {filtered.map(order => (
               <div key={order.id} className="contents">
                 <div 
-                  onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
+                  onClick={() => setExpandedId(expandedId === order.id ? null : (order.id ?? null))}
                   className={`grid grid-cols-[1fr_80px_100px] gap-4 items-center px-6 py-4 cursor-pointer transition-colors hover:bg-muted/10 ${expandedId === order.id ? 'bg-primary/5' : ''}`}
                 >
                   <div className="min-w-0">
