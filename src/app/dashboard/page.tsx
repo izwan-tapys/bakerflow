@@ -8,6 +8,7 @@ import { SmartTimeline } from '@/components/dashboard/SmartTimeline';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { updateOrderStatus } from '@/lib/services/baker.service';
 import { formatDate } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import { 
   Sun, 
   CloudSun, 
@@ -18,7 +19,8 @@ import {
   AlertCircle, 
   CheckCircle2,
   TrendingUp,
-  Receipt
+  Receipt,
+  Check
 } from 'lucide-react';
 
 function getGreeting() {
