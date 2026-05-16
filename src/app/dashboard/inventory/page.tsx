@@ -89,9 +89,6 @@ export default function InventoryPage() {
     low_stock_threshold: 10
   });
 
-  const [selectedCategory, setSelectedCategory] = useState('Semua');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
   const CATEGORIES = ['Semua', 'Tepung', 'Tenusu', 'Gula', 'Lemak', 'Hiasan', 'Packaging', 'Lain-lain'];
 
   const loadData = useCallback(async () => {
