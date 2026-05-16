@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
-const navItems = [
+
+const navItems: { href?: string; id?: string; label: string; icon: string }[] = [
   { href: '/dashboard', label: 'Office', icon: '🏢' },
   { href: '/dashboard/production', label: 'Kitchen', icon: '🥣' },
   { href: '/dashboard/delivery', label: 'Delivery', icon: '🚚' },
@@ -40,20 +41,20 @@ export function BottomNav() {
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-muted safe-area-pb md:hidden">
         <div className="flex items-center justify-around h-16 px-2 max-w-lg mx-auto">
           {navItems.map(item => {
-            const isActive = (item as any).href 
-              ? (item as any).href === '/dashboard' 
+            const isActive = item.href
+              ? item.href === '/dashboard'
                 ? pathname === '/dashboard' || pathname === '/dashboard/orders' || pathname === '/dashboard/analytics' || pathname === '/dashboard/directory'
-                : pathname.startsWith((item as any).href)
+                : pathname.startsWith(item.href)
               : false;
 
             return (
               <button
                 key={item.label}
                 onClick={() => {
-                  if ((item as any).id === 'more') {
+                  if (item.id === 'more') {
                     setShowMore(true);
-                  } else if ((item as any).href) {
-                    router.push((item as any).href);
+                  } else if (item.href) {
+                    router.push(item.href);
                   }
                 }}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all flex-1 ${
