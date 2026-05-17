@@ -16,6 +16,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { Toast } from '@/components/ui/Toast';
+import { insertGoogleEvent, deleteGoogleEvent } from '@/lib/services/googleCalendar';
 
 interface CustomTask {
   id: string;
@@ -24,6 +25,7 @@ interface CustomTask {
   duration: number;   // minutes
   is_completed: boolean;
   is_mock?: boolean;
+  google_event_id?: string;
 }
 
 const HOURS_OF_DAY = [
@@ -194,6 +196,30 @@ export default function PlannerPage() {
           message: 'Tugasan berjaya ditambah! 📝',
           type: 'success'
         });
+
+        // ✨ LIVE SYNC TO GOOGLE CALENDAR (If linked)
+        try {
+          const gEventId = await insertGoogleEvent(user.id, {
+            title: newTaskTitle.trim(),
+            description: 'Tugasan yang dijadualkan dari BakerFlow Planner.',
+            date: selectedDate,
+            start_time: newTaskTime,
+            duration: newTaskDuration
+          });
+
+          if (gEventId) {
+            // Update Supabase task row with Google Event ID for future delete/update tracking!
+            await supabase
+              .from('baker_custom_tasks')
+              .update({ google_event_id: gEventId })
+              .eq('id', data.id);
+              
+            // Refresh local state to hold the event ID
+            setCustomTasks(prev => prev.map(t => t.id === data.id ? { ...t, google_event_id: gEventId } : t));
+          }
+        } catch (gErr) {
+          console.log('Google Calendar sync skipped or failed:', gErr);
+        }
       }
       
       // Reset form
@@ -238,6 +264,18 @@ export default function PlannerPage() {
     }
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const taskToDelete = customTasks.find(t => t.id === taskId);
+      
+      // ✨ LIVE SYNC DELETE TO GOOGLE CALENDAR
+      if (user && taskToDelete?.google_event_id) {
+        try {
+          await deleteGoogleEvent(user.id, taskToDelete.google_event_id);
+        } catch (gErr) {
+          console.log('Failed to delete event from Google Calendar:', gErr);
+        }
+      }
+
       await supabase
         .from('baker_custom_tasks')
         .delete()
