@@ -203,21 +203,25 @@ export default function PlannerPage() {
             })
           });
 
-          if (syncRes.ok) {
-            const syncData = await syncRes.json();
-            if (syncData.google_event_id) {
-              // Update Supabase task row with Google Event ID for future delete/update tracking!
-              await supabase
-                .from('baker_custom_tasks')
-                .update({ google_event_id: syncData.google_event_id })
-                .eq('id', data.id);
-                
-              // Refresh local state to hold the event ID
-              setCustomTasks(prev => prev.map(t => t.id === data.id ? { ...t, google_event_id: syncData.google_event_id } : t));
-            }
+          const syncData = await syncRes.json();
+          console.log('[Calendar Sync] API Response:', syncRes.status, syncData);
+
+          if (syncRes.ok && syncData.google_event_id) {
+            // Update Supabase task row with Google Event ID for future delete/update tracking!
+            await supabase
+              .from('baker_custom_tasks')
+              .update({ google_event_id: syncData.google_event_id })
+              .eq('id', data.id);
+              
+            // Refresh local state to hold the event ID
+            setCustomTasks(prev => prev.map(t => t.id === data.id ? { ...t, google_event_id: syncData.google_event_id } : t));
+            
+            setToast({ isOpen: true, message: '📅 Tugasan disinkron ke Google Calendar!', type: 'success' });
+          } else {
+            console.warn('[Calendar Sync] Sync failed or Google not linked:', syncData);
           }
         } catch (gErr) {
-          console.log('Google Calendar sync skipped or failed:', gErr);
+          console.log('[Calendar Sync] Error:', gErr);
         }
       }
       
