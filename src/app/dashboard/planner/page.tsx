@@ -27,9 +27,17 @@ interface CustomTask {
 }
 
 const HOURS_OF_DAY = [
-  '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-  '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
+  '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
+  '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
 ];
+
+const formatHourLabel = (hourStr: string) => {
+  const h = parseInt(hourStr.split(':')[0]);
+  if (h === 0) return '12:00 AM';
+  if (h < 12) return `${h.toString().padStart(2, '0')}:00 AM`;
+  if (h === 12) return '12:00 PM';
+  return `${(h - 12).toString().padStart(2, '0')}:00 PM`;
+};
 
 export default function PlannerPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -123,6 +131,20 @@ export default function PlannerPage() {
   }, [selectedDate]);
 
   useEffect(() => { loadPlannerData(); }, [loadPlannerData]);
+
+  // Auto-scroll to the current actual time slot when the user selects "Today"
+  useEffect(() => {
+    if (!loading && selectedDate === getLocalDate(0)) {
+      const currentHour = new Date().getHours();
+      const hourStr = `${currentHour.toString().padStart(2, '0')}:00`;
+      setTimeout(() => {
+        const el = document.getElementById(`hour-row-${hourStr}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 350);
+    }
+  }, [loading, selectedDate]);
 
   // Add custom task handler
   const handleAddCustomTask = async (e?: React.FormEvent) => {
@@ -380,9 +402,9 @@ export default function PlannerPage() {
                 }`}
               >
                 {/* Time Column (Left) */}
-                <div className="w-16 flex-none py-3 pl-4 pr-2 text-right">
-                  <span className="text-[11px] font-black text-muted-foreground tracking-tight block">
-                    {hour}
+                <div className="w-20 flex-none py-3 pl-4 pr-2 text-right">
+                  <span className="text-[9px] font-black text-muted-foreground tracking-tight block">
+                    {formatHourLabel(hour)}
                   </span>
                 </div>
 
