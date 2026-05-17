@@ -54,19 +54,32 @@ export default function PlannerPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Fetch in parallel defensively. Catch blocked dates errors if table doesn't exist yet
-    const [settingsRes, ordersRes, productsRes, blockedRes] = await Promise.all([
+    // Helper async function to fetch blocked date defensively and resolve PostgrestBuilder .catch type checking
+    const getBlockedDate = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('baker_blocked_dates')
+          .select('*')
+          .eq('baker_id', user.id)
+          .eq('blocked_date', selectedDate)
+          .maybeSingle();
+        if (error) return null;
+        return data;
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const [settingsRes, ordersRes, productsRes, blockedData] = await Promise.all([
       supabase.from('baker_settings').select('*').eq('baker_id', user.id).single(),
       supabase.from('orders').select('*').eq('baker_id', user.id).eq('delivery_date', selectedDate).in('status', ['pending', 'approved', 'production', 'ready', 'otw']),
       supabase.from('products').select('*').eq('baker_id', user.id),
-      supabase.from('baker_blocked_dates').select('*').eq('baker_id', user.id).eq('blocked_date', selectedDate).maybeSingle().catch(err => ({ data: null, error: err }))
+      getBlockedDate()
     ]);
 
     setSettings(settingsRes.data);
     setOrders(ordersRes.data || []);
     setProducts(productsRes.data || []);
-
-    const blockedData = blockedRes && !blockedRes.error ? blockedRes.data : null;
 
     if (blockedData) {
       setOverrideData({
