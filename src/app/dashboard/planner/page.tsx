@@ -244,7 +244,7 @@ export default function PlannerPage() {
   const schedule = generateSchedule();
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6 pb-10">
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
         <div className="flex items-center justify-between pt-6 pb-4">
@@ -275,31 +275,6 @@ export default function PlannerPage() {
               <h2 className="text-xl font-black">Start Production at <span className="underline decoration-yellow-300">{schedule[0].prepStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></h2>
               <p className="text-sm opacity-80 font-bold">Total {schedule.length} orders to prepare.</p>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delivery Window Setting */}
-      {settings && (
-        <div className="bg-primary/5 rounded-xl p-4 border border-primary/10 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-black uppercase text-primary tracking-widest">Delivery Window</p>
-            <p className="font-bold text-foreground">{settings.delivery_start_time} - {settings.delivery_end_time}</p>
-          </div>
-          <div className="flex gap-2">
-            <input 
-              type="time" 
-              value={settings.delivery_start_time} 
-              onChange={e => updateDeliveryWindow(e.target.value, settings.delivery_end_time)}
-              className="h-8 px-2 rounded-lg border border-primary/20 text-xs font-bold"
-            />
-            <span className="text-primary/30 self-center">to</span>
-            <input 
-              type="time" 
-              value={settings.delivery_end_time} 
-              onChange={e => updateDeliveryWindow(settings.delivery_start_time, e.target.value)}
-              className="h-8 px-2 rounded-lg border border-primary/20 text-xs font-bold"
-            />
           </div>
         </div>
       )}
@@ -463,24 +438,6 @@ export default function PlannerPage() {
         </div>
       )}
 
-      {schedule.length > 0 && (
-        <button 
-          onClick={() => {
-            const text = `📅 *BakersBestie Task List (${formatDate(selectedDate)})*\n\n` + 
-              schedule.map((item, i) => 
-                `${i+1}. *${item.customer}* (${item.product})\n` +
-                `   🥣 Prep: ${item.prepStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n` +
-                `   🔥 Bake: ${item.bakeStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}\n` +
-                `   ✅ Ready: ${item.ready.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-              ).join('\n\n');
-            
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-          }}
-          className="fixed bottom-6 left-6 right-6 h-14 bg-green-500 text-white rounded-xl font-bold shadow-xl shadow-green-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
-        >
-          <span>💬</span> Send Schedule to WhatsApp
-        </button>
-      )}
 
       {/* Modern Premium Toast */}
       {toast.isOpen && (
