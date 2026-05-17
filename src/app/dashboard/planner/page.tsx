@@ -162,14 +162,14 @@ export default function PlannerPage() {
         
         setToast({
           isOpen: true,
-          message: 'Tugasan diselit sementara! Sila pasang SQL di editor untuk simpanan kekal. 🔮',
+          message: 'Tugasan disimpan sementara! Sila jalankan skrip SQL di editor untuk simpanan kekal. 🔮',
           type: 'info'
         });
       } else if (data) {
         setCustomTasks(prev => [...prev, data].sort((a, b) => a.start_time.localeCompare(b.start_time)));
         setToast({
           isOpen: true,
-          message: 'Tugasan berjaya diselit masuk! 📝',
+          message: 'Tugasan berjaya ditambah! 📝',
           type: 'success'
         });
       }
@@ -180,7 +180,7 @@ export default function PlannerPage() {
     } catch (err: any) {
       setToast({
         isOpen: true,
-        message: err.message || 'Ralat menyelit tugasan.',
+        message: err.message || 'Ralat menambah tugasan.',
         type: 'error'
       });
     }
@@ -398,7 +398,7 @@ export default function PlannerPage() {
                   {tasksInHour.length === 0 ? (
                     // Empty hour slot placeholder - clicking invites to insert task
                     <span className="text-[10px] text-muted-foreground/30 font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
-                      + Selit tugas di sini
+                      + Tambah tugasan di sini
                     </span>
                   ) : (
                     // Display tasks inside this hourly slot
@@ -483,7 +483,7 @@ export default function PlannerPage() {
           setIsAddingTask(true);
         }}
         className="fixed bottom-24 right-6 w-14 h-14 bg-gradient-to-br from-primary to-primary-hover text-white rounded-full flex items-center justify-center shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 z-40 border-2 border-white/10 cursor-pointer"
-        title="Selit Tugasan Baru"
+        title="Tambah Tugasan Baru"
       >
         <Plus className="w-7 h-7" />
       </button>
@@ -497,7 +497,7 @@ export default function PlannerPage() {
             <div className="flex justify-between items-center pb-2 border-b border-muted">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
-                <h3 className="font-extrabold text-foreground text-sm tracking-tight">Selit Tugasan Harian</h3>
+                <h3 className="font-extrabold text-foreground text-sm tracking-tight">Tambah Tugasan Harian</h3>
               </div>
               <button 
                 onClick={() => { setIsAddingTask(false); setTargetHourForNewTask(null); }}
@@ -556,7 +556,7 @@ export default function PlannerPage() {
                 type="submit"
                 className="w-full h-12 bg-primary hover:bg-primary/95 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-primary/10 flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
               >
-                Selit Tugasan Sekarang <Sparkles className="w-4 h-4" />
+                Tambah Tugasan Sekarang <Sparkles className="w-4 h-4" />
               </button>
             </form>
           </div>
