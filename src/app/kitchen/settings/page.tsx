@@ -20,7 +20,12 @@ export default function KitchenSettings() {
 
   const [settings, setSettings] = useState({
     daily_capacity: 5,
-    lowStockThreshold: 100 // Visual state or low stock threshold
+    lowStockThreshold: 100,
+    production_start_time: '09:00',
+    production_end_time: '15:00',
+    mixer_bowl_capacity_liters: 4.8,
+    oven_bcu_capacity: 4,
+    chiller_bcu_capacity: 8
   });
 
   useEffect(() => {
@@ -32,12 +37,20 @@ export default function KitchenSettings() {
           .from('baker_settings')
           .select('*')
           .eq('baker_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (data) {
+          const startTime = data.production_start_time ? data.production_start_time.substring(0, 5) : '09:00';
+          const endTime = data.production_end_time ? data.production_end_time.substring(0, 5) : '15:00';
+
           setSettings({
             daily_capacity: data.daily_capacity ?? 5,
-            lowStockThreshold: 100
+            lowStockThreshold: 100,
+            production_start_time: startTime,
+            production_end_time: endTime,
+            mixer_bowl_capacity_liters: Number(data.mixer_bowl_capacity_liters ?? 4.8),
+            oven_bcu_capacity: data.oven_bcu_capacity ?? 4,
+            chiller_bcu_capacity: data.chiller_bcu_capacity ?? 8
           });
         }
       }
@@ -71,6 +84,11 @@ export default function KitchenSettings() {
           id: existingId,
           baker_id: user.id,
           daily_capacity: settings.daily_capacity,
+          production_start_time: `${settings.production_start_time}:00`,
+          production_end_time: `${settings.production_end_time}:00`,
+          mixer_bowl_capacity_liters: settings.mixer_bowl_capacity_liters,
+          oven_bcu_capacity: settings.oven_bcu_capacity,
+          chiller_bcu_capacity: settings.chiller_bcu_capacity,
           updated_at: new Date().toISOString()
         });
 
@@ -121,16 +139,104 @@ export default function KitchenSettings() {
           </div>
         )}
 
-        {/* Production Capacity Section */}
+        {/* 1. Production Hours (Working shift) */}
         <section className="space-y-3">
-          <p className="text-[10px] font-black uppercase text-foreground/30 tracking-[0.2em] ml-2 flex items-center gap-1.5">
-            <Flame className="w-3.5 h-3.5 text-orange-500" /> Production Capacity
+          <p className="text-[10px] font-black uppercase text-foreground/45 tracking-[0.2em] ml-2 flex items-center gap-1.5">
+            🕒 Waktu Produksi (Shift Kerja)
+          </p>
+          <div className="bg-card rounded-xl border border-muted/50 overflow-hidden shadow-sm p-5 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-black text-foreground/45 uppercase tracking-widest block mb-1.5">Mula Kerja</label>
+                <input type="time" value={settings.production_start_time} onChange={e => setSettings({...settings, production_start_time: e.target.value})} className="w-full h-11 px-3 rounded-lg border-2 border-muted font-bold text-center text-sm" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-foreground/45 uppercase tracking-widest block mb-1.5">Tamat Kerja</label>
+                <input type="time" value={settings.production_end_time} onChange={e => setSettings({...settings, production_end_time: e.target.value})} className="w-full h-11 px-3 rounded-lg border-2 border-muted font-bold text-center text-sm" />
+              </div>
+            </div>
+            <p className="text-[10px] text-foreground/40 font-medium leading-normal italic">
+              *Tugasan dapur Kak Sue akan disusun secara kelompok pintar di dalam lingkungan waktu kerja ini sahaja di Google Calendar.
+            </p>
+          </div>
+        </section>
+
+        {/* 2. Hardware constraints (Oven & Chiller Capacity) */}
+        <section className="space-y-3">
+          <p className="text-[10px] font-black uppercase text-foreground/45 tracking-[0.2em] ml-2 flex items-center gap-1.5">
+            🛠️ Kapasiti Perkakasan Dapur (SKE)
+          </p>
+          <div className="space-y-3">
+            {/* Stand Mixer */}
+            <div className="bg-card rounded-xl border border-muted/50 p-5 flex items-center justify-between shadow-sm">
+              <div>
+                <span className="text-sm font-bold text-foreground block">Saiz Mangkuk Mixer</span>
+                <span className="text-[10px] text-foreground/45 mt-0.5 block font-medium">Isipadu mangkuk Stand Mixer utama (Liters)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="number" step="0.1" value={settings.mixer_bowl_capacity_liters} onChange={e => setSettings({...settings, mixer_bowl_capacity_liters: Number(e.target.value)})} className="w-20 h-10 px-3 rounded-lg border-2 border-muted font-bold text-center text-sm" />
+                <span className="text-[10px] font-black text-foreground/40 uppercase">Liters</span>
+              </div>
+            </div>
+
+            {/* Oven Capacity (Round 8-inch Circular Reference) */}
+            <div className="bg-card rounded-xl border border-muted/50 p-5 flex items-center justify-between shadow-sm">
+              <div>
+                <span className="text-sm font-bold text-foreground block">Kapasiti Oven (BCU)</span>
+                <span className="text-[10px] text-foreground/45 mt-0.5 block font-medium">Berapa loyang bulat 8-inci boleh masuk sekali bakar?</span>
+              </div>
+              <div className="flex items-center gap-3 bg-muted/30 p-1.5 rounded-xl border border-muted/30">
+                <button 
+                  onClick={() => setSettings({...settings, oven_bcu_capacity: Math.max(1, settings.oven_bcu_capacity - 1)})}
+                  className="w-9 h-9 rounded-lg bg-card hover:bg-muted/80 text-foreground flex items-center justify-center font-bold text-base active:scale-90 transition-all shadow-sm border border-muted/20"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <span className="text-sm font-black text-primary w-8 text-center">{settings.oven_bcu_capacity}</span>
+                <button 
+                  onClick={() => setSettings({...settings, oven_bcu_capacity: settings.oven_bcu_capacity + 1})}
+                  className="w-9 h-9 rounded-lg bg-card hover:bg-muted/80 text-foreground flex items-center justify-center font-bold text-base active:scale-90 transition-all shadow-sm border border-muted/20"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Chiller Capacity (Square 8x8x4 reference box) */}
+            <div className="bg-card rounded-xl border border-muted/50 p-5 flex items-center justify-between shadow-sm">
+              <div>
+                <span className="text-sm font-bold text-foreground block">Kapasiti Chiller (BCU)</span>
+                <span className="text-[10px] text-foreground/45 mt-0.5 block font-medium">Berapa kotak 8x8x4-inci boleh muat sekali simpan?</span>
+              </div>
+              <div className="flex items-center gap-3 bg-muted/30 p-1.5 rounded-xl border border-muted/30">
+                <button 
+                  onClick={() => setSettings({...settings, chiller_bcu_capacity: Math.max(1, settings.chiller_bcu_capacity - 1)})}
+                  className="w-9 h-9 rounded-lg bg-card hover:bg-muted/80 text-foreground flex items-center justify-center font-bold text-base active:scale-90 transition-all shadow-sm border border-muted/20"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <span className="text-sm font-black text-primary w-8 text-center">{settings.chiller_bcu_capacity}</span>
+                <button 
+                  onClick={() => setSettings({...settings, chiller_bcu_capacity: settings.chiller_bcu_capacity + 1})}
+                  className="w-9 h-9 rounded-lg bg-card hover:bg-muted/80 text-foreground flex items-center justify-center font-bold text-base active:scale-90 transition-all shadow-sm border border-muted/20"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Max Daily Orders Limit (Default limit fallback) */}
+        <section className="space-y-3">
+          <p className="text-[10px] font-black uppercase text-foreground/40 tracking-[0.2em] ml-2 flex items-center gap-1.5">
+            <Flame className="w-3.5 h-3.5 text-orange-500" /> Had Tempahan Harian
           </p>
           <div className="bg-card rounded-xl border border-muted/50 overflow-hidden shadow-sm">
             <div className="p-5 flex items-center justify-between">
               <div>
-                <span className="text-sm font-bold text-foreground block">Max Daily Orders</span>
-                <span className="text-[10px] text-foreground/45 mt-0.5 block font-medium">Daily baking limit to avoid overload</span>
+                <span className="text-sm font-bold text-foreground block">Had Jualan Harian (Order)</span>
+                <span className="text-[10px] text-foreground/45 mt-0.5 block font-medium">Batas tempahan sehari untuk mengelakkan keletihan dapur</span>
               </div>
               <div className="flex items-center gap-3 bg-muted/30 p-1.5 rounded-xl border border-muted/30">
                 <button 
@@ -151,15 +257,15 @@ export default function KitchenSettings() {
           </div>
         </section>
 
-        {/* Inventory alerts indicator */}
+        {/* Inventory Alerts info banner */}
         <section className="space-y-3">
-          <p className="text-[10px] font-black uppercase text-foreground/30 tracking-[0.2em] ml-2 flex items-center gap-1.5">
-            <Bell className="w-3.5 h-3.5 text-amber-500" /> Inventory Alerts
+          <p className="text-[10px] font-black uppercase text-foreground/40 tracking-[0.2em] ml-2 flex items-center gap-1.5">
+            <Bell className="w-3.5 h-3.5 text-amber-500" /> Amaran Stok Rendah
           </p>
           <div className="bg-card rounded-xl border border-muted/50 overflow-hidden p-5 shadow-sm space-y-1">
-            <h3 className="font-bold text-foreground text-sm flex items-center gap-1.5">Smart Stock Threshold</h3>
+            <h3 className="font-bold text-foreground text-sm flex items-center gap-1.5">Kapasiti & Had Amaran Bahan Mentah</h3>
             <p className="text-xs text-foreground/40 leading-relaxed font-medium">
-              BakerFlow triggers low stock alerts dynamically based on the customized ingredient threshold set in the [Inventory](file:///c:/Users/skyxi/Desktop/bakerflow/src/app/dashboard/inventory/page.tsx) tab. Go to inventory settings inside each resource to fine-tune alert thresholds.
+              BakerFlow mencetuskan amaran stok bahan mentah yang hampir habis secara dinamik berdasarkan kuantiti minima yang telah ditetapkan dalam menu [Inventory](file:///c:/Users/skyxi/Desktop/bakerflow/src/app/dashboard/inventory/page.tsx). 
             </p>
           </div>
         </section>
@@ -168,7 +274,7 @@ export default function KitchenSettings() {
           <button 
             onClick={handleSave}
             disabled={saving}
-            className="w-full h-14 bg-orange-500 text-white rounded-xl font-black text-xs shadow-xl shadow-orange-200 hover:scale-[1.01] active:scale-95 transition-all uppercase tracking-widest disabled:opacity-50"
+            className="w-full h-14 bg-orange-500 text-white rounded-xl font-black text-xs shadow-xl shadow-orange-200 hover:scale-[1.01] active:scale-95 transition-all uppercase tracking-widest disabled:opacity-50 cursor-pointer"
           >
             {saving ? 'Saving...' : 'Save Kitchen Config'}
           </button>

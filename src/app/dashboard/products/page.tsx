@@ -15,6 +15,13 @@ interface Product {
   prep_time: number;
   bake_time: number;
   cool_time: number;
+  measurement_unit?: string;
+  product_size_inches?: number;
+  product_weight_grams?: number;
+  box_size_inches?: number;
+  proofing_time_hours?: number;
+  proofing_time_minutes?: number;
+  bowl_cleanup_minutes?: number;
 }
 
 interface Ingredient {
@@ -50,7 +57,21 @@ export default function ProductsPage() {
   const [addStep, setAddStep] = useState<1 | 2>(1);
   const [showAddError, setShowAddError] = useState(false);
   const [savingProduct, setSavingProduct] = useState(false);
-  const [form, setForm] = useState({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 });
+  const [form, setForm] = useState({ 
+    name: '', 
+    description: '', 
+    price: 0, 
+    prep_time: 30, 
+    bake_time: 45, 
+    cool_time: 60,
+    measurement_unit: 'inch',
+    product_size_inches: 8,
+    product_weight_grams: 500,
+    box_size_inches: 8,
+    proofing_time_hours: 0,
+    proofing_time_minutes: 0,
+    bowl_cleanup_minutes: 15
+  });
   const [pendingRecipes, setPendingRecipes] = useState<PendingRecipe[]>([]);
   
   // Inline Add Ingredient State
@@ -166,7 +187,14 @@ export default function ProductsPage() {
         is_active: true,
         prep_time: form.prep_time,
         bake_time: form.bake_time,
-        cool_time: form.cool_time
+        cool_time: form.cool_time,
+        measurement_unit: form.measurement_unit,
+        product_size_inches: form.product_size_inches,
+        product_weight_grams: form.product_weight_grams,
+        box_size_inches: form.box_size_inches,
+        proofing_time_hours: form.proofing_time_hours,
+        proofing_time_minutes: form.proofing_time_minutes,
+        bowl_cleanup_minutes: form.bowl_cleanup_minutes
       }).select();
 
       if (prodError) throw prodError;
@@ -223,7 +251,21 @@ export default function ProductsPage() {
         }
       }
 
-      setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 });
+      setForm({ 
+        name: '', 
+        description: '', 
+        price: 0, 
+        prep_time: 30, 
+        bake_time: 45, 
+        cool_time: 60,
+        measurement_unit: 'inch',
+        product_size_inches: 8,
+        product_weight_grams: 500,
+        box_size_inches: 8,
+        proofing_time_hours: 0,
+        proofing_time_minutes: 0,
+        bowl_cleanup_minutes: 15
+      });
       setPendingRecipes([]);
       setIngSearch('');
       setShowAdd(false);
@@ -252,14 +294,35 @@ export default function ProductsPage() {
       price: form.price,
       prep_time: form.prep_time,
       bake_time: form.bake_time,
-      cool_time: form.cool_time
+      cool_time: form.cool_time,
+      measurement_unit: form.measurement_unit,
+      product_size_inches: form.product_size_inches,
+      product_weight_grams: form.product_weight_grams,
+      box_size_inches: form.box_size_inches,
+      proofing_time_hours: form.proofing_time_hours,
+      proofing_time_minutes: form.proofing_time_minutes,
+      bowl_cleanup_minutes: form.bowl_cleanup_minutes
     }).eq('id', editingProduct.id);
 
     if (error) {
       alert('Error updating product: ' + error.message);
     } else {
       setEditingProduct(null);
-      setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 });
+      setForm({ 
+        name: '', 
+        description: '', 
+        price: 0, 
+        prep_time: 30, 
+        bake_time: 45, 
+        cool_time: 60,
+        measurement_unit: 'inch',
+        product_size_inches: 8,
+        product_weight_grams: 500,
+        box_size_inches: 8,
+        proofing_time_hours: 0,
+        proofing_time_minutes: 0,
+        bowl_cleanup_minutes: 15
+      });
       loadData();
     }
     setSavingProduct(false);
@@ -316,7 +379,7 @@ export default function ProductsPage() {
             <h1 className="text-2xl font-extrabold text-foreground tracking-tight">Products</h1>
             <p className="text-foreground/50 text-xs font-bold uppercase tracking-widest mt-0.5">Bakery Catalog</p>
           </div>
-          <button onClick={() => { setShowAdd(true); setAddStep(1); setShowAddError(false); setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 }); setPendingRecipes([]); }} className="h-10 px-4 bg-primary text-white rounded-xl font-black text-xs shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+          <button onClick={() => { setShowAdd(true); setAddStep(1); setShowAddError(false); setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60, measurement_unit: 'inch', product_size_inches: 8, product_weight_grams: 500, box_size_inches: 8, proofing_time_hours: 0, proofing_time_minutes: 0, bowl_cleanup_minutes: 15 }); setPendingRecipes([]); }} className="h-10 px-4 bg-primary text-white rounded-xl font-black text-xs shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
             + Add Product
           </button>
         </div>
@@ -369,18 +432,78 @@ export default function ProductsPage() {
                       <input type="number" value={form.price || ''} onChange={e => { setForm({ ...form, price: +e.target.value }); setShowAddError(false); }}
                         className={`w-full h-12 px-4 rounded-xl border-2 ${showAddError && form.price <= 0 ? 'border-red-400 bg-red-50' : 'border-muted focus:border-primary'} outline-none font-black text-lg text-primary`} />
                     </div>
-                    <div className="col-span-2 grid grid-cols-3 gap-2 mt-2">
+                    
+                    <div className="col-span-2 border-t border-muted/30 pt-4 mt-2">
+                      <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-3">⚙️ Kitchen Operations (Kapasiti & Waktu)</p>
+                    </div>
+
+                    <div className="col-span-2 grid grid-cols-3 gap-2">
                       <div>
-                        <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Prep (Min)</label>
-                        <input type="number" value={form.prep_time} onChange={e => setForm({...form, prep_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold" />
+                        <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Prep (Minit)</label>
+                        <input type="number" value={form.prep_time} onChange={e => setForm({...form, prep_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold text-sm" />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Bake (Min)</label>
-                        <input type="number" value={form.bake_time} onChange={e => setForm({...form, bake_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold" />
+                        <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Bake (Minit)</label>
+                        <input type="number" value={form.bake_time} onChange={e => setForm({...form, bake_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold text-sm" />
                       </div>
                       <div>
-                        <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Cool (Min)</label>
-                        <input type="number" value={form.cool_time} onChange={e => setForm({...form, cool_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold" />
+                        <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Cool (Minit)</label>
+                        <input type="number" value={form.cool_time} onChange={e => setForm({...form, cool_time: +e.target.value})} className="w-full h-10 px-2 rounded-lg border-2 border-muted text-center font-bold text-sm" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Unit Jualan</label>
+                      <select value={form.measurement_unit} onChange={e => setForm({ ...form, measurement_unit: e.target.value })} className="w-full h-10 px-2 rounded-lg border-2 border-muted font-bold text-xs bg-card">
+                        <option value="inch">📏 Saiz (Inci)</option>
+                        <option value="gram">⚖️ Berat (Gram)</option>
+                        <option value="unit">📦 Bekas / Pcs</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      {form.measurement_unit === 'inch' && (
+                        <div>
+                          <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Saiz Loyang (Inci)</label>
+                          <input type="number" value={form.product_size_inches} onChange={e => setForm({ ...form, product_size_inches: +e.target.value })} className="w-full h-10 px-3 rounded-lg border-2 border-muted font-bold text-sm text-center" />
+                        </div>
+                      )}
+                      {form.measurement_unit === 'gram' && (
+                        <div>
+                          <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Berat Adunan (Gram)</label>
+                          <input type="number" value={form.product_weight_grams} onChange={e => setForm({ ...form, product_weight_grams: +e.target.value })} className="w-full h-10 px-3 rounded-lg border-2 border-muted font-bold text-sm text-center" />
+                        </div>
+                      )}
+                      {form.measurement_unit === 'unit' && (
+                        <div>
+                          <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Nisbah Chiller</label>
+                          <input disabled value="Standard (1.0 BCU)" className="w-full h-10 px-3 rounded-lg border-2 border-muted font-bold text-xs text-center bg-muted/30 text-foreground/40" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="col-span-2 grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Saiz Kotak (Inci)</label>
+                        <input type="number" value={form.box_size_inches} onChange={e => setForm({ ...form, box_size_inches: +e.target.value })} className="w-full h-10 px-3 rounded-lg border-2 border-muted font-bold text-sm text-center" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Selang Basuh Mixer (Min)</label>
+                        <input type="number" value={form.bowl_cleanup_minutes} onChange={e => setForm({ ...form, bowl_cleanup_minutes: +e.target.value })} className="w-full h-10 px-3 rounded-lg border-2 border-muted font-bold text-sm text-center" />
+                      </div>
+                    </div>
+
+                    <div className="col-span-2">
+                      <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1">Masa Perap / Proofing</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex items-center gap-2">
+                          <input type="number" placeholder="Jam" value={form.proofing_time_hours || ''} onChange={e => setForm({ ...form, proofing_time_hours: +e.target.value })} className="w-full h-10 px-3 rounded-lg border-2 border-muted font-bold text-center text-sm" />
+                          <span className="text-[10px] font-bold text-foreground/40 uppercase">Jam</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="number" placeholder="Min" value={form.proofing_time_minutes || ''} onChange={e => setForm({ ...form, proofing_time_minutes: +e.target.value })} className="w-full h-10 px-3 rounded-lg border-2 border-muted font-bold text-center text-sm" />
+                          <span className="text-[10px] font-bold text-foreground/40 uppercase">Minit</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -605,10 +728,33 @@ export default function ProductsPage() {
                       </div>
                       
                       <div className="flex flex-col gap-3 justify-end items-end">
-                        <div className="flex gap-2 w-full max-w-[280px]">
+                        <div className="flex gap-2 w-full max-w-[340px]">
+                          <button
+                            onClick={() => {
+                              setEditingProduct(product);
+                              setForm({
+                                name: product.name,
+                                description: product.description || '',
+                                price: product.price,
+                                prep_time: product.prep_time || 30,
+                                bake_time: product.bake_time || 0,
+                                cool_time: product.cool_time || 0,
+                                measurement_unit: product.measurement_unit || 'inch',
+                                product_size_inches: product.product_size_inches || 8,
+                                product_weight_grams: product.product_weight_grams || 500,
+                                box_size_inches: product.box_size_inches || 8,
+                                proofing_time_hours: product.proofing_time_hours || 0,
+                                proofing_time_minutes: product.proofing_time_minutes || 0,
+                                bowl_cleanup_minutes: product.bowl_cleanup_minutes || 15
+                              });
+                            }}
+                            className="flex-1 h-12 rounded-xl text-xs font-black bg-muted text-foreground/75 hover:scale-[1.02] active:scale-95 transition-all border border-muted"
+                          >
+                            EDIT DETAILS
+                          </button>
                           <button
                             onClick={() => setEditingRecipe(product)}
-                            className="flex-1 h-12 rounded-xl text-xs font-black bg-primary text-white shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
+                            className="flex-1 h-12 rounded-xl text-xs font-black bg-primary text-white shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
                           >
                             EDIT RECIPE
                           </button>
@@ -644,7 +790,7 @@ export default function ProductsPage() {
           <div className="bg-card w-full h-full rounded-xl p-8 shadow-2xl flex flex-col overflow-hidden border border-white/20">
             <div className="flex justify-between items-center mb-6 flex-none">
               <h2 className="text-xl font-black text-primary">Edit Product</h2>
-              <button onClick={() => { setEditingProduct(null); setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60 }); }} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
+              <button onClick={() => { setEditingProduct(null); setForm({ name: '', description: '', price: 0, prep_time: 30, bake_time: 45, cool_time: 60, measurement_unit: 'inch', product_size_inches: 8, product_weight_grams: 500, box_size_inches: 8, proofing_time_hours: 0, proofing_time_minutes: 0, bowl_cleanup_minutes: 15 }); }} className="w-10 h-10 flex items-center justify-center bg-muted rounded-full text-foreground/40 text-xl font-bold">&times;</button>
             </div>
             
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-5">
@@ -658,21 +804,83 @@ export default function ProductsPage() {
                 <input type="number" value={form.price} onChange={e => setForm({ ...form, price: +e.target.value })}
                   className="w-full h-12 px-4 rounded-xl border-2 border-muted focus:border-primary outline-none font-black text-lg text-primary" />
               </div>
+
+              <div className="border-t border-muted/30 pt-4 mt-2">
+                <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-3">⚙️ Kitchen Operations (Kapasiti & Waktu)</p>
+              </div>
+
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Prep (Min)</label>
+                  <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Prep (Minit)</label>
                   <input type="number" value={form.prep_time} onChange={e => setForm({...form, prep_time: +e.target.value})}
                     className="w-full h-11 px-2 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold text-sm text-center" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Bake (Min)</label>
+                  <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Bake (Minit)</label>
                   <input type="number" value={form.bake_time} onChange={e => setForm({...form, bake_time: +e.target.value})}
                     className="w-full h-11 px-2 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold text-sm text-center" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Cool (Min)</label>
+                  <label className="text-[10px] font-black text-foreground/30 uppercase mb-1 block">Cool (Minit)</label>
                   <input type="number" value={form.cool_time} onChange={e => setForm({...form, cool_time: +e.target.value})}
                     className="w-full h-11 px-2 rounded-xl border-2 border-muted focus:border-primary outline-none font-bold text-sm text-center" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Unit Jualan</label>
+                  <select value={form.measurement_unit} onChange={e => setForm({ ...form, measurement_unit: e.target.value })} className="w-full h-11 px-2 rounded-xl border-2 border-muted font-bold text-xs bg-card">
+                    <option value="inch">📏 Saiz (Inci)</option>
+                    <option value="gram">⚖️ Berat (Gram)</option>
+                    <option value="unit">📦 Bekas / Pcs</option>
+                  </select>
+                </div>
+
+                <div>
+                  {form.measurement_unit === 'inch' && (
+                    <div>
+                      <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Saiz Loyang (Inci)</label>
+                      <input type="number" value={form.product_size_inches} onChange={e => setForm({ ...form, product_size_inches: +e.target.value })} className="w-full h-11 px-3 rounded-xl border-2 border-muted font-bold text-sm text-center" />
+                    </div>
+                  )}
+                  {form.measurement_unit === 'gram' && (
+                    <div>
+                      <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Berat Adunan (Gram)</label>
+                      <input type="number" value={form.product_weight_grams} onChange={e => setForm({ ...form, product_weight_grams: +e.target.value })} className="w-full h-11 px-3 rounded-xl border-2 border-muted font-bold text-sm text-center" />
+                    </div>
+                  )}
+                  {form.measurement_unit === 'unit' && (
+                    <div>
+                      <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Nisbah Chiller</label>
+                      <input disabled value="Standard (1.0 BCU)" className="w-full h-11 px-3 rounded-xl border-2 border-muted font-bold text-xs text-center bg-muted/30 text-foreground/40" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Saiz Kotak (Inci)</label>
+                  <input type="number" value={form.box_size_inches} onChange={e => setForm({ ...form, box_size_inches: +e.target.value })} className="w-full h-11 px-3 rounded-xl border-2 border-muted font-bold text-sm text-center" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1.5">Selang Basuh Mixer (Min)</label>
+                  <input type="number" value={form.bowl_cleanup_minutes} onChange={e => setForm({ ...form, bowl_cleanup_minutes: +e.target.value })} className="w-full h-11 px-3 rounded-xl border-2 border-muted font-bold text-sm text-center" />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-foreground/40 uppercase tracking-widest block mb-1">Masa Perap / Proofing</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2">
+                    <input type="number" placeholder="Jam" value={form.proofing_time_hours || ''} onChange={e => setForm({ ...form, proofing_time_hours: +e.target.value })} className="w-full h-10 px-3 rounded-xl border-2 border-muted font-bold text-center text-sm" />
+                    <span className="text-[10px] font-bold text-foreground/40 uppercase">Jam</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="number" placeholder="Min" value={form.proofing_time_minutes || ''} onChange={e => setForm({ ...form, proofing_time_minutes: +e.target.value })} className="w-full h-10 px-3 rounded-xl border-2 border-muted font-bold text-center text-sm" />
+                    <span className="text-[10px] font-bold text-foreground/40 uppercase">Minit</span>
+                  </div>
                 </div>
               </div>
             </div>
