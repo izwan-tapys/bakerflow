@@ -10,6 +10,7 @@ import { updateOrderStatus } from '@/lib/services/baker.service';
 import { formatDate } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { Toast } from '@/components/ui/Toast';
 import { 
   Sun, 
   CloudSun, 
@@ -53,6 +54,15 @@ export default function AdminDashboardPage() {
     title: '',
     message: '',
     onConfirm: () => {}
+  });
+  const [toast, setToast] = useState<{
+    isOpen: boolean;
+    message: string;
+    type?: 'success' | 'error' | 'info';
+  }>({
+    isOpen: false,
+    message: '',
+    type: 'success'
   });
 
   const loadDashboardData = useCallback(async () => {
@@ -201,7 +211,11 @@ export default function AdminDashboardPage() {
               const slug = shopName.toLowerCase().replace(/ /g, '-');
               const url = `${window.location.origin}/${slug}`;
               navigator.clipboard.writeText(url);
-              alert('Order Link Copied! 🧁\n' + url);
+              setToast({
+                isOpen: true,
+                message: 'Order link copied to clipboard! 🧁',
+                type: 'success'
+              });
             }}
             className="flex items-center gap-2 px-4 py-2 bg-primary/5 text-primary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm active:scale-95 border border-primary/10"
           >
@@ -340,6 +354,15 @@ export default function AdminDashboardPage() {
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
       />
+
+      {/* Modern Premium Toast */}
+      {toast.isOpen && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+        />
+      )}
     </div>
   );
 }
