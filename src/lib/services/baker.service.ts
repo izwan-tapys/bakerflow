@@ -102,7 +102,6 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
         } else {
           // Hard block for production/ready
           return { success: false, message: `DITOLAK! ${msg}` };
-        }
       }
     }
   }
