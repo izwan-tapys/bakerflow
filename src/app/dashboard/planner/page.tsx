@@ -330,7 +330,10 @@ export default function PlannerPage() {
       const isLongProofing = proofingTime >= 240;
 
       // Base time calculation relative to order's delivery date
-      const readyTime = new Date(`${order.delivery_date}T${deliveryTime}:00`);
+      const cleanDateStr = typeof order.delivery_date === 'string'
+        ? order.delivery_date.substring(0, 10)
+        : new Date(order.delivery_date).toISOString().substring(0, 10);
+      const readyTime = new Date(`${cleanDateStr}T${deliveryTime}:00`);
       const startCoolTime = new Date(readyTime.getTime() - cool * 60000);
       
       // Batching offset (Calculated based on same-day orders)
