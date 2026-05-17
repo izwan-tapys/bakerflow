@@ -62,10 +62,9 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
 
   // 2. Pre-check: Stock validation
   if (status === 'approved' || status === 'production' || status === 'ready') {
-    if (order.product_id) {
       const { data: recipes, error: recipeError } = await supabase
         .from('recipes')
-        .select('*, ingredient:ingredients(id, name, current_stock, unit)')
+        .select('*, ingredient:ingredients!recipes_ingredient_id_fkey(id, name, current_stock, unit)')
         .eq('product_id', order.product_id);
 
       if (recipeError) return { success: false, message: 'Ralat menyemak resipi: ' + recipeError.message };
@@ -142,7 +141,7 @@ export async function checkOrderStock(orderId: string): Promise<{ isOk: boolean;
 
   const { data: recipes } = await supabase
     .from('recipes')
-    .select('*, ingredient:ingredients(id, name, current_stock, unit)')
+    .select('*, ingredient:ingredients!recipes_ingredient_id_fkey(id, name, current_stock, unit)')
     .eq('product_id', order.product_id);
 
   if (!recipes || recipes.length === 0) return { isOk: true, missing: [] };
