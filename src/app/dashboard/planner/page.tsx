@@ -323,6 +323,14 @@ export default function PlannerPage() {
     setTargetHourForNewTask(hour);
     setNewTaskTime(hour);
     setIsAddingTask(true);
+    
+    // Auto-scroll to center the clicked timeline row above the slide-up modal
+    setTimeout(() => {
+      const el = document.getElementById(`hour-row-${hour}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 120);
   };
 
   return (
@@ -362,7 +370,15 @@ export default function PlannerPage() {
             const tasksInHour = getTasksForHour(hour);
 
             return (
-              <div key={hour} className="flex min-h-[70px] relative group hover:bg-muted/5 transition-colors">
+              <div 
+                key={hour} 
+                id={`hour-row-${hour}`}
+                className={`flex min-h-[70px] relative group transition-all duration-300 ${
+                  targetHourForNewTask === hour 
+                    ? 'border-2 border-primary bg-primary/5 shadow-md shadow-primary/5 rounded-xl z-20 mx-2 -my-[1px]' 
+                    : 'hover:bg-muted/5'
+                }`}
+              >
                 {/* Time Column (Left) */}
                 <div className="w-16 flex-none py-3 pl-4 pr-2 text-right">
                   <span className="text-[11px] font-black text-muted-foreground tracking-tight block">
@@ -475,16 +491,16 @@ export default function PlannerPage() {
       {/* Slide-Up Bottom Drawer Sheet Modal (Glassmorphic Task Insertion) */}
       {isAddingTask && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-end justify-center z-50 animate-fadeIn">
-          <div className="absolute inset-0 cursor-pointer" onClick={() => setIsAddingTask(false)} />
+          <div className="absolute inset-0 cursor-pointer" onClick={() => { setIsAddingTask(false); setTargetHourForNewTask(null); }} />
           
-          <div className="bg-card/95 backdrop-blur-md w-full max-w-md rounded-t-3xl border-t border-white/10 shadow-2xl p-6 space-y-5 z-10 animate-slideUp">
+          <div className="bg-card/95 backdrop-blur-md w-full max-w-md rounded-t-3xl border-t border-white/10 shadow-2xl p-6 pb-28 space-y-5 z-10 animate-slideUp">
             <div className="flex justify-between items-center pb-2 border-b border-muted">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
                 <h3 className="font-extrabold text-foreground text-sm tracking-tight">Selit Tugasan Harian</h3>
               </div>
               <button 
-                onClick={() => setIsAddingTask(false)}
+                onClick={() => { setIsAddingTask(false); setTargetHourForNewTask(null); }}
                 className="p-1 rounded-lg hover:bg-muted text-foreground/40 transition-colors"
               >
                 <X className="w-5 h-5" />
