@@ -47,6 +47,7 @@ export default function OrderPage() {
   const [step, setStep] = useState<'calendar' | 'form' | 'payment' | 'success'>('calendar');
   const [bakerInfo, setBakerInfo] = useState<BakerInfo | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [dateOrderCounts, setDateOrderCounts] = useState<Record<string, number>>({});
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,6 +82,31 @@ export default function OrderPage() {
         .eq('is_active', true);
         
       if (productsData) setProducts(productsData);
+
+      // Fetch existing active orders count per date for the next 15 days
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      const maxDate = new Date();
+      maxDate.setDate(maxDate.getDate() + 15);
+      const maxDateStr = maxDate.toISOString().split('T')[0];
+
+      const { data: existingOrders } = await supabase
+        .from('orders')
+        .select('delivery_date')
+        .eq('baker_id', settingsData.baker_id)
+        .gte('delivery_date', todayStr)
+        .lte('delivery_date', maxDateStr)
+        .not('status', 'eq', 'cancelled'); // Exclude cancelled orders from capacity
+
+      if (existingOrders) {
+        const counts: Record<string, number> = {};
+        existingOrders.forEach(o => {
+          if (o.delivery_date) {
+            counts[o.delivery_date] = (counts[o.delivery_date] || 0) + 1;
+          }
+        });
+        setDateOrderCounts(counts);
+      }
     }
     
     setLoading(false);
@@ -175,7 +201,7 @@ export default function OrderPage() {
             <p className="text-foreground/50 text-sm">Select when you want your order delivered.</p>
           </div>
 
-          <div className="flex overflow-x-auto gap-3 pb-4 pt-1 snap-x scrollbar-hide">
+          <div className="flex overflow-x-auto gap-3 pb-4 pt-2.5 snap-x scrollbar-hide">
             {availableDates.map(date => {
               const dateStr = date.toISOString().split('T')[0];
               const isSelected = selectedDate === dateStr;
@@ -183,22 +209,48 @@ export default function OrderPage() {
               const dayNum = date.getDate();
               const month = date.toLocaleDateString('en-MY', { month: 'short' });
 
+              const currentOrdersCount = dateOrderCounts[dateStr] || 0;
+              const isFullyBooked = currentOrdersCount >= (bakerInfo?.daily_capacity || 5);
+              const remainingSlots = (bakerInfo?.daily_capacity || 5) - currentOrdersCount;
+
               return (
                 <button
                   key={dateStr}
-                  onClick={() => setSelectedDate(dateStr)}
-                  className={`flex-shrink-0 w-[4.5rem] flex flex-col items-center p-3 rounded-xl border-2 transition-all snap-center ${
-                    isSelected
-                      ? 'border-primary bg-primary text-white shadow-lg shadow-primary/30 transform scale-105'
-                      : 'border-muted bg-white text-foreground hover:border-primary/30'
+                  disabled={isFullyBooked}
+                  onClick={() => !isFullyBooked && setSelectedDate(dateStr)}
+                  className={`flex-shrink-0 w-[4.6rem] flex flex-col items-center p-3 rounded-xl border-2 transition-all snap-center relative ${
+                    isFullyBooked
+                      ? 'border-red-100/50 bg-red-50/20 text-red-300 opacity-60 cursor-not-allowed'
+                      : isSelected
+                        ? 'border-primary bg-primary text-white shadow-lg shadow-primary/30 transform scale-105'
+                        : 'border-muted bg-white text-foreground hover:border-primary/30'
                   }`}
                 >
-                  <span className={`text-xs font-medium ${isSelected ? 'text-white/80' : 'text-foreground/40'}`}>{dayName}</span>
-                  <span className="text-2xl font-extrabold mt-0.5">{dayNum}</span>
-                  <span className={`text-[10px] font-bold uppercase mt-1 ${isSelected ? 'text-white/80' : 'text-foreground/40'}`}>{month}</span>
+                  {/* Status Badge */}
+                  {isFullyBooked ? (
+                    <span className="absolute -top-2 px-1.5 py-0.5 bg-red-500 text-white text-[7px] font-black uppercase rounded-md tracking-wider leading-none shadow-sm z-10">
+                      FULL
+                    </span>
+                  ) : remainingSlots <= 2 && remainingSlots > 0 ? (
+                    <span className="absolute -top-2 px-1.5 py-0.5 bg-amber-500 text-white text-[7px] font-black uppercase rounded-md tracking-wider leading-none shadow-sm z-10">
+                      {remainingSlots} Left
+                    </span>
+                  ) : null}
+
+                  <span className={`text-[10px] font-bold ${isFullyBooked ? 'text-red-300' : isSelected ? 'text-white/80' : 'text-foreground/40'}`}>{dayName}</span>
+                  <span className={`text-2xl font-extrabold mt-0.5 ${isFullyBooked ? 'text-red-300' : 'text-foreground'}`}>{dayNum}</span>
+                  <span className={`text-[9px] font-bold uppercase mt-1 ${isFullyBooked ? 'text-red-300' : isSelected ? 'text-white/80' : 'text-foreground/40'}`}>{month}</span>
                 </button>
               );
             })}
+          </div>
+
+          {/* Capacity Info Legend */}
+          <div className="flex items-start gap-2.5 p-3.5 bg-muted/40 border border-muted/60 rounded-xl text-xs font-semibold text-foreground/50">
+            <AlertCircle className="w-4 h-4 text-primary flex-none mt-0.5" />
+            <span className="leading-relaxed">
+              Setiap hari kami hanya menerima had maksimum <strong className="text-primary font-black">{bakerInfo.daily_capacity} slot pesanan</strong> untuk menjaga kesegaran & kualiti premium artisan kami.
+            </span>
           </div>
 
           {/* Product Selection */}
