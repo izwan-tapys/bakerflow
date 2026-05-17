@@ -168,6 +168,7 @@ export default function OrderPage() {
       {/* Step: Calendar */}
       {step === 'calendar' && (
         <div className="space-y-5">
+          <div>
             <h2 className="font-bold text-foreground mb-1 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary" /> Pick a Delivery Date
             </h2>
