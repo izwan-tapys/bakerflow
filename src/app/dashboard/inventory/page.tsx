@@ -1483,19 +1483,7 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
             <IngredientForm data={editData} setData={setEditData} categories={categories} getAutoCategory={getAutoCategory} />
           ) : tab === 'recipe' ? (
             <div className="space-y-6">
-              <div className="space-y-2">
-                {subRecipes.map(r => (
-                  <div key={r.id} className="flex justify-between items-center bg-primary/5 p-4 rounded-xl border border-primary/5">
-                    <div>
-                      <p className="text-sm font-bold text-foreground">{r.ingredients?.name}</p>
-                      <p className="text-[10px] font-black text-primary uppercase tracking-widest">{r.quantity_needed}{r.ingredients?.unit}</p>
-                    </div>
-                    <button onClick={async () => { await supabase.from('recipes').delete().eq('id', r.id); loadRecipeData(); }} className="w-8 h-8 rounded bg-red-500/10 text-red-500 flex items-center justify-center">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+              {/* Add Component Ingredient input block (Placed at the top for better UX) */}
               <div className="p-5 bg-muted/30 rounded-xl space-y-4 border border-muted/50">
                 <p className="text-[10px] font-black text-foreground/30 uppercase tracking-widest">Add Component Ingredient</p>
                 <div className="space-y-3">
@@ -1512,6 +1500,21 @@ function IngredientActionModal({ ingredient, onClose, onRestock, onUpdate, onDel
                     }} className="px-6 bg-primary text-white rounded-lg font-black text-[10px] uppercase tracking-widest shadow-md shadow-primary/10">Add</button>
                   </div>
                 </div>
+              </div>
+
+              {/* Sub-recipes list (Placed below the inputs) */}
+              <div className="space-y-2">
+                {subRecipes.map(r => (
+                  <div key={r.id} className="flex justify-between items-center bg-primary/5 p-4 rounded-xl border border-primary/5">
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{r.ingredients?.name}</p>
+                      <p className="text-[10px] font-black text-primary uppercase tracking-widest">{r.quantity_needed}{r.ingredients?.unit}</p>
+                    </div>
+                    <button onClick={async () => { await supabase.from('recipes').delete().eq('id', r.id); loadRecipeData(); }} className="w-8 h-8 rounded bg-red-500/10 text-red-500 flex items-center justify-center">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (

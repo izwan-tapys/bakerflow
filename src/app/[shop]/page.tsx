@@ -4,6 +4,22 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useParams } from 'next/navigation';
 import { formatDate } from '@/lib/utils';
+import { 
+  Calendar, 
+  Cake, 
+  CheckCircle2, 
+  ArrowRight, 
+  ChevronLeft, 
+  MapPin, 
+  User, 
+  MessageCircle,
+  ShoppingBag,
+  Store,
+  Landmark,
+  Coins,
+  AlertCircle,
+  Heart
+} from 'lucide-react';
 
 interface Product {
   id?: string;
@@ -130,9 +146,9 @@ export default function OrderPage() {
 
   if (!bakerInfo) {
     return (
-      <div className="p-8 text-center space-y-3 py-16">
-        <div className="text-4xl">😔</div>
-        <p className="text-foreground/60">This order portal is not available yet.</p>
+      <div className="p-8 text-center space-y-3 py-16 bg-card border border-muted rounded-xl max-w-md mx-auto mt-10">
+        <AlertCircle className="w-12 h-12 text-foreground/30 mx-auto" />
+        <p className="font-bold text-foreground/60 text-lg">This order portal is not available yet.</p>
         <p className="text-[10px] text-foreground/20 font-mono">Debug: Looking for &quot;{shopSlug}&quot;</p>
       </div>
     );
@@ -142,8 +158,8 @@ export default function OrderPage() {
     <div className="p-5 space-y-6 pb-8">
       {/* Header */}
       <div className="text-center space-y-1">
-        <div className="w-16 h-16 bg-primary rounded-xl mx-auto flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-primary/20">
-          🎂
+        <div className="w-16 h-16 bg-primary rounded-xl mx-auto flex items-center justify-center text-white shadow-lg shadow-primary/20">
+          <Store className="w-8 h-8" />
         </div>
         <h1 className="text-xl font-extrabold text-foreground">{bakerInfo.shop_name}</h1>
         <p className="text-foreground/50 text-sm">Place your order below</p>
@@ -152,8 +168,9 @@ export default function OrderPage() {
       {/* Step: Calendar */}
       {step === 'calendar' && (
         <div className="space-y-5">
-          <div>
-            <h2 className="font-bold text-foreground mb-1">📅 Pick a Delivery Date</h2>
+            <h2 className="font-bold text-foreground mb-1 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" /> Pick a Delivery Date
+            </h2>
             <p className="text-foreground/50 text-sm">Select when you want your order delivered.</p>
           </div>
 
@@ -186,7 +203,9 @@ export default function OrderPage() {
           {/* Product Selection */}
           {products.length > 0 && (
             <div className="space-y-3">
-              <h2 className="font-bold text-foreground">🧁 Choose Your Cake</h2>
+              <h2 className="font-bold text-foreground flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-primary" /> Choose Your Product
+              </h2>
               {products.map(product => (
                 <button
                   key={product.id}
@@ -218,9 +237,9 @@ export default function OrderPage() {
           <button
             onClick={() => setStep('form')}
             disabled={!selectedDate || !selectedProduct}
-            className="w-full h-14 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-40 disabled:scale-100"
+            className="w-full h-14 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-40 disabled:scale-100 flex items-center justify-center gap-2"
           >
-            Continue →
+            Continue <ArrowRight className="w-5 h-5" />
           </button>
         </div>
       )}
@@ -229,15 +248,17 @@ export default function OrderPage() {
       {step === 'form' && (
         <div className="space-y-5">
           <div className="flex items-center gap-3">
-            <button onClick={() => setStep('calendar')} className="text-foreground/40 hover:text-foreground">← Back</button>
+            <button onClick={() => setStep('calendar')} className="h-10 px-3 bg-muted text-foreground/60 rounded-xl font-bold text-xs flex items-center gap-1 hover:bg-muted/80 transition-all">
+              <ChevronLeft className="w-4 h-4" /> Back
+            </button>
             <h2 className="font-bold text-foreground">Your Details</h2>
           </div>
 
           {/* Summary */}
           <div className="bg-primary/5 rounded-xl p-4 border border-primary/20 space-y-1">
-            <p className="text-sm font-bold text-primary">{selectedProduct?.name}</p>
-            <p className="text-xs text-foreground/60">
-              📅 {formatDate(selectedDate)}
+            <p className="text-sm font-bold text-primary flex items-center gap-1.5"><ShoppingBag className="w-4 h-4" /> {selectedProduct?.name}</p>
+            <p className="text-xs text-foreground/60 flex items-center gap-1.5">
+              <Calendar className="w-4 h-4" /> {formatDate(selectedDate)}
             </p>
           </div>
 
@@ -288,9 +309,9 @@ export default function OrderPage() {
           <button
             onClick={() => setStep('payment')}
             disabled={!form.customer_name || !form.customer_phone || !form.customer_address}
-            className="w-full h-14 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-40 disabled:scale-100"
+            className="w-full h-14 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-40 disabled:scale-100 flex items-center justify-center gap-2"
           >
-            Choose Payment →
+            Choose Payment <ArrowRight className="w-5 h-5" />
           </button>
         </div>
       )}
@@ -299,7 +320,9 @@ export default function OrderPage() {
       {step === 'payment' && (
         <div className="space-y-5">
           <div className="flex items-center gap-3">
-            <button onClick={() => setStep('form')} className="text-foreground/40 hover:text-foreground">← Back</button>
+            <button onClick={() => setStep('form')} className="h-10 px-3 bg-muted text-foreground/60 rounded-xl font-bold text-xs flex items-center gap-1 hover:bg-muted/80 transition-all">
+              <ChevronLeft className="w-4 h-4" /> Back
+            </button>
             <h2 className="font-bold text-foreground">Payment Method</h2>
           </div>
 
@@ -310,18 +333,28 @@ export default function OrderPage() {
                 form.payment_method === 'manual_transfer' ? 'border-primary bg-primary/5' : 'border-muted bg-white'
               }`}
             >
-              <p className="font-bold">🏦 Bank Transfer</p>
-              <p className="text-sm text-foreground/60 mt-0.5">Transfer to baker&apos;s account & upload receipt</p>
+              <div className="flex items-start gap-3">
+                <Landmark className="w-5 h-5 text-primary mt-0.5 flex-none" />
+                <div>
+                  <p className="font-bold">Bank Transfer</p>
+                  <p className="text-sm text-foreground/60 mt-0.5">Transfer to baker&apos;s account & upload receipt</p>
+                </div>
+              </div>
             </button>
-
+ 
             <button
               onClick={() => setForm({ ...form, payment_method: 'cod' })}
               className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
                 form.payment_method === 'cod' ? 'border-primary bg-primary/5' : 'border-muted bg-white'
               }`}
             >
-              <p className="font-bold">💵 Cash on Delivery</p>
-              <p className="text-sm text-foreground/60 mt-0.5">Pay cash when order arrives</p>
+              <div className="flex items-start gap-3">
+                <Coins className="w-5 h-5 text-primary mt-0.5 flex-none" />
+                <div>
+                  <p className="font-bold">Cash on Delivery</p>
+                  <p className="text-sm text-foreground/60 mt-0.5">Pay cash when order arrives</p>
+                </div>
+              </div>
             </button>
           </div>
 
@@ -340,9 +373,9 @@ export default function OrderPage() {
           <button
             onClick={handleSubmitOrder}
             disabled={submitting}
-            className="w-full h-14 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60"
+            className="w-full h-14 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {submitting ? 'Submitting...' : '🎉 Confirm Order'}
+            {submitting ? 'Submitting...' : 'Confirm & Place Order'}
           </button>
         </div>
       )}
@@ -350,14 +383,14 @@ export default function OrderPage() {
       {/* Step: Success */}
       {step === 'success' && (
         <div className="text-center space-y-6 py-8">
-          <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto text-5xl">
-            🎂
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto text-green-600 shadow-lg shadow-green-100">
+            <CheckCircle2 className="w-10 h-10" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-extrabold text-foreground">Order Placed!</h2>
-            <p className="text-foreground/60">Your order has been received.</p>
-            <div className="bg-primary/5 rounded-xl p-4 inline-block mt-2">
-              <p className="text-xs text-foreground/50 mb-1">Order Number</p>
+            <h2 className="text-2xl font-extrabold text-foreground tracking-tight">Order Placed!</h2>
+            <p className="text-foreground/60 text-sm">Your order has been received successfully.</p>
+            <div className="bg-primary/5 rounded-xl p-4 inline-block mt-2 border border-primary/10">
+              <p className="text-[10px] font-black uppercase tracking-wider text-foreground/40 mb-1">Order Number</p>
               <p className="text-xl font-extrabold text-primary">{orderNumber}</p>
             </div>
           </div>
@@ -371,12 +404,12 @@ export default function OrderPage() {
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full h-14 bg-green-600 text-white rounded-xl font-bold shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
             >
-              💬 WhatsApp the Baker
+              <MessageCircle className="w-5 h-5" /> WhatsApp the Baker
             </a>
           )}
 
-          <p className="text-foreground/40 text-sm">
-            Baker will confirm your order via WhatsApp shortly. ❤️
+          <p className="text-foreground/40 text-xs font-medium flex items-center justify-center gap-1.5">
+            Baker will confirm your order via WhatsApp shortly. <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
           </p>
         </div>
       )}
