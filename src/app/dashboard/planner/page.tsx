@@ -108,26 +108,14 @@ export default function PlannerPage() {
     setOrders(ordersRes.data || []);
     setProducts(productsRes.data || []);
 
-    // Set custom tasks with mock fallback for outstanding UX preview
-    if (dbCustomTasks && dbCustomTasks.length > 0) {
-      setCustomTasks(dbCustomTasks);
-      const checks: Record<string, boolean> = {};
-      dbCustomTasks.forEach((t: any) => {
-        checks[t.id] = t.is_completed;
-      });
-      setCompletedTasks(prev => ({ ...prev, ...checks }));
-    } else {
-      // Fallback Mock data for beautiful live prototype experience
-      const mockTasks: CustomTask[] = [
-        { id: 'mock-1', title: '🥣 Prep: adunan Cinnamon Rolls (x2) - Zaim', start_time: '07:00', duration: 30, is_completed: false, is_mock: true },
-        { id: 'mock-2', title: '🔥 Bake: Bakar Cinnamon Rolls (x2) - Zaim', start_time: '07:30', duration: 45, is_completed: false, is_mock: true },
-        { id: 'mock-3', title: '❄️ Cool: Sejukkan & hias Cinnamon Rolls', start_time: '08:15', duration: 60, is_completed: false, is_mock: true },
-        { id: 'mock-4', title: '🧺 Lipat 20 Kotak Roti & Tampal Pelekat Jenama', start_time: '13:00', duration: 30, is_completed: false, is_mock: true },
-        { id: 'mock-5', title: '🛒 Beli Mentega Anchor & Tepung Sourdough (Tesco)', start_time: '14:30', duration: 60, is_completed: false, is_mock: true },
-        { id: 'mock-6', title: '🧼 Cuci Oven & Deep Clean Sinki Dapur', start_time: '16:00', duration: 45, is_completed: false, is_mock: true }
-      ];
-      setCustomTasks(mockTasks);
-    }
+    // Set custom tasks from database
+    const tasks = dbCustomTasks || [];
+    setCustomTasks(tasks);
+    const checks: Record<string, boolean> = {};
+    tasks.forEach((t: any) => {
+      checks[t.id] = t.is_completed;
+    });
+    setCompletedTasks(prev => ({ ...prev, ...checks }));
 
     setLoading(false);
   }, [selectedDate]);
