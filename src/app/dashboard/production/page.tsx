@@ -1,4 +1,6 @@
 'use client';
+// Clean build trigger - Emoji free v2
+
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
