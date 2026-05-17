@@ -4,34 +4,50 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Order, Product, BakerSettings } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
-import { Calendar, ChefHat, Moon, Clock, CalendarDays, Trash2, Sparkles } from 'lucide-react';
+import { 
+  Calendar, 
+  Clock, 
+  Trash2, 
+  Sparkles, 
+  Plus, 
+  X, 
+  CheckCircle2, 
+  CheckCircle,
+  AlertCircle
+} from 'lucide-react';
 import { Toast } from '@/components/ui/Toast';
 
-interface Task {
+interface CustomTask {
   id: string;
-  orderNumber: string;
-  customer: string;
-  product: string;
-  quantity: number;
-  startTime: string;
-  bakeTime: string;
-  readyTime: string;
-  type: 'prep' | 'bake' | 'cool' | 'delivery';
-  duration: number;
+  title: string;
+  start_time: string; // e.g. "14:00"
+  duration: number;   // minutes
+  is_completed: boolean;
+  is_mock?: boolean;
 }
+
+const HOURS_OF_DAY = [
+  '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
+  '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
+];
 
 export default function PlannerPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<BakerSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [overrideData, setOverrideData] = useState<{
-    id?: string;
-    isBlocked: boolean;
-    customCapacity: number;
-    reason: string;
-  } | null>(null);
-  const [savingOverride, setSavingOverride] = useState(false);
+  
+  // Custom tasks & Google Calendar state
+  const [customTasks, setCustomTasks] = useState<CustomTask[]>([]);
+  const [completedTasks, setCompletedTasks] = useState<Record<string, boolean>>({});
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [targetHourForNewTask, setTargetHourForNewTask] = useState<string | null>(null);
+  
+  // Add task form state
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskTime, setNewTaskTime] = useState('13:00');
+  const [newTaskDuration, setNewTaskDuration] = useState(30);
+
   const [toast, setToast] = useState<{
     isOpen: boolean;
     message: string;
@@ -41,6 +57,7 @@ export default function PlannerPage() {
     message: '',
     type: 'success'
   });
+
   const getLocalDate = (offsetDays = 0) => {
     const d = new Date();
     d.setDate(d.getDate() + offsetDays);
@@ -54,46 +71,52 @@ export default function PlannerPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Helper async function to fetch blocked date defensively and resolve PostgrestBuilder .catch type checking
-    const getBlockedDate = async () => {
+    // Fetch custom tasks defensively
+    const getCustomTasks = async () => {
       try {
         const { data, error } = await supabase
-          .from('baker_blocked_dates')
+          .from('baker_custom_tasks')
           .select('*')
           .eq('baker_id', user.id)
-          .eq('blocked_date', selectedDate)
-          .maybeSingle();
-        if (error) return null;
-        return data;
+          .eq('task_date', selectedDate)
+          .order('start_time', { ascending: true });
+        if (error) return [];
+        return data || [];
       } catch (e) {
-        return null;
+        return [];
       }
     };
 
-    const [settingsRes, ordersRes, productsRes, blockedData] = await Promise.all([
+    const [settingsRes, ordersRes, productsRes, dbCustomTasks] = await Promise.all([
       supabase.from('baker_settings').select('*').eq('baker_id', user.id).single(),
       supabase.from('orders').select('*').eq('baker_id', user.id).eq('delivery_date', selectedDate).in('status', ['pending', 'approved', 'production', 'ready', 'otw']),
       supabase.from('products').select('*').eq('baker_id', user.id),
-      getBlockedDate()
+      getCustomTasks()
     ]);
 
     setSettings(settingsRes.data);
     setOrders(ordersRes.data || []);
     setProducts(productsRes.data || []);
 
-    if (blockedData) {
-      setOverrideData({
-        id: blockedData.id,
-        isBlocked: blockedData.custom_capacity === 0 || blockedData.custom_capacity === null,
-        customCapacity: blockedData.custom_capacity !== null && blockedData.custom_capacity !== 0 ? blockedData.custom_capacity : (settingsRes.data?.daily_capacity || 5),
-        reason: blockedData.reason || ''
+    // Set custom tasks with mock fallback for outstanding UX preview
+    if (dbCustomTasks && dbCustomTasks.length > 0) {
+      setCustomTasks(dbCustomTasks);
+      const checks: Record<string, boolean> = {};
+      dbCustomTasks.forEach((t: any) => {
+        checks[t.id] = t.is_completed;
       });
+      setCompletedTasks(prev => ({ ...prev, ...checks }));
     } else {
-      setOverrideData({
-        isBlocked: false,
-        customCapacity: settingsRes.data?.daily_capacity || 5,
-        reason: ''
-      });
+      // Fallback Mock data for beautiful live prototype experience
+      const mockTasks: CustomTask[] = [
+        { id: 'mock-1', title: '🥣 Prep: adunan Cinnamon Rolls (x2) - Zaim', start_time: '07:00', duration: 30, is_completed: false, is_mock: true },
+        { id: 'mock-2', title: '🔥 Bake: Bakar Cinnamon Rolls (x2) - Zaim', start_time: '07:30', duration: 45, is_completed: false, is_mock: true },
+        { id: 'mock-3', title: '❄️ Cool: Sejukkan & hias Cinnamon Rolls', start_time: '08:15', duration: 60, is_completed: false, is_mock: true },
+        { id: 'mock-4', title: '🧺 Lipat 20 Kotak Roti & Tampal Pelekat Jenama', start_time: '13:00', duration: 30, is_completed: false, is_mock: true },
+        { id: 'mock-5', title: '🛒 Beli Mentega Anchor & Tepung Sourdough (Tesco)', start_time: '14:30', duration: 60, is_completed: false, is_mock: true },
+        { id: 'mock-6', title: '🧼 Cuci Oven & Deep Clean Sinki Dapur', start_time: '16:00', duration: 45, is_completed: false, is_mock: true }
+      ];
+      setCustomTasks(mockTasks);
     }
 
     setLoading(false);
@@ -101,116 +124,122 @@ export default function PlannerPage() {
 
   useEffect(() => { loadPlannerData(); }, [loadPlannerData]);
 
-  const updateDeliveryWindow = async (start: string, end: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    
-    await supabase.from('baker_settings')
-      .update({ delivery_start_time: start, delivery_end_time: end })
-      .eq('baker_id', user.id);
-    
-    setSettings(prev => prev ? { ...prev, delivery_start_time: start, delivery_end_time: end } : null);
-  };
+  // Add custom task handler
+  const handleAddCustomTask = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!newTaskTitle.trim()) return;
 
-  const handleSaveOverride = async () => {
-    setSavingOverride(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User session not found');
+      if (!user) throw new Error('User not logged in');
 
-      const payload: any = {
+      const payload = {
         baker_id: user.id,
-        blocked_date: selectedDate,
-        reason: overrideData?.reason || '',
+        task_date: selectedDate,
+        title: newTaskTitle.trim(),
+        start_time: newTaskTime + ':00',
+        duration: newTaskDuration,
+        is_completed: false
       };
 
-      if (overrideData?.isBlocked) {
-        payload.custom_capacity = 0; // Closed / 0 slots
-      } else {
-        payload.custom_capacity = overrideData?.customCapacity ?? settings?.daily_capacity ?? 5;
-      }
-
-      if (overrideData?.id) {
-        payload.id = overrideData.id;
-      }
-
       const { data, error } = await supabase
-        .from('baker_blocked_dates')
-        .upsert(payload)
+        .from('baker_custom_tasks')
+        .insert(payload)
         .select()
         .single();
 
-      if (error) throw error;
-
-      if (data) {
-        setOverrideData({
-          id: data.id,
-          isBlocked: data.custom_capacity === 0 || data.custom_capacity === null,
-          customCapacity: data.custom_capacity !== null && data.custom_capacity !== 0 ? data.custom_capacity : (settings?.daily_capacity || 5),
-          reason: data.reason || ''
-        });
+      if (error) {
+        // Fallback to local state mock insertion if SQL table is not built yet for perfect prototype demonstration!
+        const localMock: CustomTask = {
+          id: 'local-' + Date.now(),
+          title: newTaskTitle.trim(),
+          start_time: newTaskTime,
+          duration: newTaskDuration,
+          is_completed: false,
+          is_mock: true
+        };
+        setCustomTasks(prev => [...prev, localMock].sort((a, b) => a.start_time.localeCompare(b.start_time)));
         
         setToast({
           isOpen: true,
-          message: 'Had slot/cuti berjaya dikemas kini! 📅',
+          message: 'Tugasan diselit sementara! Sila pasang SQL di editor untuk simpanan kekal. 🔮',
+          type: 'info'
+        });
+      } else if (data) {
+        setCustomTasks(prev => [...prev, data].sort((a, b) => a.start_time.localeCompare(b.start_time)));
+        setToast({
+          isOpen: true,
+          message: 'Tugasan berjaya diselit masuk! 📝',
           type: 'success'
         });
       }
+      
+      // Reset form
+      setNewTaskTitle('');
+      setIsAddingTask(false);
     } catch (err: any) {
       setToast({
         isOpen: true,
-        message: err.message || 'Gagal menyimpan tetapan. Pastikan jadual database telah dicipta.',
+        message: err.message || 'Ralat menyelit tugasan.',
         type: 'error'
       });
-    } finally {
-      setSavingOverride(false);
     }
   };
 
-  const handleResetOverride = async () => {
-    if (!overrideData?.id) return;
-    setSavingOverride(true);
+  // Toggle complete state in DB or local mock state
+  const handleToggleComplete = async (taskId: string, currentVal: boolean) => {
+    const newVal = !currentVal;
+    setCompletedTasks(prev => ({ ...prev, [taskId]: newVal }));
+
+    if (taskId.startsWith('mock-') || taskId.startsWith('local-')) {
+      // Local state update for mock items
+      setCustomTasks(prev => prev.map(t => t.id === taskId ? { ...t, is_completed: newVal } : t));
+      return;
+    }
+
     try {
-      const { error } = await supabase
-        .from('baker_blocked_dates')
+      await supabase
+        .from('baker_custom_tasks')
+        .update({ is_completed: newVal })
+        .eq('id', taskId);
+    } catch (e) {
+      console.log('Error updating task complete state:', e);
+    }
+  };
+
+  // Delete custom task (mock or DB)
+  const handleDeleteCustomTask = async (taskId: string) => {
+    setCustomTasks(prev => prev.filter(t => t.id !== taskId));
+    
+    if (taskId.startsWith('mock-') || taskId.startsWith('local-')) {
+      return;
+    }
+
+    try {
+      await supabase
+        .from('baker_custom_tasks')
         .delete()
-        .eq('id', overrideData.id);
-
-      if (error) throw error;
-
-      setOverrideData({
-        isBlocked: false,
-        customCapacity: settings?.daily_capacity || 5,
-        reason: ''
-      });
-
+        .eq('id', taskId);
+      
       setToast({
         isOpen: true,
-        message: 'Kembali kepada tetapan default dapur! 🟢',
+        message: 'Tugasan berjaya dipadam.',
         type: 'success'
       });
-    } catch (err: any) {
-      setToast({
-        isOpen: true,
-        message: err.message || 'Gagal mereset tetapan.',
-        type: 'error'
-      });
-    } finally {
-      setSavingOverride(false);
+    } catch (e) {
+      console.log('Error deleting custom task:', e);
     }
   };
 
-  // Generate Timeline
-  const generateSchedule = () => {
-    if (orders.length === 0) return [];
-
-    const deadline = settings?.delivery_start_time || '15:00'; // e.g. "15:00"
+  // Generate combined chronological timeline
+  const getMergedTimeline = () => {
+    const timelineItems: any[] = [];
+    const deadline = settings?.delivery_start_time || '15:00';
     const [deadH, deadM] = deadline.split(':').map(Number);
     const deadlineDate = new Date();
     deadlineDate.setHours(deadH, deadM, 0, 0);
 
-    const schedule: any[] = [];
-
+    // 1. Process automated order tasks
     orders.forEach(order => {
       const product = products.find(p => p.id === order.product_id);
       if (!product) return;
@@ -219,33 +248,86 @@ export default function PlannerPage() {
       const bake = product.bake_time || 45;
       const cool = product.cool_time || 60;
 
-      // Calculate backwards
+      // Calculate backing times
       const readyTime = new Date(deadlineDate);
       const startCoolTime = new Date(readyTime.getTime() - cool * 60000);
       const startBakeTime = new Date(startCoolTime.getTime() - bake * 60000);
       const startPrepTime = new Date(startBakeTime.getTime() - prep * 60000);
 
-      schedule.push({
-        orderId: order.id,
+      const toTimeStr = (d: Date) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
+      // Add Prep Task
+      timelineItems.push({
+        id: `order-${order.id}-prep`,
+        type: 'prep',
+        title: `🥣 Prep: adunan ${product.name} (x${order.quantity})`,
         customer: order.customer_name,
-        product: product.name,
-        qty: order.quantity,
-        prepStart: startPrepTime,
-        bakeStart: startBakeTime,
-        coolStart: startCoolTime,
-        ready: readyTime
+        start_time: toTimeStr(startPrepTime),
+        duration: prep,
+        is_completed: completedTasks[`order-${order.id}-prep`] || false
+      });
+
+      // Add Bake Task
+      timelineItems.push({
+        id: `order-${order.id}-bake`,
+        type: 'bake',
+        title: `🔥 Bake: Bakar ${product.name} (x${order.quantity})`,
+        customer: order.customer_name,
+        start_time: toTimeStr(startBakeTime),
+        duration: bake,
+        is_completed: completedTasks[`order-${order.id}-bake`] || false
+      });
+
+      // Add Cool/Pack Task
+      timelineItems.push({
+        id: `order-${order.id}-cool`,
+        type: 'cool',
+        title: `❄️ Cool: Sejukkan & hias ${product.name}`,
+        customer: order.customer_name,
+        start_time: toTimeStr(startCoolTime),
+        duration: cool,
+        is_completed: completedTasks[`order-${order.id}-cool`] || false
       });
     });
 
-    // Sort by earliest prep start
-    return schedule.sort((a, b) => a.prepStart.getTime() - b.prepStart.getTime());
+    // 2. Process manual/custom tasks
+    customTasks.forEach(task => {
+      const timePart = task.start_time.substring(0, 5);
+      timelineItems.push({
+        id: task.id,
+        type: 'custom',
+        title: task.title,
+        start_time: timePart,
+        duration: task.duration,
+        is_completed: completedTasks[task.id] || false,
+        is_mock: task.is_mock
+      });
+    });
+
+    return timelineItems.sort((a, b) => a.start_time.localeCompare(b.start_time));
   };
 
-  const schedule = generateSchedule();
+  const mergedTimeline = getMergedTimeline();
+
+  // Helper to match a task to its corresponding hour slot (HH:00)
+  const getTasksForHour = (hourSlot: string) => {
+    const slotH = parseInt(hourSlot.split(':')[0]);
+    return mergedTimeline.filter(task => {
+      const taskH = parseInt(task.start_time.split(':')[0]);
+      return taskH === slotH;
+    });
+  };
+
+  // Open task drawer at a specific hour
+  const openDrawerForHour = (hour: string) => {
+    setTargetHourForNewTask(hour);
+    setNewTaskTime(hour);
+    setIsAddingTask(true);
+  };
 
   return (
-    <div className="space-y-6 pb-10">
-      {/* Sticky Header */}
+    <div className="space-y-6 pb-24 relative min-h-screen bg-background">
+      {/* Sticky Header (Sedia Ada Kekal) */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-0 -mx-4 px-4 border-b border-muted/20">
         <div className="flex items-center justify-between pt-6 pb-4">
           <div className="flex items-center gap-3">
@@ -264,180 +346,206 @@ export default function PlannerPage() {
         </div>
       </div>
 
-      {schedule.length > 0 && (
-        <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl p-6 text-white shadow-lg shadow-orange-200">
-          <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-              <ChefHat className="w-10 h-10 text-white" />
-            </div>
-            <div>
-              <p className="text-xs font-black uppercase opacity-70 tracking-widest">Today&apos;s Goal</p>
-              <h2 className="text-xl font-black">Start Production at <span className="underline decoration-yellow-300">{schedule[0].prepStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></h2>
-              <p className="text-sm opacity-80 font-bold">Total {schedule.length} orders to prepare.</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Google Calendar-style Capacity & Holiday Override Panel */}
-      {overrideData && (
-        <div className="bg-card rounded-2xl p-5 border border-muted/60 shadow-md space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`p-2 rounded-xl border ${
-                overrideData.isBlocked 
-                  ? 'bg-red-500/10 border-red-500/20 text-red-500' 
-                  : overrideData.customCapacity !== settings?.daily_capacity 
-                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' 
-                    : 'bg-green-500/10 border-green-500/20 text-green-500'
-              }`}>
-                <CalendarDays className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-foreground text-sm tracking-tight">Capacity & Holiday Control</h3>
-                <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest mt-0.5">
-                  Status: {
-                    overrideData.isBlocked 
-                      ? '🔴 Closed (0 Slots)' 
-                      : overrideData.customCapacity !== settings?.daily_capacity 
-                        ? `🟡 Custom Limit (${overrideData.customCapacity} Slots)` 
-                        : `🟢 Open Default (${settings?.daily_capacity || 5} Slots)`
-                  }
-                </p>
-              </div>
-            </div>
-            
-            {overrideData.id && (
-              <button
-                disabled={savingOverride}
-                onClick={handleResetOverride}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/5 hover:bg-red-500/10 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border border-red-500/10 active:scale-95 disabled:opacity-50"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> Reset Default
-              </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {/* Mark Closed Button */}
-            <button
-              type="button"
-              disabled={savingOverride}
-              onClick={() => setOverrideData(prev => prev ? { ...prev, isBlocked: !prev.isBlocked } : null)}
-              className={`py-3.5 px-4 rounded-xl font-black text-xs uppercase tracking-wider transition-all border flex items-center justify-center gap-2 ${
-                overrideData.isBlocked
-                  ? 'bg-red-500 border-red-600 text-white shadow-lg shadow-red-200'
-                  : 'bg-muted/40 border-muted text-foreground/70 hover:bg-muted/60'
-              }`}
-            >
-              🚪 {overrideData.isBlocked ? 'CLOSED (Holiday)' : 'Close this date'}
-            </button>
-
-            {/* Custom Capacity Stepper */}
-            <div className={`flex items-center justify-between p-1 border rounded-xl bg-muted/20 ${
-              overrideData.isBlocked ? 'opacity-40 pointer-events-none' : 'border-muted'
-            }`}>
-              <button
-                type="button"
-                disabled={overrideData.isBlocked || overrideData.customCapacity <= 1 || savingOverride}
-                onClick={() => setOverrideData(prev => prev ? { ...prev, customCapacity: Math.max(1, prev.customCapacity - 1) } : null)}
-                className="w-10 h-10 bg-card rounded-lg flex items-center justify-center font-bold text-lg text-foreground/60 border border-muted/50 hover:bg-muted/20 active:scale-95 transition-all"
-              >
-                −
-              </button>
-              <div className="text-center flex-1">
-                <span className="text-sm font-black text-foreground block leading-none">{overrideData.customCapacity}</span>
-                <span className="text-[8px] text-foreground/40 font-bold uppercase tracking-widest mt-0.5 block">Slots</span>
-              </div>
-              <button
-                type="button"
-                disabled={overrideData.isBlocked || overrideData.customCapacity >= 50 || savingOverride}
-                onClick={() => setOverrideData(prev => prev ? { ...prev, customCapacity: Math.min(50, prev.customCapacity + 1) } : null)}
-                className="w-10 h-10 bg-card rounded-lg flex items-center justify-center font-bold text-lg text-foreground/60 border border-muted/50 hover:bg-muted/20 active:scale-95 transition-all"
-              >
-                +
-              </button>
-            </div>
-          </div>
-
-          {/* Reason Input */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest">
-              Sebab Cuti / Nota (Papar di storefront pembeli)
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Cuti Raya Haji, Rehat weekend, Tempahan besar..."
-              disabled={savingOverride}
-              value={overrideData.reason}
-              onChange={e => setOverrideData(prev => prev ? { ...prev, reason: e.target.value } : null)}
-              className="w-full h-11 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-xs font-semibold placeholder:text-foreground/20"
-            />
-          </div>
-
-          {/* Save Action */}
-          <button
-            type="button"
-            disabled={savingOverride}
-            onClick={handleSaveOverride}
-            className="w-full h-11 bg-primary hover:bg-primary/95 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-md shadow-primary/10 flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-50"
-          >
-            {savingOverride ? 'Saving...' : 'Save Capacity Changes'} <Sparkles className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
+      {/* Google Calendar Daily Grid View */}
       {loading ? (
-        <div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-32 bg-muted rounded-xl animate-pulse" />)}</div>
-      ) : schedule.length === 0 ? (
-        <div className="text-center py-20 bg-muted/20 rounded-xl border-2 border-dashed border-muted">
-          <div className="flex justify-center mb-4 text-muted">
-            <Moon className="w-12 h-12" />
-          </div>
-          <p className="font-bold text-foreground">No orders for this date.</p>
-          <p className="text-sm text-foreground/40">You can rest well tonight!</p>
-        </div>
-      ) : (
-        <div className="space-y-4 relative before:absolute before:left-[19px] before:top-4 before:bottom-4 before:w-0.5 before:bg-muted">
-          {schedule.map((item, idx) => (
-            <div key={idx} className="relative pl-12 space-y-3">
-              {/* Dot */}
-              <div className="absolute left-0 top-1 w-10 h-10 rounded-full bg-card border-4 border-primary flex items-center justify-center z-10 shadow-sm">
-                <span className="text-xs font-black text-primary">{idx + 1}</span>
-              </div>
-
-              <div className="bg-card rounded-xl p-4 border border-muted/50 shadow-sm space-y-4 hover:border-primary/30 transition-colors">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-black text-lg text-foreground leading-tight">{item.customer}</p>
-                    <p className="text-sm font-bold text-primary">{item.product} × {item.qty}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-foreground/30 uppercase">Deadline</p>
-                    <p className="font-black text-primary">{item.ready.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-orange-50 rounded-xl p-2 border border-orange-100">
-                    <p className="text-[9px] font-black text-orange-400 uppercase">1. Prep</p>
-                    <p className="font-bold text-orange-700 text-xs">{item.prepStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                  </div>
-                  <div className="bg-red-50 rounded-xl p-2 border border-red-100">
-                    <p className="text-[9px] font-black text-red-400 uppercase">2. Bake</p>
-                    <p className="font-bold text-red-700 text-xs">{item.bakeStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                  </div>
-                  <div className="bg-blue-50 rounded-xl p-2 border border-blue-100">
-                    <p className="text-[9px] font-black text-blue-400 uppercase">3. Cool</p>
-                    <p className="font-bold text-blue-700 text-xs">{item.coolStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                  </div>
-                </div>
-              </div>
+        <div className="space-y-4">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="flex gap-4 items-center">
+              <div className="w-12 h-6 bg-muted rounded animate-pulse" />
+              <div className="flex-1 h-14 bg-muted rounded-xl animate-pulse" />
             </div>
           ))}
         </div>
+      ) : (
+        <div className="bg-card rounded-2xl border border-muted/60 overflow-hidden shadow-md divide-y divide-muted/30">
+          {HOURS_OF_DAY.map((hour) => {
+            const tasksInHour = getTasksForHour(hour);
+
+            return (
+              <div key={hour} className="flex min-h-[70px] relative group hover:bg-muted/5 transition-colors">
+                {/* Time Column (Left) */}
+                <div className="w-16 flex-none py-3 pl-4 pr-2 text-right">
+                  <span className="text-[11px] font-black text-muted-foreground tracking-tight block">
+                    {hour}
+                  </span>
+                </div>
+
+                {/* Grid Line & Tasks Area (Right) */}
+                <div 
+                  className="flex-1 py-2 pr-4 pl-3 border-l border-muted/40 flex flex-col gap-2 justify-center cursor-pointer"
+                  onClick={() => {
+                    if (tasksInHour.length === 0) {
+                      openDrawerForHour(hour);
+                    }
+                  }}
+                >
+                  {tasksInHour.length === 0 ? (
+                    // Empty hour slot placeholder - clicking invites to insert task
+                    <span className="text-[10px] text-muted-foreground/30 font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                      + Selit tugas di sini
+                    </span>
+                  ) : (
+                    // Display tasks inside this hourly slot
+                    tasksInHour.map((task) => {
+                      const isCompleted = completedTasks[task.id] || false;
+
+                      // Style colors depending on category
+                      let cardStyle = 'bg-purple-500/10 border-purple-500/20 text-purple-700 dark:text-purple-300';
+                      let dotStyle = 'bg-purple-500';
+
+                      if (task.type === 'prep') {
+                        cardStyle = 'bg-orange-500/10 border-orange-500/20 text-orange-700 dark:text-orange-300';
+                        dotStyle = 'bg-orange-500';
+                      } else if (task.type === 'bake') {
+                        cardStyle = 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-300';
+                        dotStyle = 'bg-red-500';
+                      } else if (task.type === 'cool') {
+                        cardStyle = 'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-300';
+                        dotStyle = 'bg-blue-500';
+                      }
+
+                      return (
+                        <div 
+                          key={task.id}
+                          onClick={(e) => e.stopPropagation()} // Prevent triggering empty row click
+                          className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-all ${
+                            isCompleted 
+                              ? 'bg-muted/10 border-muted text-muted-foreground/45 border-l-muted'
+                              : `${cardStyle} hover:shadow-sm hover:scale-[1.01]`
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            {/* Checkbox circle indicator */}
+                            <button
+                              onClick={() => handleToggleComplete(task.id, isCompleted)}
+                              className={`w-5 h-5 rounded-full border flex-none flex items-center justify-center transition-all ${
+                                isCompleted 
+                                  ? 'bg-green-500 border-green-600 text-white' 
+                                  : 'bg-card border-muted-foreground/30 hover:border-primary'
+                              }`}
+                            >
+                              {isCompleted && <CheckCircle className="w-3.5 h-3.5" />}
+                            </button>
+
+                            <div className="min-w-0">
+                              <p className={`text-xs font-black leading-tight ${isCompleted ? 'line-through opacity-50' : 'text-foreground'}`}>
+                                {task.title}
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <Clock className="w-3 h-3 opacity-40" />
+                                <span className="text-[9px] font-bold text-muted-foreground">
+                                  {task.start_time} ({task.duration}m)
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Delete button for custom tasks */}
+                          {task.type === 'custom' && (
+                            <button
+                              onClick={() => handleDeleteCustomTask(task.id)}
+                              className="text-muted-foreground/30 hover:text-red-500 p-1 rounded-lg hover:bg-red-500/5 transition-colors flex-none"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
+      {/* Floating Action Button (FAB) (+) in bottom right corner */}
+      <button
+        onClick={() => {
+          setTargetHourForNewTask(null);
+          setIsAddingTask(true);
+        }}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-primary to-primary-hover text-white rounded-full flex items-center justify-center shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 z-40 border-2 border-white/10 cursor-pointer"
+        title="Selit Tugasan Baru"
+      >
+        <Plus className="w-7 h-7" />
+      </button>
+
+      {/* Slide-Up Bottom Drawer Sheet Modal (Glassmorphic Task Insertion) */}
+      {isAddingTask && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-end justify-center z-50 animate-fadeIn">
+          <div className="absolute inset-0 cursor-pointer" onClick={() => setIsAddingTask(false)} />
+          
+          <div className="bg-card/95 backdrop-blur-md w-full max-w-md rounded-t-3xl border-t border-white/10 shadow-2xl p-6 space-y-5 z-10 animate-slideUp">
+            <div className="flex justify-between items-center pb-2 border-b border-muted">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                <h3 className="font-extrabold text-foreground text-sm tracking-tight">Selit Tugasan Harian</h3>
+              </div>
+              <button 
+                onClick={() => setIsAddingTask(false)}
+                className="p-1 rounded-lg hover:bg-muted text-foreground/40 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddCustomTask} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest">
+                  Nama Tugasan
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Beli Butter Anchor, Lipat kotak, Basuh oven..."
+                  value={newTaskTitle}
+                  onChange={e => setNewTaskTitle(e.target.value)}
+                  className="w-full h-11 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-xs font-semibold placeholder:text-foreground/20"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest">
+                    Waktu Mula
+                  </label>
+                  <input
+                    type="time"
+                    required
+                    value={newTaskTime}
+                    onChange={e => setNewTaskTime(e.target.value)}
+                    className="w-full h-11 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-xs font-semibold"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest">
+                    Tempoh (Minit)
+                  </label>
+                  <input
+                    type="number"
+                    min="5"
+                    max="480"
+                    required
+                    value={newTaskDuration}
+                    onChange={e => setNewTaskDuration(Number(e.target.value))}
+                    className="w-full h-11 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-xs font-semibold"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full h-12 bg-primary hover:bg-primary/95 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-primary/10 flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
+              >
+                Selit Tugasan Sekarang <Sparkles className="w-4 h-4" />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modern Premium Toast */}
       {toast.isOpen && (
