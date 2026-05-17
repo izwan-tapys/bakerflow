@@ -48,6 +48,7 @@ export default function OrderPage() {
   const [bakerInfo, setBakerInfo] = useState<BakerInfo | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [dateOrderCounts, setDateOrderCounts] = useState<Record<string, number>>({});
+  const [blockedDates, setBlockedDates] = useState<{ blocked_date: string; custom_capacity: number | null; reason: string | null }[]>([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,6 +107,22 @@ export default function OrderPage() {
           }
         });
         setDateOrderCounts(counts);
+      }
+
+      // Fetch blocked dates / custom limits defensively
+      try {
+        const { data: blockedData } = await supabase
+          .from('baker_blocked_dates')
+          .select('blocked_date, custom_capacity, reason')
+          .eq('baker_id', settingsData.baker_id)
+          .gte('blocked_date', todayStr)
+          .lte('blocked_date', maxDateStr);
+
+        if (blockedData) {
+          setBlockedDates(blockedData);
+        }
+      } catch (e) {
+        console.log('Table baker_blocked_dates may not exist yet:', e);
       }
     }
     
@@ -209,9 +226,14 @@ export default function OrderPage() {
               const dayNum = date.getDate();
               const month = date.toLocaleDateString('en-MY', { month: 'short' });
 
+              const override = blockedDates.find(b => b.blocked_date === dateStr);
+              const customCap = override ? override.custom_capacity : null;
+              const isClosed = override && (customCap === 0 || customCap === null);
+
               const currentOrdersCount = dateOrderCounts[dateStr] || 0;
-              const isFullyBooked = currentOrdersCount >= (bakerInfo?.daily_capacity || 5);
-              const remainingSlots = (bakerInfo?.daily_capacity || 5) - currentOrdersCount;
+              const effectiveCapacity = customCap !== null ? customCap : (bakerInfo?.daily_capacity || 5);
+              const isFullyBooked = isClosed || currentOrdersCount >= effectiveCapacity;
+              const remainingSlots = effectiveCapacity - currentOrdersCount;
 
               return (
                 <button
@@ -227,7 +249,11 @@ export default function OrderPage() {
                   }`}
                 >
                   {/* Status Badge */}
-                  {isFullyBooked ? (
+                  {isClosed ? (
+                    <span className="absolute -top-2 px-1.5 py-0.5 bg-red-600 text-white text-[7px] font-black uppercase rounded-md tracking-wider leading-none shadow-sm z-10">
+                      CLOSED
+                    </span>
+                  ) : isFullyBooked ? (
                     <span className="absolute -top-2 px-1.5 py-0.5 bg-red-500 text-white text-[7px] font-black uppercase rounded-md tracking-wider leading-none shadow-sm z-10">
                       FULL
                     </span>
@@ -252,6 +278,22 @@ export default function OrderPage() {
               Setiap hari kami hanya menerima had maksimum <strong className="text-primary font-black">{bakerInfo.daily_capacity} slot pesanan</strong> untuk menjaga kesegaran & kualiti premium artisan kami.
             </span>
           </div>
+
+          {/* Custom Baker Note/Holiday Reason */}
+          {(() => {
+            const selectedOverride = blockedDates.find(b => b.blocked_date === selectedDate);
+            if (selectedDate && selectedOverride && selectedOverride.reason) {
+              return (
+                <div className="flex items-start gap-2.5 p-3.5 bg-red-50 border border-red-100 rounded-xl text-xs font-semibold text-red-600 animate-fadeIn">
+                  <span className="flex-none text-base">📢</span>
+                  <span className="leading-relaxed">
+                    <strong>Nota Baker:</strong> {selectedOverride.reason}
+                  </span>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           {/* Product Selection */}
           {products.length > 0 && (

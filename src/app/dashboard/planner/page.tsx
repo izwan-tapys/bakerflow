@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Order, Product, BakerSettings } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
-import { Calendar, ChefHat, Moon, Clock } from 'lucide-react';
+import { Calendar, ChefHat, Moon, Clock, CalendarDays, Trash2, Sparkles } from 'lucide-react';
+import { Toast } from '@/components/ui/Toast';
 
 interface Task {
   id: string;
@@ -24,6 +25,22 @@ export default function PlannerPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<BakerSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [overrideData, setOverrideData] = useState<{
+    id?: string;
+    isBlocked: boolean;
+    customCapacity: number;
+    reason: string;
+  } | null>(null);
+  const [savingOverride, setSavingOverride] = useState(false);
+  const [toast, setToast] = useState<{
+    isOpen: boolean;
+    message: string;
+    type?: 'success' | 'error' | 'info';
+  }>({
+    isOpen: false,
+    message: '',
+    type: 'success'
+  });
   const getLocalDate = (offsetDays = 0) => {
     const d = new Date();
     d.setDate(d.getDate() + offsetDays);
@@ -37,15 +54,35 @@ export default function PlannerPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const [settingsRes, ordersRes, productsRes] = await Promise.all([
+    // Fetch in parallel defensively. Catch blocked dates errors if table doesn't exist yet
+    const [settingsRes, ordersRes, productsRes, blockedRes] = await Promise.all([
       supabase.from('baker_settings').select('*').eq('baker_id', user.id).single(),
       supabase.from('orders').select('*').eq('baker_id', user.id).eq('delivery_date', selectedDate).in('status', ['pending', 'approved', 'production', 'ready', 'otw']),
-      supabase.from('products').select('*').eq('baker_id', user.id)
+      supabase.from('products').select('*').eq('baker_id', user.id),
+      supabase.from('baker_blocked_dates').select('*').eq('baker_id', user.id).eq('blocked_date', selectedDate).maybeSingle().catch(err => ({ data: null, error: err }))
     ]);
 
     setSettings(settingsRes.data);
     setOrders(ordersRes.data || []);
     setProducts(productsRes.data || []);
+
+    const blockedData = blockedRes && !blockedRes.error ? blockedRes.data : null;
+
+    if (blockedData) {
+      setOverrideData({
+        id: blockedData.id,
+        isBlocked: blockedData.custom_capacity === 0 || blockedData.custom_capacity === null,
+        customCapacity: blockedData.custom_capacity !== null && blockedData.custom_capacity !== 0 ? blockedData.custom_capacity : (settingsRes.data?.daily_capacity || 5),
+        reason: blockedData.reason || ''
+      });
+    } else {
+      setOverrideData({
+        isBlocked: false,
+        customCapacity: settingsRes.data?.daily_capacity || 5,
+        reason: ''
+      });
+    }
+
     setLoading(false);
   }, [selectedDate]);
 
@@ -60,6 +97,94 @@ export default function PlannerPage() {
       .eq('baker_id', user.id);
     
     setSettings(prev => prev ? { ...prev, delivery_start_time: start, delivery_end_time: end } : null);
+  };
+
+  const handleSaveOverride = async () => {
+    setSavingOverride(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User session not found');
+
+      const payload: any = {
+        baker_id: user.id,
+        blocked_date: selectedDate,
+        reason: overrideData?.reason || '',
+      };
+
+      if (overrideData?.isBlocked) {
+        payload.custom_capacity = 0; // Closed / 0 slots
+      } else {
+        payload.custom_capacity = overrideData?.customCapacity ?? settings?.daily_capacity ?? 5;
+      }
+
+      if (overrideData?.id) {
+        payload.id = overrideData.id;
+      }
+
+      const { data, error } = await supabase
+        .from('baker_blocked_dates')
+        .upsert(payload)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setOverrideData({
+          id: data.id,
+          isBlocked: data.custom_capacity === 0 || data.custom_capacity === null,
+          customCapacity: data.custom_capacity !== null && data.custom_capacity !== 0 ? data.custom_capacity : (settings?.daily_capacity || 5),
+          reason: data.reason || ''
+        });
+        
+        setToast({
+          isOpen: true,
+          message: 'Had slot/cuti berjaya dikemas kini! 📅',
+          type: 'success'
+        });
+      }
+    } catch (err: any) {
+      setToast({
+        isOpen: true,
+        message: err.message || 'Gagal menyimpan tetapan. Pastikan jadual database telah dicipta.',
+        type: 'error'
+      });
+    } finally {
+      setSavingOverride(false);
+    }
+  };
+
+  const handleResetOverride = async () => {
+    if (!overrideData?.id) return;
+    setSavingOverride(true);
+    try {
+      const { error } = await supabase
+        .from('baker_blocked_dates')
+        .delete()
+        .eq('id', overrideData.id);
+
+      if (error) throw error;
+
+      setOverrideData({
+        isBlocked: false,
+        customCapacity: settings?.daily_capacity || 5,
+        reason: ''
+      });
+
+      setToast({
+        isOpen: true,
+        message: 'Kembali kepada tetapan default dapur! 🟢',
+        type: 'success'
+      });
+    } catch (err: any) {
+      setToast({
+        isOpen: true,
+        message: err.message || 'Gagal mereset tetapan.',
+        type: 'error'
+      });
+    } finally {
+      setSavingOverride(false);
+    }
   };
 
   // Generate Timeline
@@ -166,6 +291,114 @@ export default function PlannerPage() {
         </div>
       )}
 
+      {/* Google Calendar-style Capacity & Holiday Override Panel */}
+      {overrideData && (
+        <div className="bg-card rounded-2xl p-5 border border-muted/60 shadow-md space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className={`p-2 rounded-xl border ${
+                overrideData.isBlocked 
+                  ? 'bg-red-500/10 border-red-500/20 text-red-500' 
+                  : overrideData.customCapacity !== settings?.daily_capacity 
+                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' 
+                    : 'bg-green-500/10 border-green-500/20 text-green-500'
+              }`}>
+                <CalendarDays className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-foreground text-sm tracking-tight">Capacity & Holiday Control</h3>
+                <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest mt-0.5">
+                  Status: {
+                    overrideData.isBlocked 
+                      ? '🔴 Closed (0 Slots)' 
+                      : overrideData.customCapacity !== settings?.daily_capacity 
+                        ? `🟡 Custom Limit (${overrideData.customCapacity} Slots)` 
+                        : `🟢 Open Default (${settings?.daily_capacity || 5} Slots)`
+                  }
+                </p>
+              </div>
+            </div>
+            
+            {overrideData.id && (
+              <button
+                disabled={savingOverride}
+                onClick={handleResetOverride}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/5 hover:bg-red-500/10 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border border-red-500/10 active:scale-95 disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Reset Default
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* Mark Closed Button */}
+            <button
+              type="button"
+              disabled={savingOverride}
+              onClick={() => setOverrideData(prev => prev ? { ...prev, isBlocked: !prev.isBlocked } : null)}
+              className={`py-3.5 px-4 rounded-xl font-black text-xs uppercase tracking-wider transition-all border flex items-center justify-center gap-2 ${
+                overrideData.isBlocked
+                  ? 'bg-red-500 border-red-600 text-white shadow-lg shadow-red-200'
+                  : 'bg-muted/40 border-muted text-foreground/70 hover:bg-muted/60'
+              }`}
+            >
+              🚪 {overrideData.isBlocked ? 'CLOSED (Holiday)' : 'Close this date'}
+            </button>
+
+            {/* Custom Capacity Stepper */}
+            <div className={`flex items-center justify-between p-1 border rounded-xl bg-muted/20 ${
+              overrideData.isBlocked ? 'opacity-40 pointer-events-none' : 'border-muted'
+            }`}>
+              <button
+                type="button"
+                disabled={overrideData.isBlocked || overrideData.customCapacity <= 1 || savingOverride}
+                onClick={() => setOverrideData(prev => prev ? { ...prev, customCapacity: Math.max(1, prev.customCapacity - 1) } : null)}
+                className="w-10 h-10 bg-card rounded-lg flex items-center justify-center font-bold text-lg text-foreground/60 border border-muted/50 hover:bg-muted/20 active:scale-95 transition-all"
+              >
+                −
+              </button>
+              <div className="text-center flex-1">
+                <span className="text-sm font-black text-foreground block leading-none">{overrideData.customCapacity}</span>
+                <span className="text-[8px] text-foreground/40 font-bold uppercase tracking-widest mt-0.5 block">Slots</span>
+              </div>
+              <button
+                type="button"
+                disabled={overrideData.isBlocked || overrideData.customCapacity >= 50 || savingOverride}
+                onClick={() => setOverrideData(prev => prev ? { ...prev, customCapacity: Math.min(50, prev.customCapacity + 1) } : null)}
+                className="w-10 h-10 bg-card rounded-lg flex items-center justify-center font-bold text-lg text-foreground/60 border border-muted/50 hover:bg-muted/20 active:scale-95 transition-all"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* Reason Input */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-foreground/40 tracking-widest">
+              Sebab Cuti / Nota (Papar di storefront pembeli)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Cuti Raya Haji, Rehat weekend, Tempahan besar..."
+              disabled={savingOverride}
+              value={overrideData.reason}
+              onChange={e => setOverrideData(prev => prev ? { ...prev, reason: e.target.value } : null)}
+              className="w-full h-11 px-4 rounded-xl border-2 border-muted bg-background focus:border-primary focus:outline-none text-xs font-semibold placeholder:text-foreground/20"
+            />
+          </div>
+
+          {/* Save Action */}
+          <button
+            type="button"
+            disabled={savingOverride}
+            onClick={handleSaveOverride}
+            className="w-full h-11 bg-primary hover:bg-primary/95 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-md shadow-primary/10 flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] disabled:opacity-50"
+          >
+            {savingOverride ? 'Saving...' : 'Save Capacity Changes'} <Sparkles className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-32 bg-muted rounded-xl animate-pulse" />)}</div>
       ) : schedule.length === 0 ? (
@@ -234,6 +467,15 @@ export default function PlannerPage() {
         >
           <span>💬</span> Send Schedule to WhatsApp
         </button>
+      )}
+
+      {/* Modern Premium Toast */}
+      {toast.isOpen && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+        />
       )}
     </div>
   );
