@@ -76,6 +76,20 @@ export default function OfficeSettings() {
 
       const existingId = existingSettings && existingSettings.length > 0 ? existingSettings[0].id : undefined;
 
+      // Enforce unique shop name slug (First Come First Served)
+      if (settings.shop_name) {
+        const { data: duplicateShop } = await supabase
+          .from('baker_settings')
+          .select('baker_id')
+          .ilike('shop_name', settings.shop_name.trim())
+          .neq('baker_id', user.id)
+          .limit(1);
+
+        if (duplicateShop && duplicateShop.length > 0) {
+          throw new Error('Nama kedai ini telah diambil oleh baker lain. Sila pilih nama yang berbeza.');
+        }
+      }
+
       const { error: upsertError } = await supabase
         .from('baker_settings')
         .upsert({
