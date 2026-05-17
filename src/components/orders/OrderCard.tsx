@@ -1,5 +1,8 @@
 'use client';
 
+import { useState } from 'react';
+import { Toast } from '@/components/ui/Toast';
+
 import { Order, OrderStatus } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
 import { 
@@ -50,6 +53,16 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ order, onStatusChange, onEdit, onRefresh }: OrderCardProps) {
+  const [toast, setToast] = useState<{
+    isOpen: boolean;
+    message: string;
+    type?: 'success' | 'error' | 'info';
+  }>({
+    isOpen: false,
+    message: '',
+    type: 'success'
+  });
+
   const formatCurrency = (amount: number) => `RM ${amount.toFixed(2)}`;
 
   const getNextStatus = (current: OrderStatus): OrderStatus | null => {
@@ -95,7 +108,11 @@ export function OrderCard({ order, onStatusChange, onEdit, onRefresh }: OrderCar
   const handleCopyLabel = () => {
     const label = `🏷️ *ORDER LABEL*\n------------------\n👤 *Customer:* ${order.customer_name}\n🧁 *Product:* ${order.product_name} x${order.quantity}\n📅 *Date:* ${order.delivery_date}\n📝 *Note:* ${order.special_notes || '-'}\n------------------\n#BakersBestie #BaBe`;
     navigator.clipboard.writeText(label);
-    alert('Label copied to clipboard! Paste it into your printer or notes.');
+    setToast({
+      isOpen: true,
+      message: 'Label copied to clipboard! Paste it into your printer or notes. 🏷️',
+      type: 'success'
+    });
   };
 
   return (
@@ -188,6 +205,15 @@ export function OrderCard({ order, onStatusChange, onEdit, onRefresh }: OrderCar
           </button>
         )}
       </div>
+
+      {/* Modern Premium Toast */}
+      {toast.isOpen && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+        />
+      )}
     </div>
   );
 }
