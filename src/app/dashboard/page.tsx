@@ -9,6 +9,7 @@ import { OrderCard } from '@/components/orders/OrderCard';
 import { updateOrderStatus } from '@/lib/services/baker.service';
 import { formatDate } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { 
   Sun, 
   CloudSun, 
@@ -39,6 +40,20 @@ export default function AdminDashboardPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<BakerSettings | null>(null);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: 'warning' | 'info' | 'danger';
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
 
   const loadDashboardData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -95,16 +110,34 @@ export default function AdminDashboardPage() {
   const handleStatusChange = async (orderId: string, status: OrderStatus) => {
     const result = await updateOrderStatus(orderId, status);
     if (!result.success) {
-      if (confirm(`${result.message}\n\nNak pergi ke Inventory untuk restock sekarang?`)) {
-        window.location.href = '/kitchen/inventory';
-      }
+      setConfirmDialog({
+        isOpen: true,
+        title: 'Restock Required 🚨',
+        message: `${result.message}. Nak pergi ke Inventory untuk restock sekarang?`,
+        confirmText: 'Go to Inventory',
+        cancelText: 'Cancel',
+        type: 'warning',
+        onConfirm: () => {
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          window.location.href = '/kitchen/inventory';
+        }
+      });
       return;
     }
     
     if (result.warning) {
-      if (confirm(`${result.warning}\n\nOrder telah di-approve. Nak ke page Inventory untuk tengok Shopping List?`)) {
-        window.location.href = '/kitchen/inventory';
-      }
+      setConfirmDialog({
+        isOpen: true,
+        title: 'Order Approved! 🎉',
+        message: `${result.warning}. Nak ke page Inventory untuk tengok Shopping List?`,
+        confirmText: 'Go to Inventory',
+        cancelText: 'Maybe Later',
+        type: 'info',
+        onConfirm: () => {
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          window.location.href = '/kitchen/inventory';
+        }
+      });
     }
     loadDashboardData(); // Refresh
   };
@@ -295,6 +328,18 @@ export default function AdminDashboardPage() {
           <p className="text-foreground/40 font-bold uppercase tracking-[0.2em] text-[10px]">All clear! No pending tasks.</p>
         </div>
       )}
+
+      {/* Modern Premium Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        cancelText={confirmDialog.cancelText}
+        type={confirmDialog.type}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }
