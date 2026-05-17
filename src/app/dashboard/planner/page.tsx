@@ -72,7 +72,7 @@ export default function PlannerPage() {
     return d.toLocaleDateString('en-CA');
   };
 
-  const [selectedDate, setSelectedDate] = useState(getLocalDate(1)); // Default Tomorrow
+  const [selectedDate, setSelectedDate] = useState(getLocalDate(0)); // Default Today
 
   const loadPlannerData = useCallback(async () => {
     setLoading(true);
