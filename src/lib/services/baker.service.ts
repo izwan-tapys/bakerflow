@@ -8,10 +8,10 @@ export async function getBakerSettings(bakerId: string): Promise<BakerSettings |
     .from('baker_settings')
     .select('*')
     .eq('baker_id', bakerId)
-    .single();
+    .order('updated_at', { ascending: false });
 
-  if (error) return null;
-  return data;
+  if (error || !data || data.length === 0) return null;
+  return data[0];
 }
 
 export async function getTodayOrders(bakerId: string): Promise<Order[]> {

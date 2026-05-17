@@ -53,7 +53,7 @@ export default function AdminDashboardPage() {
     startOfMonth.setHours(0, 0, 0, 0);
 
     const [settingsRes, todayRes, pendingRes, productionRes, revenueRes, productsRes] = await Promise.all([
-      supabase.from('baker_settings').select('*').eq('baker_id', user.id).limit(1).single(),
+      supabase.from('baker_settings').select('*').eq('baker_id', user.id).order('updated_at', { ascending: false }),
       supabase.from('orders').select('*').eq('baker_id', user.id).eq('delivery_date', today).order('created_at'),
       supabase.from('orders').select('*').eq('baker_id', user.id).eq('status', 'pending').order('created_at', { ascending: false }),
       supabase.from('orders').select('*').eq('baker_id', user.id).in('status', ['approved', 'production', 'ready']),
@@ -61,9 +61,19 @@ export default function AdminDashboardPage() {
       supabase.from('products').select('*').eq('baker_id', user.id)
     ]);
 
-    if (settingsRes.data) {
-      setSettings(settingsRes.data);
-      setShopName(settingsRes.data.shop_name);
+    if (settingsRes.data && settingsRes.data.length > 0) {
+      const activeSettings = settingsRes.data[0];
+      setSettings(activeSettings);
+      setShopName(activeSettings.shop_name);
+
+      // Clean up duplicate settings under user's authentic context
+      if (settingsRes.data.length > 1) {
+        const duplicateIds = settingsRes.data.slice(1).map(r => r.id);
+        supabase.from('baker_settings').delete().in('id', duplicateIds).then(({ error }) => {
+          if (error) console.error('Failed to clean duplicate settings:', error);
+          else console.log('Cleaned up duplicate settings rows successfully!');
+        });
+      }
     }
     
     if (productsRes.data) setProducts(productsRes.data);

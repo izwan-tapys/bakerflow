@@ -89,10 +89,26 @@ export default function SetupPage() {
         return;
       }
 
+      // Check for existing settings record to avoid generating duplicates
+      const { data: existingSettings } = await supabase
+        .from('baker_settings')
+        .select('id')
+        .eq('baker_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+      const existingId = existingSettings && existingSettings.length > 0 ? existingSettings[0].id : undefined;
+
       // Upsert baker settings
       const { error: settingsError } = await supabase
         .from('baker_settings')
-        .upsert({ ...settings, baker_id: user.id, is_setup_complete: true });
+        .upsert({ 
+          id: existingId,
+          ...settings, 
+          baker_id: user.id, 
+          is_setup_complete: true,
+          updated_at: new Date().toISOString()
+        });
 
       if (settingsError) throw settingsError;
 

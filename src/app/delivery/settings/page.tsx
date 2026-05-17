@@ -54,9 +54,19 @@ export default function DeliverySettings() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User session not found.');
 
+      const { data: existingSettings } = await supabase
+        .from('baker_settings')
+        .select('id')
+        .eq('baker_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+      const existingId = existingSettings && existingSettings.length > 0 ? existingSettings[0].id : undefined;
+
       const { error: upsertError } = await supabase
         .from('baker_settings')
         .upsert({
+          id: existingId,
           baker_id: user.id,
           delivery_start_time: settings.delivery_start_time,
           delivery_end_time: settings.delivery_end_time,
