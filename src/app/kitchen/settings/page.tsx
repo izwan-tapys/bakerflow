@@ -270,6 +270,49 @@ export default function KitchenSettings() {
           </div>
         </section>
 
+        {/* 4. Onboarding Setup Wizard Reset */}
+        <section className="space-y-3">
+          <p className="text-[10px] font-black uppercase text-foreground/40 tracking-[0.2em] ml-2 flex items-center gap-1.5">
+            🚀 Wizard Suai Kenal Dapur
+          </p>
+          <div className="bg-card rounded-xl border border-muted/50 overflow-hidden p-5 shadow-sm space-y-4">
+            <div>
+              <span className="text-sm font-bold text-foreground block">Luncurkan Wizard Onboarding</span>
+              <span className="text-[10px] text-foreground/45 mt-0.5 block font-medium">Tetapkan semula kapasiti dapur Kak Sue dan jalankan semula wizard suai kenal "Know Your Kitchen" 3-langkah dari mula.</span>
+            </div>
+            <button 
+              onClick={async () => {
+                if (confirm('Adakah anda pasti untuk meluncurkan semula Wizard Onboarding?\n\nKapasiti Oven, Chiller, dan Mixer anda akan dikosongkan di database untuk persediaan semula.')) {
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) throw new Error('Sesi pengguna tidak dijumpai.');
+                    
+                    const { error } = await supabase
+                      .from('baker_settings')
+                      .update({
+                        is_setup_complete: false,
+                        oven_bcu_capacity: null,
+                        chiller_bcu_capacity: null,
+                        mixer_bowl_capacity_liters: null
+                      })
+                      .eq('baker_id', user.id);
+
+                    if (error) throw error;
+                    
+                    // Redirect to onboarding page!
+                    window.location.href = '/onboarding/kitchen';
+                  } catch (err: any) {
+                    alert(err.message || 'Gagal menetapkan semula onboarding.');
+                  }
+                }
+              }}
+              className="w-full h-11 bg-primary/10 hover:bg-primary/20 text-primary border-2 border-primary/20 rounded-xl font-extrabold text-xs transition-colors uppercase tracking-wider cursor-pointer flex items-center justify-center gap-2"
+            >
+              🚀 Mula Wizard Onboarding
+            </button>
+          </div>
+        </section>
+
         <div className="pt-4">
           <button 
             onClick={handleSave}
