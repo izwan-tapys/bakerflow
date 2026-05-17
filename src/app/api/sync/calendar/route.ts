@@ -154,7 +154,10 @@ export async function POST(request: Request) {
       };
 
       // 3. Compute Event Timings backward from requested delivery date & deliveryTime
-      const readyTime = new Date(`${order.delivery_date}T${deliveryTime}:00`);
+      const cleanDateStr = typeof order.delivery_date === 'string'
+        ? order.delivery_date.substring(0, 10)
+        : new Date(order.delivery_date).toISOString().substring(0, 10);
+      const readyTime = new Date(`${cleanDateStr}T${deliveryTime}:00`);
       const startCoolTime = new Date(readyTime.getTime() - cool * 60000);
 
       // Batch baking offset shift (Work backwards: earlier batches get baked earlier to complete on time)

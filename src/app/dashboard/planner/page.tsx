@@ -97,9 +97,18 @@ export default function PlannerPage() {
       }
     };
 
+    // Calculate the next day to load tomorrow's orders for overnight proofing/SKE timeline splits!
+    const d = new Date(selectedDate + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    const nextDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
     const [settingsRes, ordersRes, productsRes, dbCustomTasks] = await Promise.all([
       supabase.from('baker_settings').select('*').eq('baker_id', user.id).single(),
-      supabase.from('orders').select('*').eq('baker_id', user.id).eq('delivery_date', selectedDate).in('status', ['pending', 'approved', 'production', 'ready', 'otw']),
+      supabase.from('orders')
+        .select('*')
+        .eq('baker_id', user.id)
+        .in('delivery_date', [selectedDate, nextDateStr])
+        .in('status', ['pending', 'approved', 'production', 'ready', 'otw']),
       supabase.from('products').select('*').eq('baker_id', user.id),
       getCustomTasks()
     ]);
@@ -305,10 +314,6 @@ export default function PlannerPage() {
   // Generate combined chronological timeline
   const getMergedTimeline = () => {
     const timelineItems: any[] = [];
-    const deadline = settings?.delivery_start_time || '15:00';
-    const [deadH, deadM] = deadline.split(':').map(Number);
-    const deadlineDate = new Date();
-    deadlineDate.setHours(deadH, deadM, 0, 0);
 
     // 1. Process automated order tasks
     orders.forEach(order => {
@@ -318,47 +323,123 @@ export default function PlannerPage() {
       const prep = product.prep_time || 30;
       const bake = product.bake_time || 45;
       const cool = product.cool_time || 60;
+      const deliveryTime = order.delivery_time || settings?.delivery_start_time || '15:00';
 
-      // Calculate backing times
-      const readyTime = new Date(deadlineDate);
+      // SKE Scheduler math (aligned with route.ts backend!)
+      const proofingTime = ((product?.proofing_time_hours || 0) * 60) + (product?.proofing_time_minutes || 0);
+      const isLongProofing = proofingTime >= 240;
+
+      // Base time calculation relative to order's delivery date
+      const readyTime = new Date(`${order.delivery_date}T${deliveryTime}:00`);
       const startCoolTime = new Date(readyTime.getTime() - cool * 60000);
-      const startBakeTime = new Date(startCoolTime.getTime() - bake * 60000);
-      const startPrepTime = new Date(startBakeTime.getTime() - prep * 60000);
+      
+      // Batching offset (Calculated based on same-day orders)
+      const sameDayOrders = orders.filter(o => o.delivery_date === order.delivery_date);
+      let currentBatchBcu = 0;
+      let batchNumber = 1;
+      let myBatch = 1;
+      const ovenBcuCapacity = settings?.oven_bcu_capacity ?? 4;
 
-      const toTimeStr = (d: Date) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      const getProductBCU = (p: any): number => {
+        if (!p) return 1.0;
+        const unit = p.measurement_unit || 'inch';
+        if (unit === 'inch') {
+          const size = p.product_size_inches || 8;
+          if (size <= 6) return 0.5;
+          if (size <= 8) return 1.0;
+          if (size <= 10) return 1.5;
+          return 2.0;
+        } else if (unit === 'gram') {
+          const weight = p.product_weight_grams || 500;
+          if (weight <= 300) return 0.25;
+          if (weight <= 600) return 0.5;
+          if (weight <= 1000) return 1.0;
+          return 2.0;
+        }
+        return 1.0;
+      };
 
-      // Add Prep Task
-      timelineItems.push({
-        id: `order-${order.id}-prep`,
-        type: 'prep',
-        title: `🥣 Prep: adunan ${product.name} (x${order.quantity})`,
-        customer: order.customer_name,
-        start_time: toTimeStr(startPrepTime),
-        duration: prep,
-        is_completed: completedTasks[`order-${order.id}-prep`] || false
-      });
+      for (const o of sameDayOrders) {
+        const oProduct = products.find(p => p.id === o.product_id) || {};
+        const oBcu = getProductBCU(oProduct) * o.quantity;
+        if (currentBatchBcu + oBcu > ovenBcuCapacity) {
+          batchNumber += 1;
+          currentBatchBcu = oBcu;
+        } else {
+          currentBatchBcu += oBcu;
+        }
+        if (o.id === order.id) {
+          myBatch = batchNumber;
+        }
+      }
 
-      // Add Bake Task
-      timelineItems.push({
-        id: `order-${order.id}-bake`,
-        type: 'bake',
-        title: `🔥 Bake: Bakar ${product.name} (x${order.quantity})`,
-        customer: order.customer_name,
-        start_time: toTimeStr(startBakeTime),
-        duration: bake,
-        is_completed: completedTasks[`order-${order.id}-bake`] || false
-      });
+      const batchShiftOffset = (myBatch - 1) * (bake + 10);
+      const startBakeTime = new Date(startCoolTime.getTime() - (bake + batchShiftOffset) * 60000);
 
-      // Add Cool/Pack Task
-      timelineItems.push({
-        id: `order-${order.id}-cool`,
-        type: 'cool',
-        title: `❄️ Cool: Sejukkan & hias ${product.name}`,
-        customer: order.customer_name,
-        start_time: toTimeStr(startCoolTime),
-        duration: cool,
-        is_completed: completedTasks[`order-${order.id}-cool`] || false
-      });
+      const toTimeStr = (d: Date) => {
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        return `${hh}:${mm}`;
+      };
+
+      const toDateStr = (d: Date) => {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      };
+
+      // Prep task calculation (Proofing Splitter alignment)
+      let prepDateStr: string;
+      let startPrepTime: Date;
+
+      if (isLongProofing) {
+        // Split prep to day before (Ferment overnight)
+        const prevDay = new Date(readyTime.getTime() - 86400000);
+        prepDateStr = toDateStr(prevDay);
+        startPrepTime = new Date(`${prepDateStr}T14:00:00`);
+      } else {
+        // Short proofing: remains on the same day
+        const startProofingTime = new Date(startBakeTime.getTime() - proofingTime * 60000);
+        startPrepTime = new Date(startProofingTime.getTime() - prep * 60000);
+        prepDateStr = toDateStr(startPrepTime);
+      }
+
+      // Add Prep Task ONLY if it falls on the selectedDate!
+      if (prepDateStr === selectedDate) {
+        timelineItems.push({
+          id: `order-${order.id}-prep`,
+          type: 'prep',
+          title: `🥣 Prep: adunan ${product.name} (x${order.quantity}) - ${order.customer_name}`,
+          customer: order.customer_name,
+          start_time: toTimeStr(startPrepTime),
+          duration: prep,
+          is_completed: completedTasks[`order-${order.id}-prep`] || false
+        });
+      }
+
+      // Add Bake & Cool Tasks ONLY if delivery_date matches selectedDate!
+      if (order.delivery_date === selectedDate) {
+        timelineItems.push({
+          id: `order-${order.id}-bake`,
+          type: 'bake',
+          title: `🔥 Bake [Batch ${myBatch}/${batchNumber}]: Bakar ${product.name} (x${order.quantity})`,
+          customer: order.customer_name,
+          start_time: toTimeStr(startBakeTime),
+          duration: bake,
+          is_completed: completedTasks[`order-${order.id}-bake`] || false
+        });
+
+        timelineItems.push({
+          id: `order-${order.id}-cool`,
+          type: 'cool',
+          title: `❄️ Cool: Sejukkan & hias ${product.name}`,
+          customer: order.customer_name,
+          start_time: toTimeStr(startCoolTime),
+          duration: cool,
+          is_completed: completedTasks[`order-${order.id}-cool`] || false
+        });
+      }
     });
 
     // 2. Process manual/custom tasks

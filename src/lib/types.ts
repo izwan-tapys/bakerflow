@@ -15,6 +15,13 @@ export interface BakerSettings {
   delivery_start_time: string;
   delivery_end_time: string;
   is_setup_complete: boolean;
+  
+  // Kitchen Capacity Planning
+  production_start_time?: string;
+  production_end_time?: string;
+  mixer_bowl_capacity_liters?: number;
+  oven_bcu_capacity?: number;
+  chiller_bcu_capacity?: number;
 }
 
 export interface DeliveryZone {
@@ -37,6 +44,15 @@ export interface Product {
   prep_time: number;
   bake_time: number;
   cool_time: number;
+
+  // Recipe Timing & Units
+  measurement_unit?: string;
+  product_size_inches?: number;
+  product_weight_grams?: number;
+  box_size_inches?: number;
+  proofing_time_hours?: number;
+  proofing_time_minutes?: number;
+  bowl_cleanup_minutes?: number;
 }
 
 export type OrderStatus = 'pending' | 'approved' | 'production' | 'ready' | 'otw' | 'completed' | 'cancelled';
