@@ -131,6 +131,34 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
     .eq('id', orderId);
 
   if (error) return { success: false, message: error.message };
+
+  // ✨ GOOGLE CALENDAR AUTOMATIC SYNC TRIGGERS
+  try {
+    if (status === 'approved' || status === 'production') {
+      fetch('/api/sync/calendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          baker_id: order.baker_id,
+          action: 'sync_order',
+          order_id: orderId
+        })
+      }).catch(err => console.log('Background calendar sync failed:', err));
+    } else if (status === 'cancelled') {
+      fetch('/api/sync/calendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          baker_id: order.baker_id,
+          action: 'delete_order',
+          order_id: orderId
+        })
+      }).catch(err => console.log('Background calendar delete failed:', err));
+    }
+  } catch (syncErr) {
+    console.log('Failed to trigger background Google Calendar sync:', syncErr);
+  }
+
   return { success: true };
 }
 
